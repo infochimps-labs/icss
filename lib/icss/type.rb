@@ -10,36 +10,25 @@ module Icss
     # Schema factory
     class_inheritable_accessor :ruby_klass, :avro_name, :pig_name
 
-    def self.avro_name= name
-      ::Icss::Type::NAMED_TYPES[name.to_sym] = self
-    end
-
     # Keep the body around. FIXME: want to get rid of this, cops might find the body
     attr_accessor :body
     def after_receive hsh
       self.body = hsh
     end
 
-    def self.receive hsh
-      case hsh[:type].to_sym || hsh["type"].to_sym
-      when :record then obj = Icss::RecordType.new(hsh["name"])
-      else              obj = self.new
-      end
-      obj.receive!(hsh)
-      obj
+    def self.primitive? name
+      PRIMITIVE_TYPES.include?(name.to_sym)
     end
+
+    #
+    # Factory methods
+    #
 
     def to_hash()
       {:name => name, :type => type, :doc => doc }
     end
     # This will cause funny errors when it is an element of something that's to_json'ed
     def to_json() to_hash.to_json ; end
-
-    # Named types registry
-    NAMED_TYPES = {} unless defined?(NAMED_TYPES)
-    def self.find type_name
-      NAMED_TYPES[type_name.to_sym]
-    end
 
     #
     # Schema Translation
@@ -48,11 +37,48 @@ module Icss
     def pig_type
       self.class.pig_name
     end
+
+    def inspect
+      ["#<#{self.class.name}",
+        inspect_hsh.map{|k,v| "#{k}=#{v}" },
+        ">",
+      ].join(" ")
+    end
+
+  private
+    def inspect_hsh
+      {
+        :name        => name,
+        :type        => type,
+        :doc         => "'#{(doc||"")[0..30].gsub(/[\n\t\r]+/,' ')}...'",
+    }
+    end
+
+  end
+
+  class TypeFactory < Type
+    # I feel like the case statement below could be improved...
+    def self.receive hsh
+      type = hsh[:type].to_sym || hsh["type"].to_sym
+      # p [self, type, hsh] # , Icss::Type::DERIVED_TYPES]
+      case
+      when primitive?(type)
+        find(type).receive(hsh)
+      when type == :record
+        obj = Icss::RecordType.new(hsh["name"])
+        obj.receive!(hsh)
+        obj
+      when obj = self.find(type)
+        obj
+      else
+        raise "hell"
+      end
+    end
   end
 
   class NamedType < Type
     def initialize name
-      ::Icss::Type::NAMED_TYPES[name.to_sym] = self
+      ::Icss::Type::DERIVED_TYPES[name.to_sym] = self
     end
   end
 
@@ -62,7 +88,7 @@ module Icss
   # A record type has fields, each of which
   #
   class RecordType < NamedType
-    rcvr :fields, Array, :of => Icss::Type
+    rcvr :fields, Array, :of => Icss::TypeFactory
 
     def to_hash
       super.merge( :fields => fields.map{|field| field.to_hash} )
@@ -78,41 +104,80 @@ module Icss
         end
       end
     end
+
+    private
+    def inspect_hsh
+      super.merge(
+        :fields => (fields||[]).inject({}){|h,f| h[f.name] = f.type ; h }.inspect
+        )
+    end
   end
 
   class StringType < Type
     self.ruby_klass = String
     self.pig_name  = 'chararray'
-    self.avro_name = 'string'
   end
   class IntegerType < Type
     self.ruby_klass = Integer
     self.pig_name  = 'int'
-    self.avro_name = 'int'
+  end
+  class BooleanType < Type
+    self.ruby_klass = Boolean
+    self.pig_name  = 'int' # FIXME: ??
   end
   class LongType < Type
     self.ruby_klass = Integer
     self.pig_name  = 'long'
-    self.avro_name = 'long'
   end
   class FloatType < Type
     self.ruby_klass = Float
     self.pig_name  = 'float'
-    self.avro_name = 'float'
   end
   class DoubleType < Type
     self.ruby_klass = Float
     self.pig_name  = 'double'
-    self.avro_name = 'double'
   end
   class BytesType < Type
     self.ruby_klass = String
     self.pig_name  = 'bytearray'
-    self.avro_name = 'bytes'
   end
   class FixedType < Type
     self.ruby_klass = String
     self.pig_name  = 'bytearray'
-    self.avro_name = 'fixed'
+  end
+
+  Type.class_eval do
+    PRIMITIVE_TYPES  = {
+      :null    => :null,
+      :boolean => BooleanType,
+      :string  => StringType,
+      :bytes   => BytesType,
+      :int     => IntegerType,
+      :long    => LongType,
+      :float   => FloatType,
+      :double  => DoubleType,
+    }.freeze unless defined?(PRIMITIVE_TYPES)
+    NAMED_TYPES      = {
+      :fixed   => :fixed,
+      :enum    => :enum,
+      :record  => RecordType,
+      :error   => :error
+    }.freeze unless defined?(NAMED_TYPES)
+    ENUMERABLE_TYPES = {
+      :array   => Array,
+      :map     => :map,
+      :union   => :union,
+      :request => :request,
+    }.freeze unless defined?(ENUMERABLE_TYPES)
+    VALID_TYPES     = (PRIMITIVE_TYPES.merge(NAMED_TYPES.merge(ENUMERABLE_TYPES))).freeze unless defined?(VALID_TYPES)
+
+    VALID_TYPES.each{|n, t| t.avro_name = n if n.is_a?(Icss::Type) }
+
+    # Registry for synthesized types (eg the result of a type record definition)
+    DERIVED_TYPES = {} unless defined?(DERIVED_TYPES)
+
+    def self.find type_name
+      VALID_TYPES[type_name.to_sym] || DERIVED_TYPES[type_name.to_sym]
+    end
   end
 end

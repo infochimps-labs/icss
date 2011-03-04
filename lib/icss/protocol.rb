@@ -4,7 +4,7 @@ module Icss
 
     rcvr :name,        String
     rcvr :namespace,   String
-    rcvr :types,       Array, :of => Icss::Type
+    rcvr :types,       Array, :of => Icss::TypeFactory
     rcvr :messages,    Hash,  :of => Icss::Message
     rcvr :data_assets, Array, :of => Icss::DataAsset
     rcvr :doc,         String
@@ -21,7 +21,7 @@ module Icss
     end
 
     def inspect
-      ["#<{self.class.name}",
+      ["#<#{self.class.name}",
         "namespace=#{namespace}",
         "name=#{name}",
         "types=#{(types||[]).map(&:name).inspect}",
