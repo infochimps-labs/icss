@@ -1,6 +1,6 @@
-$: << File.dirname(__FILE__)+'/..'
-require 'troop/icss/receiver'
-require 'troop/icss/type'
-require 'troop/icss/message'
-require 'troop/icss/data_asset'
-require 'troop/icss/protocol'
+$: << File.dirname(__FILE__)
+require 'icss/receiver'
+require 'icss/type'
+require 'icss/message'
+require 'icss/data_asset'
+require 'icss/protocol'

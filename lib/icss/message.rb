@@ -11,9 +11,12 @@ module Icss
     def response_types
       response.map{|resp| Icss::Type.find(resp) }
     end
-
     def request_types
       request.map{|req|   Icss::Type.find(req['type']) }
+    end
+
+    def path
+      File.join(protocol.namespace, protocol.name, self.name)
     end
 
     def to_hash()

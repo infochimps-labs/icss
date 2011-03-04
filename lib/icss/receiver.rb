@@ -93,6 +93,7 @@ module Receiver
     # automatically generates an attr_accessor on the class if none exists
     #
     def rcvr name, type, info={}
+      name = name.to_sym
       attr_reader(name) unless method_defined?(name)
       attr_writer(name) unless method_defined?("#{name}=")
       class_eval %Q{
@@ -100,7 +101,6 @@ module Receiver
           @#{name} = #{receiver_body_for(type, info)}
         end
       }
-      # receiver_method << %Q{#{info[:post_hook]}.call(v, #{type})} if info[:post_hook]
       receiver_attrs[name] = { :type => type, :info => info }
     end
 
@@ -108,7 +108,6 @@ module Receiver
     # class's initializer needs arguments you'll need to override this
     # method.
     def receive hsh
-      p ['receive', self, hsh]
       obj = self.new
       obj.receive!(hsh)
       obj
@@ -137,7 +136,6 @@ module Receiver
 
   # modify object in place with new typecast values.
   def receive! hsh
-    p ['receive!', self, hsh]
     self.class.receiver_attr_names.each do |attr|
       self.send("receive_#{attr}", hsh[attr]) if hsh.has_key?(attr)
     end
