@@ -7,14 +7,13 @@ module Icss
     rcvr :types,       Array, :of => Icss::TypeFactory
     rcvr :messages,    Hash,  :of => Icss::Message
     rcvr :data_assets, Array, :of => Icss::DataAsset
-    rcvr :targets,     Hash,  :of => Icss::Target
+    rcvr :targets,     Hash,  :of => Icss::TargetListFactory
     rcvr :doc,         String
 
     # String: namespace.name
     def fullname
       "#{namespace}.#{name}"
     end
-
 
     # attr_accessor :body
     def after_receive hsh
@@ -28,7 +27,10 @@ module Icss
     end
     
     def receive_targets hsh
-      hsh.inject({}) do |target, 
+      self.targets = hsh.inject({}) do |target_obj_hsh, (target_name, target_info_list)|
+        target_obj_hsh[target_name] = TargetListFactory.receive(target_name, target_info_list) # returns an arry of targets
+        target_obj_hsh
+      end
     end
 
     def to_hash()
