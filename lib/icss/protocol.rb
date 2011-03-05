@@ -20,15 +20,9 @@ module Icss
       fullname.gsub('.','/')
     end
     
-    # def initialize(path, protocol_hash)
-    #   @dirname   = File.dirname(path)
-    #   receive! protocol_hash # .to_mash
-    # end
-
     def receive_targets hsh
-      hsh.each!
+      hsh.inject({}) do |target, 
     end
-
 
     def to_hash()
       {
@@ -36,6 +30,7 @@ module Icss
         :types => (types||[]).map{|t| t.to_hash }
       }
     end
+    
     # This will cause funny errors when it is an element of something that's to_json'ed
     def to_json() to_hash.to_json ; end
   end
