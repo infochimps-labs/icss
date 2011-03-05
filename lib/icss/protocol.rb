@@ -3,12 +3,19 @@ module Icss
     include Receiver
 
     rcvr :name,        String
-    rcvr :namespace,   String
+    rcvr :namespace,   String # must be *dotted* ("foo.bar"), not slashed ("foo/bar")
     rcvr :types,       Array, :of => Icss::TypeFactory
     rcvr :messages,    Hash,  :of => Icss::Message
     rcvr :data_assets, Array, :of => Icss::DataAsset
     rcvr :targets,     Hash,  :of => Icss::Target
     rcvr :doc,         String
+
+    # String: namespace.name
+    def fullname
+      "#{namespace}.#{name}"
+    end
+
+
     # attr_accessor :body
     def after_receive hsh
       self.name ||= hsh['protocol']
