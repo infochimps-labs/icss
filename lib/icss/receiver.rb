@@ -4,6 +4,9 @@ require 'time'
 # dummy type for receiving True or False
 class Boolean ; end unless defined?(Boolean)
 
+# dummy type for receiving "must be nil
+class Null ; end unless defined?(Null)
+
 # Receiver lets you describe complex (even recursive!) actively-typed data models that
 # * are creatable or assignable from static data structures
 # * perform efficient type conversion when assigning from a data structure,
@@ -65,6 +68,8 @@ class Boolean ; end unless defined?(Boolean)
 module Receiver
   mattr_accessor :receiver_bodies
   self.receiver_bodies           = {}
+  self.receiver_bodies[Object]   = %q{ v } # accept and love the object just as it is
+  self.receiver_bodies[Null]     = %q{ raise "This field must be nil, but #{v} was given" unless (v.nil?) ; nil }
   self.receiver_bodies[Integer]  = %q{ v.nil? ? nil : v.to_i }
   self.receiver_bodies[Time]     = %q{ v.nil? ? nil : Time.parse(v).utc }
   self.receiver_bodies[Date]     = %q{ v.nil? ? nil : Date.parse(v) }
