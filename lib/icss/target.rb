@@ -10,15 +10,22 @@ module Icss
     end
   end
 
-  class MysqlTarget
+  class Target
     include Receiver
+    #
+    # Name should not be something like 'default', it should be something
+    # that 'appeals' to the message name.
+    #
+    rcvr :name, String
+  end
+  
+  class MysqlTarget < Target
     rcvr :data_assets, Array, :of => String
     rcvr :database,    String
     rcvr :table_name,  String
   end
     
-  class HbaseTarget
-    include Receiver
+  class HbaseTarget < Target
     rcvr :data_assets,   Array, :of => String
     rcvr :database,      String
     rcvr :table_name,    String
@@ -26,15 +33,13 @@ module Icss
     rcvr :loader,        String
   end
 
-  class ElasticSearchTarget
-    include Receiver
+  class ElasticSearchTarget < Target
     rcvr :data_assets,   Array, :of => String
     rcvr :index_name, String
     rcvr :id_field,   String    
   end
   
-  class CatalogTarget
-    include Receiver
+  class CatalogTarget < Target
     rcvr :name,        String
     rcvr :title,       String
     rcvr :description, String
