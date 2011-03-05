@@ -31,7 +31,7 @@ module Icss
     # stuff a compact cartoon of the fields in there
     def inspect_hsh
       super.merge(
-        :fields_sum => (fields||[]).inject({}){|h,f| h[f.name] = f.type ; h }.inspect
+        :fields => (fields||[]).inject({}){|h,f| h[f.name] = f.type ; h }.inspect
         )
     end
   end
@@ -46,16 +46,15 @@ module Icss
 
     def inspect_hsh
       {
-        :name           => name,
-        :namespace      => namespace,
-        :types_br       => (types||[]).map(&:name).inspect,
-        :messages_br    => (messages||{}).values.map(&:name).inspect,
-        :data_assets_br => (data_assets||[]).map(&:name).inspect,
-        :doc            => "'#{(doc||"")[0..30].gsub(/[\n\t\r]+/,' ')}...'",
+        :name        => name,
+        :namespace   => namespace,
+        :types       => (types||[]).map(&:name).inspect,
+        :messages    => (messages||{}).values.map(&:name).inspect,
+        :data_assets => (data_assets||[]).map(&:name).inspect,
+        :doc         => "'#{(doc||"")[0..30].gsub(/[\n\t\r]+/,' ')}...'",
       }
     end
   end
-
 
 end
 
