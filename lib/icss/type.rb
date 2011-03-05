@@ -84,7 +84,7 @@ module Icss
     end
 
     def self.build_record_type hsh
-      klass_name = hsh[:name].to_s.classify
+      klass_name = hsh[:name].to_s.classify+"Type"
       klass = Icss::Type.const_set(klass_name, Class.new(Icss::RecordType))
       ::Icss::Type::DERIVED_TYPES[hsh[:name].to_sym] = klass
     end
@@ -124,7 +124,7 @@ module Icss
   end
   class BooleanType < Type
     self.ruby_klass = Boolean
-    self.pig_name  = 'int' # FIXME: ??
+    self.pig_name  = 'FIXME WHAT GOES HERE' # FIXME: ??
   end
   class LongType < Type
     self.ruby_klass = Integer
