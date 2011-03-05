@@ -17,7 +17,7 @@ module Icss
     rcvr :doc,    String
     rcvr :type,   String
     # Schema factory
-    class_inheritable_accessor :ruby_klass, :avro_name, :pig_name
+    class_inheritable_accessor :ruby_klass, :name, :pig_name
 
     #
     # Factory methods
@@ -86,6 +86,10 @@ module Icss
     def self.build_record_type hsh
       klass_name = hsh[:name].to_s.classify+"Type"
       klass = Icss::Type.const_set(klass_name, Class.new(Icss::RecordType))
+      # FIXME: doesn't follow receive pattern
+      klass.name = hsh[:name].to_s.to_sym if hsh[:name]
+      klass.doc  = hsh[:doc].to_s.to_sym  if hsh[:doc]
+      klass.type = :record
       ::Icss::Type::DERIVED_TYPES[hsh[:name].to_sym] = klass
     end
   end
@@ -97,6 +101,7 @@ module Icss
   #
   class RecordType < NamedType
     rcvr :fields, Array, :of => Icss::TypeFactory
+    class_inheritable_accessor :doc, :type
 
     def ruby_klass
       @klass ||= Class.new do
@@ -106,11 +111,15 @@ module Icss
       end
     end
 
+    def self.to_hash
+      { :name => name, :doc => doc }
+    end
+
     #
     # Conversion
     #
     def to_hash
-      super.merge( :fields => fields.map{|field| field.to_hash} )
+      super.merge( :fields => (fields||[]).map{|field| field.to_hash} )
     end
   end
 
@@ -171,6 +180,6 @@ module Icss
       :request => :request,
     }.freeze unless defined?(ENUMERABLE_TYPES)
     VALID_TYPES     = (PRIMITIVE_TYPES.merge(NAMED_TYPES.merge(ENUMERABLE_TYPES))).freeze unless defined?(VALID_TYPES)
-    VALID_TYPES.each{|n, t| t.avro_name = n if n.is_a?(Icss::Type) }
+    VALID_TYPES.each{|n, t| t.name = n if n.is_a?(Icss::Type) }
   end
 end

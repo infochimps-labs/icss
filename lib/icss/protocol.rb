@@ -29,5 +29,14 @@ module Icss
       hsh.each!
     end
 
+
+    def to_hash()
+      {
+        :name => name, :namespace => namespace, :doc => doc,
+        :types => (types||[]).map{|t| t.to_hash }
+      }
+    end
+    # This will cause funny errors when it is an element of something that's to_json'ed
+    def to_json() to_hash.to_json ; end
   end
 end
