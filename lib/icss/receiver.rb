@@ -119,6 +119,8 @@ module Receiver
 
   private
     def receiver_body_for type, info
+      # Note that Array and Hash only need (and only get) special treatment when
+      # they have an :of => SomeType option.
       case
       when info[:of] && (type == Array || type == :array)
         %Q{ v.nil? ? nil : v.map{|el| #{info[:of]}.receive(el) } }
@@ -137,7 +139,9 @@ module Receiver
   # modify object in place with new typecast values.
   def receive! hsh
     self.class.receiver_attr_names.each do |attr|
-      self.send("receive_#{attr}", hsh[attr]) if hsh.has_key?(attr)
+      if    hsh.has_key?(attr.to_sym) then self.send("receive_#{attr}", hsh[attr.to_sym])
+      elsif hsh.has_key?(attr.to_s)   then self.send("receive_#{attr}", hsh[attr.to_s])
+      end
     end
     after_receive(hsh) if respond_to?(:after_receive)
   end

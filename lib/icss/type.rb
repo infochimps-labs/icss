@@ -2,33 +2,41 @@ module Icss
   #
   # Generic ICSS base type
   #
+
+  #
+  # Here's the main thing you got to understand:
+  #
+  # * when I hit something under types: I define a class
+  # * when I hit something under fields: I instantiate a class.
+  #
+  #
+
   class Type
     include Receiver
     rcvr :name,   String
-    rcvr :type,   Symbol
     rcvr :doc,    String
+    rcvr :type,   String
     # Schema factory
     class_inheritable_accessor :ruby_klass, :avro_name, :pig_name
-
-    # Keep the body around. FIXME: want to get rid of this, cops might find the body
-    attr_accessor :body
-    def after_receive hsh
-      self.body = hsh
-    end
-
-    def self.primitive? name
-      PRIMITIVE_TYPES.include?(name.to_sym)
-    end
 
     #
     # Factory methods
     #
 
-    def to_hash()
-      {:name => name, :type => type, :doc => doc }
+    # Registry for synthesized types (eg the result of a type record definition)
+    Icss::Type::DERIVED_TYPES = {} unless defined?(Icss::Type::DERIVED_TYPES)
+
+    # VALID_TYPES, PRIMITIVE_TYPES, etc are way down below (the klasses need to
+    # be defined first)
+
+    #
+    def self.find type_name
+      VALID_TYPES[type_name.to_sym] || DERIVED_TYPES[type_name.to_sym]
     end
-    # This will cause funny errors when it is an element of something that's to_json'ed
-    def to_json() to_hash.to_json ; end
+
+    def self.primitive? name
+      PRIMITIVE_TYPES.include?(name.to_sym)
+    end
 
     #
     # Schema Translation
@@ -38,47 +46,47 @@ module Icss
       self.class.pig_name
     end
 
-    def inspect
-      ["#<#{self.class.name}",
-        inspect_hsh.map{|k,v| "#{k}=#{v}" },
-        ">",
-      ].join(" ")
-    end
+    #
+    # Conversion
+    #
 
-  private
-    def inspect_hsh
-      {
-        :name        => name,
-        :type        => type,
-        :doc         => "'#{(doc||"")[0..30].gsub(/[\n\t\r]+/,' ')}...'",
-    }
+    def to_hash()
+      {:name => name, :type => type, :doc => doc }
     end
+    # This will cause funny errors when it is an element of something that's to_json'ed
+    def to_json() to_hash.to_json ; end
 
+  end
+
+  class NamedType < Type
+    # def initialize name
+    #   ::Icss::Type::DERIVED_TYPES[name.to_sym] = self
+    # end
   end
 
   class TypeFactory < Type
     # I feel like the case statement below could be improved...
     def self.receive hsh
-      type = hsh[:type].to_sym || hsh["type"].to_sym
-      # p [self, type, hsh] # , Icss::Type::DERIVED_TYPES]
+      hsh = hsh.symbolize_keys
+      type = hsh[:type].to_sym
+      # p [self, 'receive', type, hsh, Icss::Type::DERIVED_TYPES]
       case
       when primitive?(type)
         find(type).receive(hsh)
       when type == :record
-        obj = Icss::RecordType.new(hsh["name"])
-        obj.receive!(hsh)
-        obj
+        klass = build_record_type(hsh)
+        klass.receive(hsh)
       when obj = self.find(type)
-        obj
+        obj.receive(hsh)
       else
         raise "hell"
       end
     end
-  end
 
-  class NamedType < Type
-    def initialize name
-      ::Icss::Type::DERIVED_TYPES[name.to_sym] = self
+    def self.build_record_type hsh
+      klass_name = hsh[:name].to_s.classify
+      klass = Icss::Type.const_set(klass_name, Class.new(Icss::RecordType))
+      ::Icss::Type::DERIVED_TYPES[hsh[:name].to_sym] = klass
     end
   end
 
@@ -90,13 +98,6 @@ module Icss
   class RecordType < NamedType
     rcvr :fields, Array, :of => Icss::TypeFactory
 
-    def to_hash
-      super.merge( :fields => fields.map{|field| field.to_hash} )
-    end
-
-    def field_types
-    end
-
     def ruby_klass
       @klass ||= Class.new do
         fields.each do |field|
@@ -105,11 +106,11 @@ module Icss
       end
     end
 
-    private
-    def inspect_hsh
-      super.merge(
-        :fields => (fields||[]).inject({}){|h,f| h[f.name] = f.type ; h }.inspect
-        )
+    #
+    # Conversion
+    #
+    def to_hash
+      super.merge( :fields => fields.map{|field| field.to_hash} )
     end
   end
 
@@ -170,14 +171,6 @@ module Icss
       :request => :request,
     }.freeze unless defined?(ENUMERABLE_TYPES)
     VALID_TYPES     = (PRIMITIVE_TYPES.merge(NAMED_TYPES.merge(ENUMERABLE_TYPES))).freeze unless defined?(VALID_TYPES)
-
     VALID_TYPES.each{|n, t| t.avro_name = n if n.is_a?(Icss::Type) }
-
-    # Registry for synthesized types (eg the result of a type record definition)
-    DERIVED_TYPES = {} unless defined?(DERIVED_TYPES)
-
-    def self.find type_name
-      VALID_TYPES[type_name.to_sym] || DERIVED_TYPES[type_name.to_sym]
-    end
   end
 end

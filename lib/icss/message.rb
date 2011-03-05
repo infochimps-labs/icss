@@ -8,6 +8,14 @@ module Icss
     rcvr :doc,      String
     attr_accessor :protocol
 
+    #
+    #
+    #
+
+    #
+    # Sugar
+    #
+
     def response_types
       response.map{|resp| Icss::Type.find(resp) }
     end
@@ -18,6 +26,10 @@ module Icss
     def path
       File.join(protocol.namespace, protocol.name, self.name)
     end
+
+    #
+    # Conversion
+    #
 
     def to_hash()
       { :name => name, :request => request, :response => response, :errors => errors, :doc => doc }
