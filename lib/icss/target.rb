@@ -1,0 +1,50 @@
+module Icss
+
+  #
+  # Instantiates an array of target objects
+  #
+  class TargetListFactory
+    def self.receive target_name, target_info_list
+      klass = ("Icss::"+target_name.classify+"Target").constantize
+      target_info_list.map{|target_info| klass.receive(target_info)}
+    end
+  end
+
+  class Target
+    include Receiver
+    #
+    # Name should not be something like 'default', it should be something
+    # that 'appeals' to the message name.
+    #
+    rcvr :name, String
+  end
+
+  class MysqlTarget < Target
+    rcvr :data_assets, Array, :of => String
+    rcvr :database,    String
+    rcvr :table_name,  String
+  end
+
+  class HbaseTarget < Target
+    rcvr :data_assets,   Array, :of => String
+    rcvr :database,      String
+    rcvr :table_name,    String
+    rcvr :column_family, String
+    rcvr :loader,        String
+  end
+
+  class ElasticSearchTarget < Target
+    rcvr :data_assets,   Array, :of => String
+    rcvr :index_name, String
+    rcvr :id_field,   String
+  end
+
+  class CatalogTarget < Target
+    rcvr :name,        String
+    rcvr :title,       String
+    rcvr :description, String
+    rcvr :tags,        Array, :of => String
+    rcvr :messages,    Array, :of => String
+    rcvr :packages,    Array, :of => Hash
+  end
+end
