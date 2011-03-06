@@ -1,6 +1,6 @@
 {
-  "protocol" : "AvroTrace",
   "namespace" : "org.apache.avro.ipc.trace",
+  "protocol" : "AvroTrace",
   "types" : [ {
     "type" : "enum",
     "name" : "SpanEvent",
