@@ -98,7 +98,7 @@ module Receiver
       name = name.to_sym
       class_eval %Q{
         def receive_#{name}(v)
-          @#{name} = #{receiver_body_for(type, info)}
+          self.#{name} = #{receiver_body_for(type, info)}
         end
       }
       receiver_attrs[name] = { :type => type, :info => info }

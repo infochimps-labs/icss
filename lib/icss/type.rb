@@ -1,9 +1,6 @@
 module Icss
   #
-  # Generic ICSS base type
-  #
-
-  # Avro Schema Declaration
+  # Describes an avro type
   #
   # A Schema is represented in JSON by one of:
   #
@@ -14,28 +11,21 @@ module Icss
   #   in the Icss::Type class
   # * A JSON array, representing a union of embedded types.
   #
-
   #
-  # Here's the main thing you got to understand:
-  #
-  # * when I hit something under types: I define a class
-  # * when I hit something under fields: I instantiate a class.
-  #
-  #
-
   class Type
     include Receiver
-    rcvr_accessor :name,    String, :required => true, :validates => :validate_avro_name
-    rcvr_accessor :doc,     String
+    rcvr_accessor :name,       String
+    rcvr_accessor :doc,        String
     # Schema factory
-    class_inheritable_accessor :ruby_klass, :pig_name
+    rcvr_accessor :ruby_klass, Object
+    rcvr_accessor :pig_name,   String
 
     #
     # Factory methods
     #
 
     # Registry for synthesized types (eg the result of a type record definition)
-    Icss::Type::DERIVED_TYPES = {} unless defined?(Icss::Type::DERIVED_TYPES)
+    Icss::Type::DERIVED_TYPES = {}   unless defined?(Icss::Type::DERIVED_TYPES)
 
     # VALID_TYPES, PRIMITIVE_TYPES, etc are way down below (the klasses need to
     # be defined first)
@@ -53,7 +43,7 @@ module Icss
     # Schema Translation
     #
 
-    def pig_type
+    def pig_name
       self.class.pig_name
     end
 
@@ -62,11 +52,10 @@ module Icss
     #
 
     def to_hash()
-      {:name => name, :type => type, :doc => doc }
+      {:name => name, :doc => doc }.reject{|k,v| v.nil? }
     end
     # This will cause funny errors when it is an element of something that's to_json'ed
     def to_json() to_hash.to_json ; end
-
   end
 
   # ---------------------------------------------------------------------------
@@ -74,37 +63,24 @@ module Icss
   # Primitive Types
   #
 
-  class NilClassType < Type
-    self.ruby_klass = NilClass
-    self.pig_name  = 'FIXME WHAT GOES HERE' # FIXME: ??
+  class PrimitiveType < Type
+    def to_hash
+      name.to_s
+    end
   end
-  class BooleanType < Type
-    self.ruby_klass = Boolean
-    self.pig_name  = 'FIXME WHAT GOES HERE' # FIXME: ??
-  end
-  class IntegerType < Type
-    self.ruby_klass = Integer
-    self.pig_name  = 'int'
-  end
-  class LongType < Type
-    self.ruby_klass = Integer
-    self.pig_name  = 'long'
-  end
-  class FloatType < Type
-    self.ruby_klass = Float
-    self.pig_name  = 'float'
-  end
-  class DoubleType < Type
-    self.ruby_klass = Float
-    self.pig_name  = 'double'
-  end
-  class BytesType < Type
-    self.ruby_klass = String
-    self.pig_name  = 'bytearray'
-  end
-  class StringType < Type
-    self.ruby_klass = String
-    self.pig_name  = 'chararray'
+
+  # Registry for primitive types
+  unless defined?(::Icss::Type::PRIMITIVE_TYPES)
+    ::Icss::Type::PRIMITIVE_TYPES = {}
+    ::Icss::Type::PRIMITIVE_TYPES[:null]    = PrimitiveType.new(:ruby_klass => NilClass, :pig_name => 'FIXME WHAT GOES HERE' )
+    ::Icss::Type::PRIMITIVE_TYPES[:boolean] = PrimitiveType.new(:ruby_klass => Boolean,  :pig_name => 'FIXME WHAT GOES HERE')
+    ::Icss::Type::PRIMITIVE_TYPES[:string]  = PrimitiveType.new(:ruby_klass => Integer,  :pig_name => 'int')
+    ::Icss::Type::PRIMITIVE_TYPES[:bytes]   = PrimitiveType.new(:ruby_klass => Integer,  :pig_name => 'long')
+    ::Icss::Type::PRIMITIVE_TYPES[:int]     = PrimitiveType.new(:ruby_klass => Float,    :pig_name => 'float')
+    ::Icss::Type::PRIMITIVE_TYPES[:long]    = PrimitiveType.new(:ruby_klass => Float,    :pig_name => 'double')
+    ::Icss::Type::PRIMITIVE_TYPES[:float]   = PrimitiveType.new(:ruby_klass => String,   :pig_name => 'bytearray')
+    ::Icss::Type::PRIMITIVE_TYPES[:double]  = PrimitiveType.new(:ruby_klass => String,   :pig_name => 'chararray')
+    ::Icss::Type::PRIMITIVE_TYPES.freeze
   end
 
   # ---------------------------------------------------------------------------
@@ -134,10 +110,9 @@ module Icss
   class NamedType < Type
     rcvr_accessor :namespace, String
     attr_accessor :parent
-
-    # def initialize name
-    #   ::Icss::Type::DERIVED_TYPES[name.to_sym] = self
-    # end
+    # the avro base type name
+    class_inheritable_accessor :type
+    include Icss::Validations
 
     # In named types, the namespace and name are determined in one of the following ways:
     #
@@ -162,13 +137,8 @@ module Icss
       else
         @name = nm
       end
-    end
-
-    # An avro name must
-    # * start with [A-Za-z_]
-    # * subsequently contain only [A-Za-z0-9_]
-    def validate_name nm
-      (nm =~ /\A[A-Za-z_]\w*\z/) or raise "An avro name must start with [A-Za-z_] and contain only [A-Za-z0-9_]. A namespace is the dot-separated sequence of such names."
+      ::Icss::Type::DERIVED_TYPES[@name.to_sym] = self
+      @name
     end
 
     def receive_namespace nmsp
@@ -191,6 +161,41 @@ module Icss
     def fullname
       [namespace, name].join('.')
     end
+
+    def to_hash
+      super.merge( @namespace ? { :namespace => @namespace } : {} )
+    end
+  end
+
+  #
+  # Avro Schema Declaration
+  #
+  # A Schema is represented in JSON by one of:
+  #
+  # * A JSON string, naming a defined type.
+  # * A JSON object, of the form:
+  #       {"type": "typeName" ...attributes...}
+  #   where typeName is either a primitive or derived type name, as defined
+  #   in the Icss::Type class
+  # * A JSON array, representing a union of embedded types.
+  #
+  #
+  class TypeFactory
+    def self.receive type_info
+      # p ['----------', self, 'receive', type_info] # , Icss::Type::DERIVED_TYPES]
+      case
+      when type_info.is_a?(String) || type_info.is_a?(Symbol)
+        Icss::Type.find(type_info)
+      when type_info.is_a?(Array)
+        warn "Can't do union types yet"
+        UnionType.receive(:name => type_info.to_json)
+      else
+        type_info  = type_info.symbolize_keys
+        type_name = type_info[:type].to_sym
+        type = Icss::Type.find(type_name)
+        obj  = type.receive(type_info)
+      end
+    end
   end
 
   #
@@ -199,8 +204,7 @@ module Icss
   # Each field has the following attributes:
   # * name:     a string providing the name of the field (required), and
   # * doc:      a string describing this field for users (optional).
-  # * type:     a Type object defining a schema, or a string or symbol naming a
-  #             record definition (required).
+  # * type:     a schema, or a string or symbol naming a record definition (required).
   #
   #             avro type     json type       ruby type       example
   #             null          null            NilClass        nil
@@ -231,13 +235,23 @@ module Icss
   # See RecordType for examples.
   #
   class RecordField
+    include Receiver
     rcvr_accessor :name,      String, :required => true
     rcvr_accessor :doc,       String
-    rcvr_accessor :type,      String, :required => true
+    rcvr_accessor :type,      Icss::Type, :required => true
     rcvr_accessor :default,   Object # accept and love the object just as it is
     rcvr          :order,     String
+    # is_reference is true if the type is a named reference to a defined type;
+    # false if the type was defined right here in the schema.
+    attr_accessor :is_reference
+    def is_reference?() is_reference ; end
 
-    ALLOWED_ORDERS = %w[ascending descending ignore]
+    def receive_type type_info
+      self.is_reference = type_info.is_a?(String) || type_info.is_a?(Symbol)
+      self.type = TypeFactory.receive(type_info)
+    end
+
+    ALLOWED_ORDERS = %w[ascending descending ignore].freeze unless defined?(ALLOWED_ORDERS)
     def order
       @order || 'ascending'
     end
@@ -248,6 +262,15 @@ module Icss
     def order= v
       raise "'order' may only take the values ascending (the default), descending, or ignore." unless v.nil? || ALLOWED_ORDERS.include?(v)
       self.order = v
+    end
+
+    def to_hash()
+      { :name    => name,
+        :type    => (is_reference? ? type.name : type.to_hash),
+        :default => default,
+        :order   => @order,
+        :doc     => doc,
+      }.reject{|k,v| v.nil? }
     end
   end
 
@@ -273,7 +296,8 @@ module Icss
   #         }
   #
   class RecordType < NamedType
-    rcvr_accessor :fields, Array, :of => Icss::TypeFactory, :required => true
+    rcvr_accessor :fields, Array, :of => Icss::RecordField, :required => true
+    self.type = :record
 
     # def ruby_klass
     #   @klass ||= Class.new do
@@ -283,16 +307,14 @@ module Icss
     #   end
     # end
 
-    #
-    # Conversion
-    #
     def to_hash
-      super.merge( :fields => (fields||[]).map{|field| field.to_hash} )
+      super.merge( :type => self.class.type, :fields => (fields||[]).map{|field| field.to_hash} )
     end
   end
 
   #  An error definition is just like a record definition except it uses "error" instead of "record".
   class ErrorType < RecordType
+    self.type = :error
   end
 
   #
@@ -315,6 +337,20 @@ module Icss
   #
   class EnumType < NamedType
     rcvr_accessor :symbols, Array, :of => Symbol, :required => true
+    self.type = :enum
+
+    def to_hash
+      super.merge( :symbols => symbols )
+    end
+  end
+
+  #
+  # base class for Avro enumerable types (array, map and union)
+  #
+  # (do not confuse with EnumType, which is not an EnumerableType. sigh).
+  #
+  class EnumerableType < Type
+    class_inheritable_accessor :type
   end
 
   #
@@ -328,9 +364,14 @@ module Icss
   #
   #     {"type": "array", "items": "string"}
   #
-  class ArrayType < Type
+  class ArrayType < EnumerableType
     # FIXME: is items required? The schema doesn't say so.
     rcvr_accessor :items, TypeFactory
+    self.type = :array
+
+    def to_hash
+      super.merge( :items => items.to_s )
+    end
   end
 
   #
@@ -345,11 +386,16 @@ module Icss
   #
   #     {"type": "map", "values": "long"}
   #
-  class MapType < Type
+  class MapType < EnumerableType
     # FIXME: is items required? The schema doesn't say so.
     rcvr_accessor :values, TypeFactory
+    self.type = :map
+
+    def to_hash
+      super.merge( :values => values.to_s )
+    end
   end
-  HashType = MapType
+  HashType = MapType unless defined?(HashType)
 
   #
   # Describes an Avro Union type.
@@ -365,7 +411,8 @@ module Icss
   #
   # Unions may not immediately contain other unions.
   #
-  class UnionType < Type
+  class UnionType < EnumerableType
+    self.type = :union
     def receive *args
       raise "Not implemented yet"
     end
@@ -386,65 +433,26 @@ module Icss
   #
   class FixedType < Type
     rcvr_accessor :size, Integer, :required => true
-  end
 
-  #
-  #
-  #
-  class TypeFactory < Type
-    # I feel like the case statement below could be improved...
-    def self.receive hsh
-      hsh = hsh.symbolize_keys
-      type = hsh[:type].to_sym
-      # p [self, 'receive', type, hsh, Icss::Type::DERIVED_TYPES]
-      case
-      when primitive?(type)
-        find(type).receive(hsh)
-      when type == :record
-        klass = build_record_type(hsh)
-        klass.receive(hsh)
-      when obj = self.find(type)
-        obj.receive(hsh)
-      else
-        raise "hell"
-      end
-    end
-
-    def self.build_record_type hsh
-      klass_name = hsh[:name].to_s.classify+"Type"
-      klass = Icss::Type.const_set(klass_name, Class.new(Icss::RecordType))
-      # FIXME: doesn't follow receive pattern
-      klass.name = hsh[:name].to_s.to_sym if hsh[:name]
-      klass.doc  = hsh[:doc]              if hsh[:doc]
-      klass.type = :record
-      ::Icss::Type::DERIVED_TYPES[hsh[:name].to_sym] = klass
+    def to_hash
+      super.merge( :size => size )
     end
   end
 
   Type.class_eval do
-    PRIMITIVE_TYPES  = {
-      :null    => NilClassType,
-      :boolean => BooleanType,
-      :string  => StringType,
-      :bytes   => BytesType,
-      :int     => IntegerType,
-      :long    => LongType,
-      :float   => FloatType,
-      :double  => DoubleType,
-    }.freeze unless defined?(PRIMITIVE_TYPES)
-    NAMED_TYPES      = {
-      :fixed   => :fixed,
-      :enum    => :enum,
+    Icss::Type::NAMED_TYPES      = {
+      :fixed   => FixedType,
+      :enum    => EnumType,
       :record  => RecordType,
-      :error   => :error
-    }.freeze unless defined?(NAMED_TYPES)
-    ENUMERABLE_TYPES = {
-      :array   => Array,
-      :map     => :map,
-      :union   => :union,
-      :request => :request,
-    }.freeze unless defined?(ENUMERABLE_TYPES)
-    VALID_TYPES     = (PRIMITIVE_TYPES.merge(NAMED_TYPES.merge(ENUMERABLE_TYPES))).freeze unless defined?(VALID_TYPES)
-    VALID_TYPES.each{|n, t| t.name = n if n.is_a?(Icss::Type) }
+      :error   => ErrorType
+    }.freeze unless defined?(Icss::Type::NAMED_TYPES)
+    Icss::Type::ENUMERABLE_TYPES = {
+      :array   => ArrayType,
+      :map     => MapType,
+      :union   => UnionType,
+      # :request => RequestType,
+    }.freeze unless defined?(Icss::Type::ENUMERABLE_TYPES)
+    Icss::Type::VALID_TYPES  = (Icss::Type::PRIMITIVE_TYPES.merge(Icss::Type::NAMED_TYPES.merge(Icss::Type::ENUMERABLE_TYPES))).freeze unless defined?(Icss::Type::VALID_TYPES)
+    Icss::Type::VALID_TYPES.each{|n, t| t.name = n if t.is_a?(Icss::Type) }
   end
 end
