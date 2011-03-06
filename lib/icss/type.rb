@@ -13,11 +13,19 @@ module Icss
 
   class Type
     include Receiver
-    rcvr :name,   String
-    rcvr :doc,    String
-    rcvr :type,   String
+    rcvr :name,    String
+    rcvr :doc,     String
+    rcvr :type,    String
+    rcvr :default, Object # accept and love the object just as it is
+    # Type documentation
+    class_inheritable_accessor :name, :doc
     # Schema factory
-    class_inheritable_accessor :ruby_klass, :name, :pig_name
+    class_inheritable_accessor :ruby_klass, :pig_name
+
+    #
+    #
+    #
+    class OrderEnum < String ; end
 
     #
     # Factory methods
@@ -88,7 +96,7 @@ module Icss
       klass = Icss::Type.const_set(klass_name, Class.new(Icss::RecordType))
       # FIXME: doesn't follow receive pattern
       klass.name = hsh[:name].to_s.to_sym if hsh[:name]
-      klass.doc  = hsh[:doc].to_s.to_sym  if hsh[:doc]
+      klass.doc  = hsh[:doc]              if hsh[:doc]
       klass.type = :record
       ::Icss::Type::DERIVED_TYPES[hsh[:name].to_sym] = klass
     end
@@ -101,6 +109,7 @@ module Icss
   #
   class RecordType < NamedType
     rcvr :fields, Array, :of => Icss::TypeFactory
+    rcvr :order,  OrderEnum
     class_inheritable_accessor :doc, :type
 
     def ruby_klass
@@ -123,6 +132,10 @@ module Icss
     end
   end
 
+  class NilClassType < Type
+    self.ruby_klass = NilClass
+    self.pig_name  = 'FIXME WHAT GOES HERE' # FIXME: ??
+  end
   class StringType < Type
     self.ruby_klass = String
     self.pig_name  = 'chararray'
@@ -158,7 +171,7 @@ module Icss
 
   Type.class_eval do
     PRIMITIVE_TYPES  = {
-      :null    => :null,
+      :null    => NilClassType,
       :boolean => BooleanType,
       :string  => StringType,
       :bytes   => BytesType,
