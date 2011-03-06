@@ -16,35 +16,35 @@ module Icss
     # Name should not be something like 'default', it should be something
     # that 'appeals' to the message name.
     #
-    rcvr :name, String
+    rcvr_accessor :name, String
   end
 
   class MysqlTarget < Target
-    rcvr :data_assets, Array, :of => String
-    rcvr :database,    String
-    rcvr :table_name,  String
+    rcvr_accessor :data_assets, Array, :of => String
+    rcvr_accessor :database,    String
+    rcvr_accessor :table_name,  String
   end
 
   class HbaseTarget < Target
-    rcvr :data_assets,   Array, :of => String
-    rcvr :database,      String
-    rcvr :table_name,    String
-    rcvr :column_family, String
-    rcvr :loader,        String
+    rcvr_accessor :data_assets,   Array, :of => String
+    rcvr_accessor :database,      String
+    rcvr_accessor :table_name,    String
+    rcvr_accessor :column_family, String
+    rcvr_accessor :loader,        String
   end
 
   class ElasticSearchTarget < Target
-    rcvr :data_assets,   Array, :of => String
-    rcvr :index_name, String
-    rcvr :id_field,   String
+    rcvr_accessor :data_assets,   Array, :of => String
+    rcvr_accessor :index_name, String
+    rcvr_accessor :id_field,   String
   end
 
   class CatalogTarget < Target
-    rcvr :name,        String
-    rcvr :title,       String
-    rcvr :description, String
-    rcvr :tags,        Array, :of => String
-    rcvr :messages,    Array, :of => String
-    rcvr :packages,    Array, :of => Hash
+    rcvr_accessor :name,        String
+    rcvr_accessor :title,       String
+    rcvr_accessor :description, String
+    rcvr_accessor :tags,        Array, :of => String
+    rcvr_accessor :messages,    Array, :of => String
+    rcvr_accessor :packages,    Array, :of => Hash
   end
 end
