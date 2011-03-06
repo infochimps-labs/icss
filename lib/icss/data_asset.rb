@@ -1,10 +1,10 @@
 module Icss
   class DataAsset
     include Receiver
-    rcvr :name,      String
-    rcvr :location,  String
-    rcvr :type,      String
-    rcvr :doc,       String
+    rcvr_accessor :name,      String
+    rcvr_accessor :location,  String
+    rcvr_accessor :type,      String
+    rcvr_accessor :doc,       String
 
     def named? nm
       name == nm

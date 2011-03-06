@@ -2,8 +2,8 @@ module Icss
   class CodeAsset
     include Receiver
 
-    rcvr :name,      String
-    rcvr :location,  String
+    rcvr_accessor :name,      String
+    rcvr_accessor :location,  String
 
     def to_hash()
       { :name => name, :location => location}

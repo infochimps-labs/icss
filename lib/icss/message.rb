@@ -1,11 +1,11 @@
 module Icss
   class Message
     include Receiver
-    rcvr :name,     String
-    rcvr :request,  Array, :of => :Hash
-    rcvr :response, Array
-    rcvr :errors,   Array
-    rcvr :doc,      String
+    rcvr_accessor :name,     String
+    rcvr_accessor :request,  Array, :of => :Hash
+    rcvr_accessor :response, Array
+    rcvr_accessor :errors,   Array
+    rcvr_accessor :doc,      String
     attr_accessor :protocol
 
     #

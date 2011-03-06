@@ -2,12 +2,12 @@ module Icss
   class Protocol
     include Receiver
 
-    rcvr :name,        String
-    rcvr :namespace,   String # must be *dotted* ("foo.bar"), not slashed ("foo/bar")
-    rcvr :types,       Array, :of => Icss::TypeFactory
-    rcvr :messages,    Hash,  :of => Icss::Message
-    rcvr :data_assets, Array, :of => Icss::DataAsset
-    rcvr :doc,         String
+    rcvr_accessor :name,        String
+    rcvr_accessor :namespace,   String # must be *dotted* ("foo.bar"), not slashed ("foo/bar")
+    rcvr_accessor :types,       Array, :of => Icss::TypeFactory
+    rcvr_accessor :messages,    Hash,  :of => Icss::Message
+    rcvr_accessor :data_assets, Array, :of => Icss::DataAsset
+    rcvr_accessor :doc,         String
 
     # String: namespace.name
     def fullname

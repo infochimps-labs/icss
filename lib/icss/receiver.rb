@@ -4,9 +4,6 @@ require 'time'
 # dummy type for receiving True or False
 class Boolean ; end unless defined?(Boolean)
 
-# dummy type for receiving "must be nil
-class Null ; end unless defined?(Null)
-
 # Receiver lets you describe complex (even recursive!) actively-typed data models that
 # * are creatable or assignable from static data structures
 # * perform efficient type conversion when assigning from a data structure,
@@ -15,9 +12,9 @@ class Null ; end unless defined?(Null)
 #
 #    class Tweet
 #      include Receiver
-#      rcvr :id,           Integer
-#      rcvr :user_id,      Integer
-#      rcvr :created_at,   Time
+#      rcvr_accessor :id,           Integer
+#      rcvr_accessor :user_id,      Integer
+#      rcvr_accessor :created_at,   Time
 #    end
 #    p Tweet.receive(:id => "7", :user_id => 9, :created_at => "20101231010203" )
 #     # => #<Tweet @id=7, @user_id=9, @created_at=2010-12-31 07:02:03 UTC>
@@ -26,9 +23,9 @@ class Null ; end unless defined?(Null)
 #
 #    class TwitterUser
 #      include Receiver
-#      rcvr :id,           Integer
-#      rcvr :screen_name,  String
-#      rcvr :follower_ids, Array, :of => Integer
+#      rcvr_accessor :id,           Integer
+#      rcvr_accessor :screen_name,  String
+#      rcvr_accessor :follower_ids, Array, :of => Integer
 #      # protect against receiving an id of "0" or ""
 #      def receive_id(v)
 #        raise "Missing id: #{v.inspect}" if v.to_i == 0
@@ -39,7 +36,7 @@ class Null ; end unless defined?(Null)
 # The receiver pattern works naturally with inheritance:
 #
 #    class TweetWithUser < Tweet
-#      rcvr :user, TwitterUser
+#      rcvr_accessor :user, TwitterUser
 #      def after_receive(hsh)
 #        self.user_id = self.user.id if self.user
 #      end
@@ -68,17 +65,17 @@ class Null ; end unless defined?(Null)
 module Receiver
   mattr_accessor :receiver_bodies
   self.receiver_bodies           = {}
-  self.receiver_bodies[Object]   = %q{ v } # accept and love the object just as it is
-  self.receiver_bodies[Null]     = %q{ raise "This field must be nil, but #{v} was given" unless (v.nil?) ; nil }
-  self.receiver_bodies[Integer]  = %q{ v.nil? ? nil : v.to_i }
-  self.receiver_bodies[Time]     = %q{ v.nil? ? nil : Time.parse(v).utc }
-  self.receiver_bodies[Date]     = %q{ v.nil? ? nil : Date.parse(v) }
-  self.receiver_bodies[Float]    = %q{ v.nil? ? nil : v.to_f }
   self.receiver_bodies[Symbol]   = %q{ v.to_sym }
   self.receiver_bodies[String]   = %q{ v.to_s }
-  self.receiver_bodies[Boolean]  = %q{ v.nil? ? nil : (v.strip != "false") }
+  self.receiver_bodies[Integer]  = %q{ v.nil? ? nil : v.to_i }
+  self.receiver_bodies[Float]    = %q{ v.nil? ? nil : v.to_f }
+  self.receiver_bodies[Time]     = %q{ v.nil? ? nil : Time.parse(v).utc }
+  self.receiver_bodies[Date]     = %q{ v.nil? ? nil : Date.parse(v) }
   self.receiver_bodies[Array]    = %q{ v.nil? ? nil : v }
   self.receiver_bodies[Hash]     = %q{ v.nil? ? nil : v }
+  self.receiver_bodies[Boolean]  = %q{ v.nil? ? nil : (v.strip != "false") }
+  self.receiver_bodies[NilClass] = %q{ raise "This field must be nil, but #{v} was given" unless (v.nil?) ; nil }
+  self.receiver_bodies[Object]   = %q{ v } # accept and love the object just as it is
   self.receiver_bodies.each do |k,b|
     k.class_eval %Q{
       def self.receive(v)
@@ -99,14 +96,33 @@ module Receiver
     #
     def rcvr name, type, info={}
       name = name.to_sym
-      attr_reader(name) unless method_defined?(name)
-      attr_writer(name) unless method_defined?("#{name}=")
       class_eval %Q{
         def receive_#{name}(v)
           @#{name} = #{receiver_body_for(type, info)}
         end
       }
       receiver_attrs[name] = { :type => type, :info => info }
+    end
+
+    # defines a receiver attribute, an attr_reader and an attr_writer
+    # attr_reader is skipped if the getter method is already defined;
+    # attr_writer is skipped if the setter method is already defined;
+    def rcvr_accessor name, type, info={}
+      attr_reader(name) unless method_defined?(name)
+      attr_writer(name) unless method_defined?("#{name}=")
+      rcvr name, type, info
+    end
+    # defines a receiver attribute and an attr_reader
+    # attr_reader is skipped if the getter method is already defined.
+    def rcvr_reader name, type, info={}
+      attr_reader(name) unless method_defined?(name)
+      rcvr name, type, info
+    end
+    # defines a receiver attribute and an attr_writer
+    # attr_writer is skipped if the setter method is already defined.
+    def rcvr_writer name, type, info={}
+      attr_writer(name) unless method_defined?("#{name}=")
+      rcvr name, type, info
     end
 
     # instantiate a new object and dispatch the hash for assignment. If your

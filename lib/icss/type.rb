@@ -13,10 +13,10 @@ module Icss
 
   class Type
     include Receiver
-    rcvr :name,    String
-    rcvr :doc,     String
-    rcvr :type,    String
-    rcvr :default, Object # accept and love the object just as it is
+    rcvr_accessor :name,    String
+    rcvr_accessor :doc,     String
+    rcvr_accessor :type,    String
+    rcvr_accessor :default, Object # accept and love the object just as it is
     # Type documentation
     class_inheritable_accessor :name, :doc
     # Schema factory
@@ -108,14 +108,14 @@ module Icss
   # A record type has fields, each of which
   #
   class RecordType < NamedType
-    rcvr :fields, Array, :of => Icss::TypeFactory
-    rcvr :order,  OrderEnum
+    rcvr_accessor :fields, Array, :of => Icss::TypeFactory
+    rcvr_accessor :order,  OrderEnum
     class_inheritable_accessor :doc, :type
 
     def ruby_klass
       @klass ||= Class.new do
         fields.each do |field|
-          rcvr field.name, field.ruby_klass
+          rcvr_accessor field.name, field.ruby_klass
         end
       end
     end
