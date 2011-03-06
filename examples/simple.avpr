@@ -63,8 +63,7 @@
      "ack": {
          "doc": "Send a one way message",
          "request": [],
-         "response": "null",
-         "one-way": true
+         "response": "null"
      }
  }
 

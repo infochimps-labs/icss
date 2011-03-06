@@ -10,8 +10,7 @@
              {"name": "port", "type": "int",
               "doc": "The port to transmit inputs to this task on."}
          ],
-         "response": "null",
-         "one-way": true
+         "response": "null"
      },
 
      "output": {
@@ -20,8 +19,7 @@
              {"name": "datum", "type": "bytes",
               "doc": "A binary-encoded instance of the declared schema."}
          ],
-         "response": "null",
-         "one-way": true
+         "response": "null"
      },
 
      "outputPartitioned": {
@@ -32,8 +30,7 @@
              {"name": "datum", "type": "bytes",
               "doc": "A binary-encoded instance of the declared schema."}
          ],
-         "response": "null",
-         "one-way": true
+         "response": "null"
      },
 
      "status": {
@@ -42,8 +39,7 @@
              {"name": "message", "type": "string",
               "doc": "The new status message for the task."}
          ],
-         "response": "null",
-         "one-way": true
+         "response": "null"
      },
 
      "count": {
@@ -56,8 +52,7 @@
              {"name": "amount", "type": "long",
               "doc": "The amount to incrment the counter."}
          ],
-         "response": "null",
-         "one-way": true
+         "response": "null"
      },
 
      "fail": {
@@ -66,15 +61,13 @@
              {"name": "message", "type": "string",
               "doc": "The reason for failure."}
          ],
-         "response": "null",
-         "one-way": true
+         "response": "null"
      },
 
      "complete": {
          "doc": "Called when a task's output has completed without error.",
          "request": [],
-         "response": "null",
-         "one-way": true
+         "response": "null"
      }
 
  }
