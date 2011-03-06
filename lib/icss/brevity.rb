@@ -8,33 +8,6 @@
 #
 #
 module Icss
-  Type.class_eval do
-    def inspect_with_brevity
-      ["#<#{self.class.name}",
-        inspect_hsh.map{|k,v| "#{k}=#{v}" },
-        ">",
-      ].join(" ")
-    end
-
-  private
-    def inspect_hsh
-      {
-        :name        => name,
-        :type        => type,
-        :doc         => "'#{(doc||"")[0..30].gsub(/[\n\t\r]+/,' ')}...'",
-    }
-    end
-  end
-
-  RecordType.class_eval do
-    private
-    # stuff a compact cartoon of the fields in there
-    def inspect_hsh
-      super.merge(
-        :fields => (fields||[]).inject({}){|h,f| h[f.name] = f.type ; h }.inspect
-        )
-    end
-  end
 
   Protocol.class_eval do
     def inspect
@@ -47,12 +20,90 @@ module Icss
     def inspect_hsh
       {
         :name        => name,
-        :namespace   => namespace,
+        :namespace   => @namespace,
         :types       => (types||[]).map(&:name).inspect,
         :messages    => (messages||{}).values.map(&:name).inspect,
         :data_assets => (data_assets||[]).map(&:name).inspect,
         :doc         => "'#{(doc||"")[0..30].gsub(/[\n\t\r]+/,' ')}...'",
       }
+    end
+  end
+
+  Message.class_eval do
+    def inspect
+      ["#<#{self.class.name}",
+        inspect_hsh.map{|k,v| "#{k}=#{v}" },
+        ">"
+      ].join(" ")
+    end
+
+    private
+    # stuff a compact cartoon of the fields in there
+    def inspect_hsh
+      {
+        :name        => name,
+        :types       => (types||[]).map(&:name).inspect,
+        :messages    => (messages||{}).values.map(&:name).inspect,
+        :data_assets => (data_assets||[]).map(&:name).inspect,
+        :doc         => "'#{(doc||"")[0..30].gsub(/[\n\t\r]+/,' ')}...'",
+      }
+    end
+  end
+
+  Type.class_eval do
+    def inspect
+      ["#<#{self.class.name}",
+        inspect_hsh.map{|k,v| "#{k}=#{v}" },
+        (respond_to?(:type) ? type : nil),
+        ">",
+      ].compact.join(" ")
+    end
+  private
+    def inspect_hsh
+      { :name        => name,
+        :doc         => "'#{(doc||"")[0..30].gsub(/[\n\t\r]+/,' ')}...'", }
+    end
+  end
+
+  NamedType.class_eval do
+    private
+    def inspect_hsh
+      super.merge( :namespace => @namespace )
+    end
+  end
+
+  RecordType.class_eval do
+    private
+    def inspect_hsh
+      super.merge( :fields  => (fields||[]).inject({}){|h,f| h[f.name] = f.type ; h }.inspect )
+    end
+  end
+
+  EnumType.class_eval do
+    private
+    def inspect_hsh
+      super.merge( :symbols => symbols.inspect )
+    end
+  end
+
+  FixedType.class_eval do
+    private
+    def inspect_hsh
+      super.merge( :size    => size.inspect )
+    end
+  end
+
+  ArrayType.class_eval do
+    private
+    def inspect_hsh
+      super.merge( :items   => items.inspect )
+    end
+  end
+
+  MapType.class_eval do
+    private
+    def inspect_hsh
+      super.merge( :values  => values.inspect )
     end
   end
 
