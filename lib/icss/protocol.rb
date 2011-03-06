@@ -96,8 +96,8 @@ module Icss
 
     def to_hash()
       {
-        :protocol    => protocol,
         :namespace   => @namespace, # use accessor so unset namespace isn't given
+        :protocol    => protocol,
         :doc         => doc,
         :types       => (types      ||[]).map{|t| t.to_hash },
         :messages    => (messages   ||{}).inject({}){|h,(k,v)| h[k] = v.to_hash; h },

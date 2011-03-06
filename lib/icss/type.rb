@@ -32,6 +32,10 @@ module Icss
 
     #
     def self.find type_name
+      if type_name.to_s.include?('.')
+        warn "crap. can't properly do namespaced types yet."
+        type_name = type_name.to_s.gsub(/(.*)\./, "")
+      end
       VALID_TYPES[type_name.to_sym] || DERIVED_TYPES[type_name.to_sym]
     end
 
@@ -133,7 +137,7 @@ module Icss
       if nm.include?('.')
         split_name = nm.split('.')
         @name      = split_name.pop
-        @namespace = split_name
+        @namespace = split_name.join('.')
       else
         @name = nm
       end
@@ -163,7 +167,7 @@ module Icss
     end
 
     def to_hash
-      super.merge( @namespace ? { :namespace => @namespace } : {} )
+      super.merge( @namespace ? { :namespace => @namespace } : {} ).merge( :type => self.class.type )
     end
   end
 
@@ -187,8 +191,7 @@ module Icss
       when type_info.is_a?(String) || type_info.is_a?(Symbol)
         Icss::Type.find(type_info)
       when type_info.is_a?(Array)
-        warn "Can't do union types yet"
-        UnionType.receive(:name => type_info.to_json)
+        UnionType.receive(type_info)
       else
         type_info  = type_info.symbolize_keys
         type_name = type_info[:type].to_sym
@@ -261,12 +264,12 @@ module Icss
     # QUESTION: should this be an override of order=, or of receive_order?
     def order= v
       raise "'order' may only take the values ascending (the default), descending, or ignore." unless v.nil? || ALLOWED_ORDERS.include?(v)
-      self.order = v
+      @order = v
     end
 
     def to_hash()
       { :name    => name,
-        :type    => (is_reference? ? type.name : type.to_hash),
+        :type    => (is_reference? ? (type ? type.name : "why null") : type.to_hash),
         :default => default,
         :order   => @order,
         :doc     => doc,
@@ -308,7 +311,7 @@ module Icss
     # end
 
     def to_hash
-      super.merge( :type => self.class.type, :fields => (fields||[]).map{|field| field.to_hash} )
+      super.merge( :fields => (fields||[]).map{|field| field.to_hash} )
     end
   end
 
@@ -351,6 +354,9 @@ module Icss
   #
   class EnumerableType < Type
     class_inheritable_accessor :type
+    def to_hash
+      super.merge( :type => type.to_s )
+    end
   end
 
   #
@@ -370,7 +376,7 @@ module Icss
     self.type = :array
 
     def to_hash
-      super.merge( :items => items.to_s )
+      super.merge( :items => items.name )
     end
   end
 
@@ -392,7 +398,7 @@ module Icss
     self.type = :map
 
     def to_hash
-      super.merge( :values => values.to_s )
+      super.merge( :values => values.to_hash )
     end
   end
   HashType = MapType unless defined?(HashType)
@@ -412,9 +418,15 @@ module Icss
   # Unions may not immediately contain other unions.
   #
   class UnionType < EnumerableType
+    attr_accessor :available_types
     self.type = :union
-    def receive *args
-      raise "Not implemented yet"
+
+    def receive! type_list
+      self.available_types = type_list.map{|type_info| TypeFactory.receive(type_info) }
+    end
+
+    def to_hash
+      available_types.map(&:to_hash)
     end
   end
 
@@ -431,8 +443,9 @@ module Icss
   #
   #     {"type": "fixed", "size": 16, "name": "md5"}
   #
-  class FixedType < Type
+  class FixedType < NamedType
     rcvr_accessor :size, Integer, :required => true
+    self.type = :fixed
 
     def to_hash
       super.merge( :size => size )
