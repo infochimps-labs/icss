@@ -2,16 +2,16 @@
   "namespace" : "org.apache.avro.ipc.trace",
   "protocol" : "AvroTrace",
   "types" : [ {
-    "type" : "enum",
     "name" : "SpanEvent",
+    "type" : "enum",
     "symbols" : [ "SERVER_RECV", "SERVER_SEND", "CLIENT_RECV", "CLIENT_SEND" ]
   }, {
-    "type" : "fixed",
     "name" : "ID",
+    "type" : "fixed",
     "size" : 8
   }, {
-    "type" : "record",
     "name" : "TimestampedEvent",
+    "type" : "record",
     "fields" : [ {
       "name" : "timeStamp",
       "type" : "long"
@@ -20,8 +20,8 @@
       "type" : [ "SpanEvent", "string" ]
     } ]
   }, {
-    "type" : "record",
     "name" : "Span",
+    "type" : "record",
     "fields" : [ {
       "name" : "traceID",
       "type" : "ID"
