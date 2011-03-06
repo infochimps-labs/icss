@@ -136,6 +136,7 @@ module Icss
     def name= nm
       if nm.include?('.')
         split_name = nm.split('.')
+        @use_fullname = true
         @name      = split_name.pop
         @namespace = split_name.join('.')
       else
@@ -167,7 +168,10 @@ module Icss
     end
 
     def to_hash
-      super.merge( @namespace ? { :namespace => @namespace } : {} ).merge( :type => self.class.type )
+      hsh = super
+      if    @use_fullname then hsh[:name] = fullname
+      elsif @namespace    then hsh.merge!( :namespace => @namespace ) ; end
+      hsh.merge( :type => self.class.type )
     end
   end
 
@@ -419,14 +423,19 @@ module Icss
   #
   class UnionType < EnumerableType
     attr_accessor :available_types
+    attr_accessor :referenced_types
     self.type = :union
 
     def receive! type_list
-      self.available_types = type_list.map{|type_info| TypeFactory.receive(type_info) }
+      self.available_types = type_list.map do |type_info|
+        type = TypeFactory.receive(type_info)
+        (referenced_types||=[]) << type if (type_info.is_a?(String) || type_info.is_a?(Symbol))
+        type
+      end
     end
 
     def to_hash
-      available_types.map(&:to_hash)
+      available_types.map{|t| t.name } #  (referenced_types||=[]).include?(t) ? t.name : t.to_hash }
     end
   end
 

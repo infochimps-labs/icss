@@ -21,17 +21,23 @@ module Icss
     rcvr_accessor :doc,      String
     rcvr_accessor :request,  Array, :of => Icss::RecordField
     rcvr_accessor :response, Icss::TypeFactory
-    rcvr_accessor :errors,   Array, :of => Icss::TypeFactory
+    rcvr_accessor :errors,   Icss::UnionType
     attr_accessor :protocol
+
+    def after_receive hsh
+      @response_is_reference = true if hsh['response'].is_a?(String) || hsh['response'].is_a?(Symbol)
+    end
 
     #
     # Conversion
     #
     def to_hash()
-      { :request  => (request||[]).map(&:to_hash),
-        :response => response.to_hash,
-        :errors   => (errors && errors.map(&:to_hash)),
-        :doc      => doc }.reject{|k,v| v.nil? }
+      {
+        :doc      => doc,
+        :request  => (request||[]).map(&:to_hash),
+        :response => (@response_is_reference ? response.name : response.to_hash),
+        :errors   => (errors && errors.to_hash),
+      }.reject{|k,v| v.nil? }
     end
     def to_json() to_hash.to_json ; end
   end

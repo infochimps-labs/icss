@@ -71,9 +71,9 @@ module Icss
     def after_receive hsh
       # Set each message's protocol to self, and if the name wasn't given, set
       # it using the message's hash key.
-      (self.messages||={}).each{|msg_name, msg| msg.protocol = self; msg.name ||= msg_name }
+      self.messages.each{|msg_name, msg| msg.protocol = self; msg.name ||= msg_name } if self.messages
       # Set all the type's parent to self (for namespace resolution)
-      (self.types   ||=[]).each{|type| type.parent  = self }
+      self.types.each{|type| type.parent  = self } if self.types
       validate_name
       validate_namespace
     end
@@ -99,7 +99,7 @@ module Icss
         :namespace   => @namespace, # use accessor so unset namespace isn't given
         :protocol    => protocol,
         :doc         => doc,
-        :types       => (types      ||[]).map{|t| t.to_hash },
+        :types       => (types       && types.map(&:to_hash)),
         :messages    => (messages   ||{}).inject({}){|h,(k,v)| h[k] = v.to_hash; h },
         :data_assets => (data_assets && data_assets.map(&:to_hash)),
         :code_assets => (code_assets && code_assets.map(&:to_hash)),
