@@ -76,14 +76,14 @@ module Icss
   # Registry for primitive types
   unless defined?(::Icss::Type::PRIMITIVE_TYPES)
     ::Icss::Type::PRIMITIVE_TYPES = {}
-    ::Icss::Type::PRIMITIVE_TYPES[:null]    = PrimitiveType.new(:ruby_klass => NilClass, :pig_name => 'FIXME WHAT GOES HERE' )
-    ::Icss::Type::PRIMITIVE_TYPES[:boolean] = PrimitiveType.new(:ruby_klass => Boolean,  :pig_name => 'FIXME WHAT GOES HERE')
-    ::Icss::Type::PRIMITIVE_TYPES[:string]  = PrimitiveType.new(:ruby_klass => Integer,  :pig_name => 'int')
-    ::Icss::Type::PRIMITIVE_TYPES[:bytes]   = PrimitiveType.new(:ruby_klass => Integer,  :pig_name => 'long')
-    ::Icss::Type::PRIMITIVE_TYPES[:int]     = PrimitiveType.new(:ruby_klass => Float,    :pig_name => 'float')
-    ::Icss::Type::PRIMITIVE_TYPES[:long]    = PrimitiveType.new(:ruby_klass => Float,    :pig_name => 'double')
-    ::Icss::Type::PRIMITIVE_TYPES[:float]   = PrimitiveType.new(:ruby_klass => String,   :pig_name => 'bytearray')
-    ::Icss::Type::PRIMITIVE_TYPES[:double]  = PrimitiveType.new(:ruby_klass => String,   :pig_name => 'chararray')
+    ::Icss::Type::PRIMITIVE_TYPES[:null]    = PrimitiveType.receive(:ruby_klass => NilClass, :pig_name => 'FIXME WHAT GOES HERE' )
+    ::Icss::Type::PRIMITIVE_TYPES[:boolean] = PrimitiveType.receive(:ruby_klass => Boolean,  :pig_name => 'FIXME WHAT GOES HERE')
+    ::Icss::Type::PRIMITIVE_TYPES[:string]  = PrimitiveType.receive(:ruby_klass => Integer,  :pig_name => 'int')
+    ::Icss::Type::PRIMITIVE_TYPES[:bytes]   = PrimitiveType.receive(:ruby_klass => Integer,  :pig_name => 'long')
+    ::Icss::Type::PRIMITIVE_TYPES[:int]     = PrimitiveType.receive(:ruby_klass => Float,    :pig_name => 'float')
+    ::Icss::Type::PRIMITIVE_TYPES[:long]    = PrimitiveType.receive(:ruby_klass => Float,    :pig_name => 'double')
+    ::Icss::Type::PRIMITIVE_TYPES[:float]   = PrimitiveType.receive(:ruby_klass => String,   :pig_name => 'bytearray')
+    ::Icss::Type::PRIMITIVE_TYPES[:double]  = PrimitiveType.receive(:ruby_klass => String,   :pig_name => 'chararray')
     ::Icss::Type::PRIMITIVE_TYPES.freeze
   end
 
