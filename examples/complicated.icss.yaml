@@ -1,0 +1,158 @@
+---
+namespace: util.time
+protocol: chronic
+
+doc: >-
+  An API call to parse human-readable date / time strings
+
+data_assets: []
+      
+code_assets:
+  - location:   code/chronic_endpoint.rb
+    type:       apeyeye_endpoint
+      
+types:
+    - name: a_atsigns_b_params
+      type: record
+      doc:  ""
+      fields:
+        - name: user_a_id
+          type: int
+        - name: user_a_sn
+          type: string
+        - name: user_b_id
+          type: int
+        - name: user_b_sn
+          type: string
+        
+
+    - name: your_mom
+      type: record
+      doc:  "hi"
+      fields:
+        - name: went_to_college
+          type: int
+          
+    - name:     chronic_parse_params
+      type:     record
+      doc:
+        Query API parameters for the /util/time/chronic/parse call
+      fields:
+        - name: context
+          type: string
+          doc: >-
+              <tt>:past</tt> or <tt>:future</tt> (defaults to <tt>:future</tt>)
+              
+              If your string represents a birthday, you can set
+              <tt>:context</tt> to <tt>:past</tt> and if an ambiguous string is
+              given, it will assume it is in the past. Specify <tt>:future</tt>
+              or omit to set a future context.
+              
+        - name: now
+          type: string
+          doc: >-
+            Time (defaults to Time.now)
+            
+            By setting <tt>:now</tt> to a Time, all computations will be based off
+            of that time instead of Time.now. If set to nil, Chronic will use Time.now.
+
+        - name: guess
+          type: boolean
+          doc: >-
+            +true+ or +false+ (defaults to +true+)
+
+            By default, the parser will guess a single point in time for the
+            given date or time. If you'd rather have the entire time span returned,
+            set <tt>:guess</tt> to +false+ and a Chronic::Span will be returned.
+
+        - name: ambiguous_time_range
+          type: int
+          doc: >-
+            Integer or <tt>:none</tt> (defaults to <tt>6</tt> (6am-6pm))
+
+            If an Integer is given, ambiguous times (like 5:00) will be
+            assumed to be within the range of that time in the AM to that time
+            in the PM. For example, if you set it to <tt>7</tt>, then the parser will
+            look for the time between 7am and 7pm. In the case of 5:00, it would
+            assume that means 5:00pm. If <tt>:none</tt> is given, no assumption
+            will be made, and the first matching instance of that time will
+            be used.
+        - name: field_that_is_recursive
+          type: your_mom
+          doc:  wears combat boots
+          
+        # - name: field_that_is_an_array
+        #   type: array
+        #   items: int
+        #   doc:  I am an array of primitives
+        # - name: field_that_is_a_named_type_holy_fuck
+        #   type: array
+        #   items: your_mom
+        #   doc:  I am an array of Iccs::Type::YourMomType
+            
+    - name: chronic_parse_response
+      type: record
+      doc: |-
+        Query API response for the /util/time/chronic/parse call
+      fields:
+        - name: time
+          doc:  >-
+            The UTC parsed time, as a "ISO 8601 combined date time":http://en.wikipedia.org/wiki/ISO_8601 string.
+          type: string
+        - name: epoch_seconds
+          doc:  >-
+            The UTC parsed time, as "epoch seconds":http://en.wikipedia.org/wiki/Epoch_seconds integer.
+          type: int
+        - name: params
+          doc:  >-
+            Your params, right back atcha'
+          type: string  # map
+        # - name: errors
+        #   doc:  >-
+        #     Error conditions
+        #   type: array
+        #   optional: true
+        - name: whatever
+          doc:  dummy string
+          type:
+            name: embedded_record_def
+            type: record
+            doc:  I am an inline record definition
+            fields:
+            - name: name
+              type: string
+
+messages:
+  parse:
+    request:
+      - name: params
+        type: chronic_parse_params
+    response: chronic_parse_response
+    doc_file:
+      README.md
+
+# 
+# targets:
+#   mysql:
+#     # Name of the data asset, mysql table name will derived from this
+#     - table_name: word_freq_bnc
+#       database: lang_corp_word_freq_bnc
+#       data_assets:
+#         - word_freq_bnc_data_asset
+#         
+#   apidocs:
+#     - dest_path: /language/corpora/word_freq_bnc/token_frequency
+#       
+#   bulkdownload:
+#     - package_name: word_freq_bnc
+#       data_assets:
+#         - word_freq_bnc_data_asset
+#       
+#   catalog:
+#     # Name of the catalogue entry
+#     - name: word_freq_bnc
+#       title: Word Frequencies From the British National Corpus
+#       messages:
+#         - token_frequency
+#       packages:
+#         - word_freq_bnc
