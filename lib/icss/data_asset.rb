@@ -10,12 +10,8 @@ module Icss
       name == nm
     end
 
-    def type_obj
-      Icss::Type.find(type)
-    end
-
     def to_hash()
-      { :name => name, :location => request, :type => type, :doc => doc }
+      { :name => name, :location => location, :type => type, :doc => doc }
     end
     def to_json() to_hash.to_json ; end
   end
