@@ -101,7 +101,7 @@ module Receiver
           self.#{name} = #{receiver_body_for(type, info)}
         end
       }
-      receiver_attrs[name] = { :type => type, :info => info }
+      receiver_attrs << { :name => name, :type => type, :info => info }
     end
 
     # defines a receiver attribute, an attr_reader and an attr_writer
@@ -135,7 +135,7 @@ module Receiver
     end
 
     def receiver_attr_names
-      receiver_attrs.keys
+      receiver_attrs.map{|h| h[:name] }
     end
 
   private
@@ -171,7 +171,7 @@ module Receiver
   def self.included base
     base.class_eval do
       class_inheritable_accessor :receiver_attrs
-      self.receiver_attrs = {}
+      self.receiver_attrs = []
       extend ClassMethods
     end
   end
