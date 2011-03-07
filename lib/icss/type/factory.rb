@@ -39,14 +39,12 @@ module Icss
       klass = define_klass
       decorate_with_receivers(klass)
       decorate_with_conveniences(klass)
-      p klass
       @klass = klass
     end
 
     def decorate_with_receivers klass
       fields.each do |field|
         field.define_receiver_on(klass)
-        p klass.receiver_attr_names
       end
     end
 

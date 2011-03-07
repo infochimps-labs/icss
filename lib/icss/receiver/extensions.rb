@@ -166,7 +166,6 @@ module Receiver
     # Return a Hash containing only values for the given keys where self.has_key?(k)
     #
     def slice *allowed_keys
-      p allowed_keys
       allowed_keys.inject({}){|h,k| h[k] = self[k] if self.has_key?(k) ; h }
     end
 

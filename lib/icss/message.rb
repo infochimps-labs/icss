@@ -38,11 +38,19 @@ module Icss
     def to_hash()
       {
         :doc      => doc,
-        :request  => (request||[]).map(&:to_hash),
-        :response => (@response_is_reference ? response.name : response.to_hash),
+        :request  => summary_of_request_attr,
+        :response => summary_of_response_attr,
         :errors   => (errors && errors.to_hash),
       }.reject{|k,v| v.nil? }
     end
     def to_json() to_hash.to_json ; end
+
+  private
+    def summary_of_response_attr
+      case when response.blank? then response when @response_is_reference then response.name else response.to_hash end
+    end
+    def summary_of_request_attr
+      (request||[]).map(&:to_hash)
+    end
   end
 end

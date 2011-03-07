@@ -42,8 +42,8 @@ module Icss
     def inspect_hsh
       {
         :name        => name,
-        :request     => (request||[]).map(&:type).map(&:name),
-        :response    => response.name,
+        :request     => summary_of_request_attr, # (request||[]).map(&:type).map(&:name),
+        :response    => summary_of_response_attr,
         :errors      => errors.inspect,
         :protocol    => (protocol && protocol.protocol),
         :doc         => "'#{(doc||"")[0..30].gsub(/[\n\t\r]+/,' ')}...'",
