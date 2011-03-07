@@ -273,9 +273,13 @@ module Icss
       @order = v
     end
 
+    def record?
+      type.is_a? Icss::RecordType
+    end
+
     def to_hash()
       { :name    => name,
-        :type    => (is_reference? ? type.name : type.to_hash),
+        :type    => (is_reference? ? (type && type.name) : type.to_hash),
         :default => default,
         :order   => @order,
         :doc     => doc,
@@ -351,7 +355,7 @@ module Icss
   # (do not confuse with EnumType, which is not an EnumerableType. sigh).
   #
   class EnumerableType < Type
-    class_inheritable_accessor :type
+    class_inheritable_accessor :type, :ruby_klass
     def to_hash
       super.merge( :type => type.to_s )
     end
@@ -372,9 +376,10 @@ module Icss
     # FIXME: is items required? The schema doesn't say so.
     rcvr_accessor :items, TypeFactory
     self.type = :array
+    self.ruby_klass = Array
 
     def to_hash
-      super.merge( :items => items.name )
+      super.merge( :items => (items && items.name) )
     end
   end
 
@@ -394,6 +399,7 @@ module Icss
     # FIXME: is items required? The schema doesn't say so.
     rcvr_accessor :values, TypeFactory
     self.type = :map
+    self.ruby_klass = Hash
 
     def to_hash
       super.merge( :values => values.to_hash )
@@ -448,7 +454,9 @@ module Icss
   #
   class FixedType < NamedType
     rcvr_accessor :size, Integer, :required => true
+    class_inheritable_accessor :ruby_klass
     self.type = :fixed
+    self.ruby_klass = String
 
     def to_hash
       super.merge( :size => size )

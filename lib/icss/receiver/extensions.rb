@@ -40,7 +40,7 @@ module Receiver
     # Note: indifferent access -- either of :foo or "foo" will work
     #
     def [](name)
-      self.send(name)
+      self.send(name) if keys.include?(name)
     end
 
     # Fake hash writer semantics: delegates to self.send("key=", val)
@@ -49,7 +49,7 @@ module Receiver
     # NOTE: indifferent access -- either of :foo or "foo" will work
     #
     def []=(name, val)
-      self.send("#{name}=", val)
+      self.send("#{name}=", val) if keys.include?(name)
     end
     alias_method(:store, :[]=)
 
@@ -166,7 +166,8 @@ module Receiver
     # Return a Hash containing only values for the given keys where self.has_key?(k)
     #
     def slice *allowed_keys
-      allowed_keys.inject({}).each{|h,k| h[k] = self[k] if self.has_key?(k) }
+      p allowed_keys
+      allowed_keys.inject({}){|h,k| h[k] = self[k] if self.has_key?(k) ; h }
     end
 
     # Calls block once for each key in #keys in order, passing the key and value as parameters.
