@@ -28,6 +28,10 @@ module Icss
       @response_is_reference = true if hsh['response'].is_a?(String) || hsh['response'].is_a?(Symbol)
     end
 
+    def path
+      File.join(protocol.path, name)
+    end
+
     #
     # Conversion
     #

@@ -198,6 +198,7 @@ module Icss
         UnionType.receive(type_info)
       else
         type_info  = type_info.symbolize_keys
+        raise "No type was given in #{type_info.inspect}" if type_info[:type].blank?
         type_name = type_info[:type].to_sym
         type = Icss::Type.find(type_name)
         obj  = type.receive(type_info)

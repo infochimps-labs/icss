@@ -5,7 +5,9 @@ module Icss
 
   Message.class_eval do
     def query_string
-      request_types.map do |type| "#{type.name}=[value]" end.join("&")
+      # request.first.fields.map do |field| "#{field.name}=[value]"
+      # end.join("&")
+      request.first.fields.inspect
     end
 
     def api_url
