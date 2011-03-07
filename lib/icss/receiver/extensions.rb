@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 module Receiver
 
   #
@@ -18,10 +17,21 @@ module Receiver
   #
   # in addition to the below, by including Enumerable, this also adds
   #
-  #   #to_a (#entries), #all?, #any?, #collect (#map), #detect (#find),
-  #   #each_with_index, find_all (#select), #grep, #inject, #max, #min,
-  #   #partition, #reject, sort, #sort_by, and #zip. (and perhaps more)
+  #    #all?, #any?, #chunk, #collect, #collect_concat, #count, #cycle, #detect,
+  #    #drop, #drop_while, #each_cons, #each_entry, #each_slice,
+  #    #each_with_index, #each_with_object, #entries, #find, #find_all,
+  #    #find_index, #first, #flat_map, #grep, #group_by, #inject, #map, #max,
+  #    #max_by, #min, #min_by, #minmax, #minmax_by, #none?, #one?, #partition,
+  #    #reduce, #reverse_each, #slice_before, #sort, #sort_by, #take,
+  #    #take_while, #zip
   #
+  # As opposed to hash, does *not* define
+  #
+  #   default, default=, default_proc, default_proc=, shift
+  #   length, size, empty?, flatten, replace, keep_if, key(value)
+  #   compare_by_identity compare_by_identity? rehash, select!
+  #
+  #   assoc rassoc
   #
   module ActsAsHash
 
@@ -41,6 +51,7 @@ module Receiver
     def []=(name, val)
       self.send("#{name}=", val)
     end
+    alias_method(:store, :[]=)
 
     # @param key<Object> The key to check for.
     #
@@ -77,7 +88,7 @@ module Receiver
     def delete(key)
       val = self[key]
       self[key]= nil
-      self.remove_instance_variable("@#{key}") if self.instance_variable_defined?("@#{key}")
+      self.send(:remove_instance_variable, "@#{key}") if self.instance_variable_defined?("@#{key}")
       val
     end
 
@@ -87,9 +98,9 @@ module Receiver
     # Each key in #keys becomes an element in the new array if the value of its
     # attribute is non-nil OR the corresponding instance_variable is defined.
     def to_hash
-      keys.inject({}) do |hsh, k|
-        val = self[k]
-        hsh[k] = val if (val || self.instance_variable_defined?("@#{key}"))
+      keys.inject({}) do |hsh, key|
+        val = self[key]
+        hsh[key] = val if (val || self.instance_variable_defined?("@#{key}"))
         hsh
       end
     end
@@ -133,9 +144,9 @@ module Receiver
       end
     end
 
-    # a nested array of [ key, value ] pairs.
+    # a nested array of [ key, value ] pairs. Delegates to to_hash.to_a
     def to_a
-      keys.map{|k| [k, self[k]] }
+      to_hash.to_a
     end
 
     # @return [Hash] the object as a Hash with symbolized keys.
@@ -158,6 +169,7 @@ module Receiver
       allowed_keys.inject({}).each{|h,k| h[k] = self[k] if self.has_key?(k) }
     end
 
+    # Calls block once for each key in #keys in order, passing the key and value as parameters.
     def each &block
       keys.each do |key|
         yield(key, self[key])
@@ -165,10 +177,12 @@ module Receiver
     end
     alias_method :each_pair, :each
 
+    # Calls block once for each key in #keys in order, passing the key as parameter.
     def each_key &block
       keys.each(&block)
     end
 
+    # Calls block once for each key in #keys in order, passing the value as parameter.
     def each_value &block
       keys.each do |key|
         yield self[key]
@@ -229,6 +243,13 @@ module Receiver
       keys.find{|key| self[key] == val }
     end
 
+    # Returns a new hash created by using inverting self.to_hash. If this new
+    # hash has duplicate values, the result will contain only one of them as a
+    # key -- which one is not predictable.
+    def invert
+      to_hash.invert
+    end
+
     # Returns true if the given value is present for some attribute in #keys
     def has_value? val
       !! index(val)
@@ -240,6 +261,65 @@ module Receiver
     alias_method :key?,     :has_key?
     alias_method :member?,  :has_key?
 
+    # Deletes every attribute for which block is true.
+    # Returns nil if no changes were made, self otherwise.
+    def reject!(&block)
+      changed = false
+      each do |key, val|
+        if yield(key, val)
+          changed = true
+          delete(key)
+        end
+      end
+      changed ? self : nil
+    end
+
+    # Deletes every attribute for which block is true.
+    # Similar to reject! but returns self.
+    def delete_if(&block)
+      reject!(&block)
+      self
+    end
+
+    # Deletes every attribute for which block is true.
+    # Equivalent to self.dup.delete_if.
+    def reject(&block)
+      self.dup.delete_if(&block)
+    end
+
+    # deletes all attributes
+    def clear
+      each_key{|k| delete(k) }
+    end
+
+    # delete all attributes where the value is blank?, and return self. Contrast with compact!
+    def compact_blank!
+      delete_if{|k,v| v.blank? }
+    end
+    # delete all attributes where the value is nil?, and return self. Contrast with compact_blank!
+    def compact!
+      delete_if{|k,v| v.nil? }
+    end
+    # returns a hash with key/value pairs having nil? values removed
+    def compact
+      to_hash.delete_if{|k,v| v.nil? }
+    end
+    # returns a hash with key/value pairs having blank? values removed
+    def compact_blank
+      to_hash.delete_if{|k,v| v.blank? }
+    end
+
+    def self.included base
+      base.class_eval do
+        extend  ClassMethods
+        include Enumerable
+      end
+    end
+
+    #
+    # Not yet implemented
+    #
+
     # # Returns true if has_key? is false for all attributes in #keys
     # def empty?
     #   keys.all?{|key| not has_key?(key) }
@@ -250,20 +330,6 @@ module Receiver
     #   keys.select{|key| has_key?(key) }.length
     # end
     # alias_method :size, :length
-
-    #
-    # Not yet implemented
-    #
-
-    # clear
-    # delete_if
-    # # Same as Hash#delete_if, but works on (and returns) a copy of
-    # # hsh. Equivalent to self.dup.delete_if.
-    # def reject() end
-    # # Equivalent to Hash#delete_if, but returns nil if no changes were made.
-    # def reject!() end
-    #
-    # def invert() ; end
 
     # # @param key<Object> The key to fetch.
     # # @param *extras<Array> Default value.
@@ -277,27 +343,12 @@ module Receiver
     # #   result returned.
     # #
     # # fetch does not evaluate any default values supplied when
-    # # the hash was created—it only looks for keys in the hash.
+    # # the hash was created -- it only looks for keys in the hash.
     # #
     # # @return [Object] The value at key or the default value.
     # def fetch(key, default=nil, &block)
     #   raise ""
     # end
-
-    # #
-    # # remove all key-value pairs where the value is blank
-    # #
-    # def compact_blank
-    # end
-    #
-    # def compact() end
-    #
-    # def compact!() end
-    #
-    # # Removes a key/value pair from hsh and returns it as the two-item array
-    # # [ key, value ]. If the hash is empty, returns the default value, calls the
-    # # default proc (with a key value of nil), or returns nil.
-    # def shift() ; end
 
     # # Returns a new hash with +self+ and +other_hash+ merged recursively.
     # def deep_merge(other_hash)
@@ -314,13 +365,5 @@ module Receiver
     #   self
     # end
 
-    def self.included base
-      base.class_eval do
-        extend  ClassMethods
-        include Enumerable
-      end
-    end
-
-    alias_method :store, :[]=  # 3
   end
 end
