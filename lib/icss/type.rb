@@ -246,6 +246,7 @@ module Icss
     include Receiver
     rcvr_accessor :name,      String, :required => true
     rcvr_accessor :doc,       String
+    attr_accessor :type # work around a bug in ruby 1.8, which has defined (and deprecated) type
     rcvr_accessor :type,      Icss::Type, :required => true
     rcvr_accessor :default,   Object # accept and love the object just as it is
     rcvr          :order,     String
@@ -274,7 +275,7 @@ module Icss
 
     def to_hash()
       { :name    => name,
-        :type    => (is_reference? ? (type ? type.name : "why null") : type.to_hash),
+        :type    => (is_reference? ? type.name : type.to_hash),
         :default => default,
         :order   => @order,
         :doc     => doc,
@@ -306,14 +307,6 @@ module Icss
   class RecordType < NamedType
     rcvr_accessor :fields, Array, :of => Icss::RecordField, :required => true
     self.type = :record
-
-    # def ruby_klass
-    #   @klass ||= Class.new do
-    #     fields.each do |field|
-    #       instance_eval{ field.define_receiver }
-    #     end
-    #   end
-    # end
 
     def to_hash
       super.merge( :fields => (fields||[]).map{|field| field.to_hash} )
