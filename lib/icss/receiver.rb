@@ -89,6 +89,16 @@ module Receiver
     :symbol => Symbol,  :string  => String,
   }.each{|t_alias, t| self.receiver_bodies[t_alias] = self.receiver_bodies[t] }
 
+  # modify object in place with new typecast values.
+  def receive! hsh
+    self.class.receiver_attr_names.each do |attr|
+      if    hsh.has_key?(attr.to_sym) then self.send("receive_#{attr}", hsh[attr.to_sym])
+      elsif hsh.has_key?(attr.to_s)   then self.send("receive_#{attr}", hsh[attr.to_s])
+      end
+    end
+    after_receive(hsh) if respond_to?(:after_receive)
+  end
+
   module ClassMethods
     #
     # define a receiver attribute.
@@ -152,16 +162,6 @@ module Receiver
         raise("Can't receive #{type} #{info}")
       end
     end
-  end
-
-  # modify object in place with new typecast values.
-  def receive! hsh
-    self.class.receiver_attr_names.each do |attr|
-      if    hsh.has_key?(attr.to_sym) then self.send("receive_#{attr}", hsh[attr.to_sym])
-      elsif hsh.has_key?(attr.to_s)   then self.send("receive_#{attr}", hsh[attr.to_s])
-      end
-    end
-    after_receive(hsh) if respond_to?(:after_receive)
   end
 
   # set up receiver attributes, and bring in methods from the ClassMethods module at class-level
