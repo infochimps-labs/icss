@@ -42,9 +42,10 @@ module Icss
     def inspect_hsh
       {
         :name        => name,
-        :types       => (types||[]).map(&:name).inspect,
-        :messages    => (messages||{}).values.map(&:name).inspect,
-        :data_assets => (data_assets||[]).map(&:name).inspect,
+        :request     => (request||[]).map(&:type).map(&:name),
+        :response    => response.name,
+        :errors      => errors.inspect,
+        :protocol    => (protocol && protocol.protocol),
         :doc         => "'#{(doc||"")[0..30].gsub(/[\n\t\r]+/,' ')}...'",
       }
     end
@@ -53,8 +54,8 @@ module Icss
   Type.class_eval do
     def inspect
       ["#<#{self.class.name}",
+        @type,
         inspect_hsh.map{|k,v| "#{k}=#{v}" },
-        (respond_to?(:type) ? type : nil),
         ">",
       ].compact.join(" ")
     end
@@ -62,6 +63,12 @@ module Icss
     def inspect_hsh
       { :name        => name,
         :doc         => "'#{(doc||"")[0..30].gsub(/[\n\t\r]+/,' ')}...'", }
+    end
+  end
+
+  PrimitiveType.class_eval do
+    def inspect
+      "#<#{self.class.name} #{name}>"
     end
   end
 
@@ -75,7 +82,7 @@ module Icss
   RecordType.class_eval do
     private
     def inspect_hsh
-      super.merge( :fields  => (fields||[]).inject({}){|h,f| h[f.name] = f.type ; h }.inspect )
+      super.merge( :fields  => (fields||[]).inject({}){|h,f| h[f.name] = ((f.type && f.is_reference?) ? f.type.name : f.type) ; h }.inspect )
     end
   end
 
