@@ -63,20 +63,19 @@ class Boolean ; end unless defined?(Boolean)
 #    # => #<Tweet @id=7, @user_id=nil, @created_at=2009-05-06 12:08:09 UTC>
 #
 module Receiver
-  mattr_accessor :receiver_bodies
-  self.receiver_bodies           = {}
-  self.receiver_bodies[Symbol]   = %q{ v.to_sym }
-  self.receiver_bodies[String]   = %q{ v.to_s }
-  self.receiver_bodies[Integer]  = %q{ v.nil? ? nil : v.to_i }
-  self.receiver_bodies[Float]    = %q{ v.nil? ? nil : v.to_f }
-  self.receiver_bodies[Time]     = %q{ v.nil? ? nil : Time.parse(v).utc }
-  self.receiver_bodies[Date]     = %q{ v.nil? ? nil : Date.parse(v) }
-  self.receiver_bodies[Array]    = %q{ v.nil? ? nil : v }
-  self.receiver_bodies[Hash]     = %q{ v.nil? ? nil : v }
-  self.receiver_bodies[Boolean]  = %q{ v.nil? ? nil : (v.strip != "false") }
-  self.receiver_bodies[NilClass] = %q{ raise "This field must be nil, but #{v} was given" unless (v.nil?) ; nil }
-  self.receiver_bodies[Object]   = %q{ v } # accept and love the object just as it is
-  self.receiver_bodies.each do |k,b|
+  RECEIVER_BODIES           = {}
+  RECEIVER_BODIES[Symbol]   = %q{ v.to_sym }
+  RECEIVER_BODIES[String]   = %q{ v.to_s }
+  RECEIVER_BODIES[Integer]  = %q{ v.nil? ? nil : v.to_i }
+  RECEIVER_BODIES[Float]    = %q{ v.nil? ? nil : v.to_f }
+  RECEIVER_BODIES[Time]     = %q{ v.nil? ? nil : Time.parse(v).utc }
+  RECEIVER_BODIES[Date]     = %q{ v.nil? ? nil : Date.parse(v) }
+  RECEIVER_BODIES[Array]    = %q{ v.nil? ? nil : v }
+  RECEIVER_BODIES[Hash]     = %q{ v.nil? ? nil : v }
+  RECEIVER_BODIES[Boolean]  = %q{ v.nil? ? nil : (v.strip != "false") }
+  RECEIVER_BODIES[NilClass] = %q{ raise "This field must be nil, but #{v} was given" unless (v.nil?) ; nil }
+  RECEIVER_BODIES[Object]   = %q{ v } # accept and love the object just as it is
+  RECEIVER_BODIES.each do |k,b|
     k.class_eval %Q{
       def self.receive(v)
         #{b}
@@ -87,7 +86,7 @@ module Receiver
     :time   => Time,    :date    => Date,
     :float  => Float,   :double  => Float,
     :symbol => Symbol,  :string  => String,
-  }.each{|t_alias, t| self.receiver_bodies[t_alias] = self.receiver_bodies[t] }
+  }.each{|t_alias, t| RECEIVER_BODIES[t_alias] = RECEIVER_BODIES[t] }
 
   # modify object in place with new typecast values.
   def receive! hsh
@@ -154,8 +153,8 @@ module Receiver
         %Q{ v.nil? ? nil : v.map{|el| #{info[:of]}.receive(el) } }
       when info[:of] && (type == Hash  || type == :hash || type == :map)
         %Q{ v.nil? ? nil : v.inject({}){|h, (el,val)| h[el] = #{info[:of]}.receive(val); h } }
-      when Receiver.receiver_bodies.include?(type)
-        Receiver.receiver_bodies[type]
+      when Receiver::RECEIVER_BODIES.include?(type)
+        Receiver::RECEIVER_BODIES[type]
       when type.is_a?(Class) || (type.is_a?(Symbol) && type.to_s =~ /^[A-Z]/)
         %Q{v.blank? ? nil : #{type}.receive(v) }
       else
