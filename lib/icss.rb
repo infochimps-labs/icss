@@ -10,3 +10,6 @@ require 'icss/data_asset'
 require 'icss/code_asset'
 require 'icss/target'
 require 'icss/protocol'
+
+require 'icss/type/factory'
+require 'icss/receiver/extensions'

@@ -66,6 +66,24 @@ module Icss
     end
   end
 
+  RecordField.class_eval do
+    def inspect
+      ["#<#{self.class.name}",
+        inspect_hsh.map{|k,v| "#{k}=#{v}" },
+        ">",
+      ].compact.join(" ")
+    end
+  private
+    def inspect_hsh
+      { :name        => name,
+        :type        => (is_reference? ? type.name : type.to_hash),
+        :default     => default,
+        :order       => @order,
+        :doc         => "'#{(doc||"")[0..30].gsub(/[\n\t\r]+/,' ')}...'",
+      }.reject{|k,v| v.nil? }
+    end
+  end
+
   PrimitiveType.class_eval do
     def inspect
       "#<#{self.class.name} #{name}>"
