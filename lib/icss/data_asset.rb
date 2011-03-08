@@ -3,6 +3,8 @@ module Icss
     include Receiver
     rcvr_accessor :name,      String
     rcvr_accessor :location,  String
+    #overriding ruby's deprecated but still present type attr on objects
+    attr_accessor :type
     rcvr_accessor :type,      String
     rcvr_accessor :doc,       String
 
