@@ -68,11 +68,11 @@ module Receiver
   RECEIVER_BODIES[String]   = %q{ v.to_s }
   RECEIVER_BODIES[Integer]  = %q{ v.nil? ? nil : v.to_i }
   RECEIVER_BODIES[Float]    = %q{ v.nil? ? nil : v.to_f }
-  RECEIVER_BODIES[Time]     = %q{ v.nil? ? nil : Time.parse(v).utc }
-  RECEIVER_BODIES[Date]     = %q{ v.nil? ? nil : Date.parse(v) }
+  RECEIVER_BODIES[Time]     = %q{ v.nil? ? nil : Time.parse(v.to_s).utc }
+  RECEIVER_BODIES[Date]     = %q{ v.nil? ? nil : Date.parse(v.to_s) }
   RECEIVER_BODIES[Array]    = %q{ v.nil? ? nil : v }
   RECEIVER_BODIES[Hash]     = %q{ v.nil? ? nil : v }
-  RECEIVER_BODIES[Boolean]  = %q{ v.nil? ? nil : (v.strip != "false") }
+  RECEIVER_BODIES[Boolean]  = %q{ v.nil? ? nil : (v.to_s.strip != "false") }
   RECEIVER_BODIES[NilClass] = %q{ raise "This field must be nil, but #{v} was given" unless (v.nil?) ; nil }
   RECEIVER_BODIES[Object]   = %q{ v } # accept and love the object just as it is
   RECEIVER_BODIES.each do |k,b|
