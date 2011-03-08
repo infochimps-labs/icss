@@ -101,8 +101,8 @@ module Receiver
   #
   def receive! hsh
     self.class.receiver_attr_names.each do |attr|
-      if    hsh.has_key?(attr.to_sym) then other_val = hsh[attr.to_sym]
-      elsif hsh.has_key?(attr.to_s)   then other_val = hsh[attr.to_s]
+      if    hsh.has_key?(attr.to_sym) then val = hsh[attr.to_sym]
+      elsif hsh.has_key?(attr.to_s)   then val = hsh[attr.to_s]
       else  next ; end
       _receive_attr attr, val
     end

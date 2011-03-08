@@ -251,24 +251,16 @@ module Receiver
         else  next ; end
         #
         self_val  = self[key]
-        p [key, self_val]
-        p [key, other_val]
-        p [key, self]
-        p [key, other_hash]
         case
-        when other_val.nil?                     then p 'next' ; next
-        when (not has_key?(key))                then p 'nil'  ; _receive_attr(key, other_val)
-        when receiver_attrs[key][:merge_as] == :hash_of_arrays then p 'ar_f'
+        when other_val.nil?                     then next
+        when (not has_key?(key))                then _receive_attr(key, other_val)
+        when receiver_attrs[key][:merge_as] == :hash_of_arrays
           self_val.merge!(other_val) do |k, v1, v2| case when v1.blank? then v2 when v2.blank? then v1 else v1 + v2 end end
-        when self_val.is_a?(Array)              then p 'app'  ; self[key] += other_val
-        when self_val.respond_to?(:deep_merge!) then p 'dpmg' ; self[key] = self_val.deep_merge!(other_val)
-        when self_val.respond_to?(:merge!)      then p 'mrg'  ; self[key] = self_val.merge!(other_val)
-        else                                         p 'else' ; _receive_attr(key, other_val)
+        when self_val.is_a?(Array)              then self[key] += other_val
+        when self_val.respond_to?(:deep_merge!) then self[key] = self_val.deep_merge!(other_val)
+        when self_val.respond_to?(:merge!)      then self[key] = self_val.merge!(other_val)
+        else                                         _receive_attr(key, other_val)
         end
-        p self_val
-        p self[key]
-        p [key, self]
-        puts '----'
       end
       after_receive(other_hash) if respond_to?(:after_receive)
       self
