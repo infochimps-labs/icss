@@ -94,7 +94,7 @@ module Receiver
     :float   => Float,   :double  => Float,
     :hash    => Hash,    :map     => Hash,
     :array   => Array,
-  }
+  } unless defined?(TYPE_ALIASES)
 
   #
   # modify object in place with new typecast values.
