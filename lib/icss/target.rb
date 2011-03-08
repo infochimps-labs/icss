@@ -43,7 +43,7 @@ module Icss
     rcvr_accessor :name,        String
     rcvr_accessor :title,       String
     rcvr_accessor :description, String
-    rcvr_accessor :price_in_cents, Integer
+    rcvr_accessor :price, Float
     rcvr_accessor :tags,        Array, :of => String
     rcvr_accessor :messages,    Array, :of => String
     rcvr_accessor :packages,    Array, :of => Hash
