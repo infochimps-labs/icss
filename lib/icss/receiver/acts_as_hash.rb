@@ -227,6 +227,53 @@ module Receiver
     end
     alias_method :merge!, :update
 
+    # # Returns a new hash with +self+ and +other_hash+ merged recursively.
+    # def deep_merge(other_hash)
+    #   dup.deep_merge!(other_hash)
+    # end
+
+    # Recursively merges using receive
+    #
+    # Modifies the full receiver chain in-place.
+    #
+    # For each key in keys,
+    # * if self's value is nil, receive the attribute.
+    # * if self's attribute is an Array, append to it.
+    # * if self's value responds to deep_merge!, deep merge it.
+    # * if self's value responds_to merge!, merge! it.
+    # * otherwise, receive the value from other_hash
+    #
+    def deep_merge!(other_hash)
+      keys.each do |key|
+        # get other's val if any
+        if    other_hash.has_key?(key.to_sym) then other_val = other_hash[key.to_sym]
+        elsif other_hash.has_key?(key.to_s)   then other_val = other_hash[key.to_s]
+        else  next ; end
+        #
+        self_val  = self[key]
+        p [key, self_val]
+        p [key, other_val]
+        p [key, self]
+        p [key, other_hash]
+        case
+        when other_val.nil?                     then p 'next' ; next
+        when (not has_key?(key))                then p 'nil'  ; _receive_attr(key, other_val)
+        when receiver_attrs[key][:merge_as] == :hash_of_arrays then p 'ar_f'
+          self_val.merge!(other_val) do |k, v1, v2| case when v1.blank? then v2 when v2.blank? then v1 else v1 + v2 end end
+        when self_val.is_a?(Array)              then p 'app'  ; self[key] += other_val
+        when self_val.respond_to?(:deep_merge!) then p 'dpmg' ; self[key] = self_val.deep_merge!(other_val)
+        when self_val.respond_to?(:merge!)      then p 'mrg'  ; self[key] = self_val.merge!(other_val)
+        else                                         p 'else' ; _receive_attr(key, other_val)
+        end
+        p self_val
+        p self[key]
+        p [key, self]
+        puts '----'
+      end
+      after_receive(other_hash) if respond_to?(:after_receive)
+      self
+    end
+
     # Searches the hash for an entry whose value == value, returning the
     # corresponding key. If multiple entries has this value, the key returned
     # will be that on one of the entries. If not found,returns nil.
@@ -350,20 +397,6 @@ module Receiver
     #   raise ""
     # end
 
-    # # Returns a new hash with +self+ and +other_hash+ merged recursively.
-    # def deep_merge(other_hash)
-    #   dup.deep_merge!(other_hash)
-    # end
-    #
-    # # Returns a new hash with +self+ and +other_hash+ merged recursively.
-    # # Modifies the receiver in place.
-    # def deep_merge!(other_hash)
-    #   other_hash.each_pair do |k,v|
-    #     tv = self[k]
-    #     self[k] = tv.is_a?(Hash) && v.is_a?(Hash) ? tv.deep_merge(v) : v
-    #   end
-    #   self
-    # end
 
   end
 end

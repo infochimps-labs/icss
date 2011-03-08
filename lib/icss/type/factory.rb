@@ -1,4 +1,3 @@
-
 module Icss
   class SynthesizedType
     include Receiver

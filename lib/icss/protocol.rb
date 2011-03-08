@@ -53,6 +53,8 @@ module Icss
   #
   class Protocol
     include Receiver
+    include Receiver::ActsAsHash
+    include Receiver::ActsAsLoadable
     include Icss::Validations
 
     rcvr_accessor :protocol,    String, :required => true
@@ -65,7 +67,7 @@ module Icss
     # extensions to avro
     rcvr_accessor :data_assets, Array, :of => Icss::DataAsset
     rcvr_accessor :code_assets, Array, :of => Icss::CodeAsset
-    rcvr_accessor :targets,     Hash,  :of => Icss::TargetListFactory
+    rcvr_accessor :targets,     Hash,  :of => Icss::TargetListFactory, :merge_as => :hash_of_arrays
 
     # attr_accessor :body
     def after_receive hsh
@@ -103,8 +105,16 @@ module Icss
         :messages    => (messages   ||{}).inject({}){|h,(k,v)| h[k] = v.to_hash; h },
         :data_assets => (data_assets && data_assets.map(&:to_hash)),
         :code_assets => (code_assets && code_assets.map(&:to_hash)),
-        :targets     => (targets     && targets.inject({}){|h,(k,v)| h[k] = v.to_hash; h }),
+        :targets     => (targets_to_hash),
       }.reject{|k,v| v.nil? }
+    end
+
+    def targets_to_hash
+      return unless targets
+      targets.inject({}) do |h,(k,targs)|
+        h[k] = targs.map{|t| t.respond_to?(:to_hash) ? t.to_hash : t }
+        h
+      end
     end
 
     # This will cause funny errors when it is an element of something that's to_json'ed
