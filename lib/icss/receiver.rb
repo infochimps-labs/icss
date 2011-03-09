@@ -77,11 +77,13 @@ module Receiver
   RECEIVER_BODIES[NilClass] = %q{ raise "This field must be nil, but #{v} was given" unless (v.nil?) ; nil }
   RECEIVER_BODIES[Object]   = %q{ v } # accept and love the object just as it is
   RECEIVER_BODIES.each do |k,b|
-    k.class_eval %Q{
+    if k.is_a?(Class)
+      k.class_eval <<-STR, __FILE__, __LINE__ + 1
       def self.receive(v)
         #{b}
       end
-    } if k.is_a?(Class)
+      STR
+    end
   end
 
   TYPE_ALIASES = {
@@ -137,11 +139,11 @@ module Receiver
     def rcvr name, type, info={}
       name = name.to_sym
       type = type_to_klass(type)
-      class_eval %Q{
+      class_eval  <<-STR, __FILE__, __LINE__ + 1
         def receive_#{name}(v)
           self.#{name} = #{receiver_body_for(type, info)}
         end
-      }
+      STR
       receiver_attr_names << name unless receiver_attr_names.include?(name)
       receiver_attrs[name] = info.merge({ :name => name, :type => type })
     end

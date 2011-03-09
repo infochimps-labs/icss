@@ -6,7 +6,7 @@ module Icss
   Message.class_eval do
     def query_string
       request.first.type.fields.map do |field|
-        "#{field.name}=[value]"
+        "#{field.name}="
       end.join("&")
     end
 
