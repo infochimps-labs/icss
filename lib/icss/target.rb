@@ -12,6 +12,7 @@ module Icss
 
   class Target
     include Receiver
+    include Receiver::ActsAsHash
     #
     # Name should not be something like 'default', it should be something
     # that 'appeals' to the message name.

@@ -46,11 +46,9 @@ module Icss
     #
     # Schema Translation
     #
-
-    def pig_name
-      self.class.pig_name
+    def self.pig_name
+      "undefined_#{self.to_s.underscore}"
     end
-
     #
     # Conversion
     #
@@ -398,7 +396,7 @@ module Icss
   class MapType < EnumerableType
     # FIXME: is items required? The schema doesn't say so.
     rcvr_accessor :values, TypeFactory
-    self.type = :map
+    self.type       = :map
     self.ruby_klass = Hash
 
     def to_hash

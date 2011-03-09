@@ -1,6 +1,7 @@
 module Icss
   class CodeAsset
     include Receiver
+    include Receiver::ActsAsHash
 
     rcvr_accessor :name,      String
     rcvr_accessor :location,  String

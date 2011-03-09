@@ -100,6 +100,7 @@ module Receiver
   # modify object in place with new typecast values.
   #
   def receive! hsh
+    raise "Can't receive (it isn't hashlike): #{hsh.inspect}" unless hsh.respond_to?(:[])
     self.class.receiver_attr_names.each do |attr|
       if    hsh.has_key?(attr.to_sym) then val = hsh[attr.to_sym]
       elsif hsh.has_key?(attr.to_s)   then val = hsh[attr.to_s]
@@ -205,8 +206,6 @@ module Receiver
       self.receiver_attrs      = {} # info about the attr
       self.receiver_attr_names = [] # ordered set of attr names
       extend ClassMethods
-      include Receiver::ActsAsHash
-      include Receiver::ActsAsLoadable
     end
   end
 end

@@ -1,6 +1,8 @@
 module Icss
   class DataAsset
     include Receiver
+    include Receiver::ActsAsHash
+
     rcvr_accessor :name,      String
     rcvr_accessor :location,  String
     #overriding ruby's deprecated but still present type attr on objects

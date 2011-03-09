@@ -17,6 +17,7 @@ module Icss
   #
   class Message
     include Receiver
+    include Receiver::ActsAsHash
     rcvr_accessor :name,     String
     rcvr_accessor :doc,      String
     rcvr_accessor :request,  Array, :of => Icss::RecordField
