@@ -134,7 +134,7 @@ module Receiver
     # #keys, guaranteed in same order
     def values
       values_at *keys
-    end
+    end unless method_defined?(:values)
 
     # Returns an array consisting of the value for each attribute in
     # allowed_keys, guaranteed in same order

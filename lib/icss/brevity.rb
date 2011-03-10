@@ -76,7 +76,7 @@ module Icss
   private
     def inspect_hsh
       { :name        => name,
-        :type        => (is_reference? ? type.name : type.to_hash),
+        :type        => expand_type,
         :default     => default,
         :order       => @order,
         :doc         => "'#{(doc||"")[0..30].gsub(/[\n\t\r]+/,' ')}...'",

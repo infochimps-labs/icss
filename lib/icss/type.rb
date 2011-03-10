@@ -42,6 +42,13 @@ module Icss
     def self.primitive? name
       PRIMITIVE_TYPES.include?(name.to_sym)
     end
+    def primitive?
+      false
+    end
+
+    def title
+      self.name
+    end
 
     #
     # Schema Translation
@@ -52,10 +59,6 @@ module Icss
     #
     # Conversion
     #
-
-    def title
-      self.name
-    end
 
     def to_hash()
       {:name => name, :doc => doc }.reject{|k,v| v.nil? }
@@ -72,6 +75,9 @@ module Icss
   class PrimitiveType < Type
     def to_hash
       name.to_s
+    end
+    def primitive?
+      true
     end
   end
 
@@ -194,6 +200,8 @@ module Icss
     def self.receive type_info
       # p ['----------', self, 'receive', type_info] # , Icss::Type::DERIVED_TYPES]
       case
+      when type_info.is_a?(Icss::Type)
+        type_info
       when type_info.is_a?(String) || type_info.is_a?(Symbol)
         Icss::Type.find(type_info)
       when type_info.is_a?(Array)
@@ -246,6 +254,7 @@ module Icss
   #
   class RecordField
     include Receiver
+    include Receiver::ActsAsHash
     rcvr_accessor :name,      String, :required => true
     rcvr_accessor :doc,       String
     attr_accessor :type # work around a bug in ruby 1.8, which has defined (and deprecated) type
@@ -281,11 +290,21 @@ module Icss
 
     def to_hash()
       { :name    => name,
-        :type    => (is_reference? ? (type && type.name) : type.to_hash),
+        :type    => expand_type,
         :default => default,
         :order   => @order,
         :doc     => doc,
       }.reject{|k,v| v.nil? }
+    end
+
+    def expand_type
+      case
+      when is_reference? && type.respond_to?(:name) then type.name
+      when is_reference?                            then '(_unspecified_)'
+      when type.is_a?(Array) then type.map{|t| t.to_hash }
+      when type.respond_to?(:to_hash) then type.to_hash
+      else type.to_s
+      end
     end
   end
 
@@ -343,7 +362,7 @@ module Icss
   # }
   #
   class EnumType < NamedType
-    rcvr_accessor :symbols, Array, :of => Symbol, :required => true
+    rcvr_accessor :symbols, Array, :of => String, :required => true
     self.type = :enum
 
     def to_hash
