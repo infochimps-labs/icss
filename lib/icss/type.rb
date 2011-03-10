@@ -53,6 +53,10 @@ module Icss
     # Conversion
     #
 
+    def title
+      self.name
+    end
+
     def to_hash()
       {:name => name, :doc => doc }.reject{|k,v| v.nil? }
     end
@@ -375,6 +379,10 @@ module Icss
     rcvr_accessor :items, TypeFactory
     self.type = :array
     self.ruby_klass = Array
+
+    def title
+      "array of #{items.title}"
+    end
 
     def to_hash
       super.merge( :items => (items && items.name) )
