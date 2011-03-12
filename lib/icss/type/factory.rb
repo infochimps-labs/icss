@@ -1,6 +1,10 @@
 module Icss
   class SynthesizedType
     include Receiver
+
+    def initialize *args
+      receive! *args unless args.empty?
+    end
   end
 
   class RecordType < NamedType

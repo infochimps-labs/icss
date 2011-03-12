@@ -89,6 +89,11 @@ module Icss
       fullname.gsub('.', '/')
     end
 
+    def find_message name
+      name = name.to_s.gsub("/", ".").split(".").last
+      messages && messages[name]
+    end
+
     def receive_targets hsh
       self.targets = hsh.inject({}) do |target_obj_hsh, (target_name, target_info_list)|
         target_obj_hsh[target_name] = TargetListFactory.receive(target_name, target_info_list) # returns an arry of targets
