@@ -1,5 +1,5 @@
 module Icss
-  class SynthesizedType
+  class MetaType
     include Receiver
 
     def initialize *args
@@ -33,7 +33,7 @@ module Icss
       parent_module = ruby_klass_parent
       klass_basename = ruby_klass_scope_names.last.to_sym
       klass   = parent_module.const_get(klass_basename) rescue nil
-      klass ||= parent_module.const_set(klass_basename, Class.new(::Icss::SynthesizedType))
+      klass ||= parent_module.const_set(klass_basename, Class.new(::Icss::MetaType))
       klass
     end
 
