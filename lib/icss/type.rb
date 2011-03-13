@@ -162,7 +162,7 @@ module Icss
     end
 
     def namespace
-      @namespace || parent.namespace
+      @namespace || (parent ? parent.namespace : "")
     end
 
     #
@@ -284,9 +284,9 @@ module Icss
       @order = v
     end
 
-    def record?
-      type.is_a? Icss::RecordType
-    end
+    def record?() type.is_a? Icss::RecordType end
+    def union?()  type.is_a? Array            end
+    def enum?()   type.is_a? Icss::EnumType   end
 
     def to_hash()
       { :name    => name,
