@@ -28,16 +28,16 @@ module Icss
 
   class HbaseTarget < Target
     rcvr_accessor :data_assets,   Array, :of => String
-    rcvr_accessor :database,      String
     rcvr_accessor :table_name,    String
     rcvr_accessor :column_family, String
     rcvr_accessor :loader,        String
   end
 
   class ElasticSearchTarget < Target
-    rcvr_accessor :data_assets,   Array, :of => String
-    rcvr_accessor :index_name, String
-    rcvr_accessor :id_field,   String
+    rcvr_accessor :data_assets, Array, :of => String
+    rcvr_accessor :index_name,  String
+    rcvr_accessor :id_field,    String
+    rcvr_accessor :object_type, String
   end
 
   class CatalogTarget < Target
@@ -45,7 +45,7 @@ module Icss
     rcvr_accessor :license,     String
     rcvr_accessor :title,       String
     rcvr_accessor :description, String
-    rcvr_accessor :price, Float
+    rcvr_accessor :price,       Float
     rcvr_accessor :tags,        Array, :of => String
     rcvr_accessor :messages,    Array, :of => String
     rcvr_accessor :packages,    Array, :of => Hash
