@@ -1,0 +1,211 @@
+h1. The Infochimps Stupid Schema (ICSS) Specification
+
+The icss is intended to be a complete description of a collection of related data and it's associated assets (data assets and code assets). This includes any data records, where those records live, as well as any api calls (messages) based on the the described records.
+
+Before any further proclamations here is complete example:
+
+<pre><code>
+---
+namespace: language.corpora.word_freq
+protocol: bnc
+
+messages:
+  word_stats:
+    request:
+      - name: word_stats_request
+        type: word_stats_request
+    response: word_statistics_record
+    doc: Query on a head word to get back word statistics (and word variants) from the British National Corpus.
+
+data_assets:
+  - name: word_stats_data_asset
+    location: data/word_stats
+    type: word_statistics_record
+
+code_assets:
+  - location: code/bnc_endpoint.rb
+    name: word_stats
+
+types:
+
+  - name: word_stats_request
+    type: record
+    doc: Query api parameters for the word_stats message
+    fields:
+      - name: head_word
+        type: string
+
+  - name: word_statistics_record
+    doc: |-
+      Here we provide plain text versions of the frequency lists contained in WFWSE. These are
+      raw unedited frequency lists produced by our software and do not contain the many
+      additional notes supplied in the book itself. The lists are tab delimited plain text so
+      can be imported into your prefered spreadsheet format. For the main lists we provide a
+      key to the columns. More details on the process undertaken in the preparation of the
+      lists can be found in the introduction to the book. These lists show dispersion ranging
+      between 0 and 1 rather than 0 and 100 as in the book. We multiplied the value by 100 and
+      rounded to zero decimal places in the book for reasons of space. Log likelihood values
+      are shown here to one decimal place rather than zero as in the book. Please note, all
+      frequencies are per million words.
+    type: record
+    fields:
+      - name: head_word
+        doc:  Word type headword - see pp.4-5
+        type: string
+      - name: part_of_speech
+        doc: Part of speech (grammatical word class - see pp. 12-13)
+        type: string
+      - name: head_word_freq_ppm
+        doc:  Rounded frequency per million word tokens (down to a minimum of 10 occurrences of a lemma per million)- see pp. 5. Where BOTH head word and lemmas appear
+        type: float
+      - name: head_word_range
+        doc: Range, the number of sectors of the corpus (out of a maximum of 100) in which the word occurs. Where BOTH head word and lemmas appear
+        type: int
+      - name: head_word_dispersion
+        doc: Dispersion value (Juilland's D) from a minimum of 0.00 to a maximum of 1.00. Where BOTH head word and lemmas appear
+        type: float
+      - name: variant_word
+        doc: Variant form of headword
+        type: string
+      - name: variant_word_freq_ppm
+        doc:  Rounded frequency per million word tokens (down to a minimum of 10 occurrences of a lemma per million)- see pp. 5. Where BOTH head word and lemmas appear
+        type: float
+      - name: variant_word_range
+        doc: Range, the number of sectors of the corpus (out of a maximum of 100) in which the word occurs. Where BOTH head word and lemmas appear
+        type: int
+      - name: variant_word_dispersion
+        doc: Dispersion value (Juilland's D) from a minimum of 0.00 to a maximum of 1.00. Where BOTH head word and lemmas appear
+        type: float
+
+targets:
+  mysql:
+    - table_name: bnc
+      database: language_corpora_word_freq
+      name: word_freq_bnc
+      data_assets:
+        - word_stats_data_asset
+
+  catalog:
+    - name: word_freq_bnc
+      title: Word Frequencies From the British National Corpus
+      description: |-
+        Here we provide plain text versions of the frequency lists contained in         WFWSE. These are
+        raw unedited frequency lists produced by our software and do not contain the many
+        additional notes supplied in the book itself. The lists are tab delimited plain text so
+        can be imported into your prefered spreadsheet format. For the main lists we provide a
+        key to the columns. More details on the process undertaken in the preparation of the
+        lists can be found in the introduction to the book. These lists show dispersion ranging
+        between 0 and 1 rather than 0 and 100 as in the book. We multiplied the value by 100 and
+        rounded to zero decimal places in the book for reasons of space. Log likelihood values
+        are shown here to one decimal place rather than zero as in the book. Please note, all
+        frequencies are per million words.
+      tags:
+        - token
+        - word
+        - corpus
+        - word-frequency
+        - british
+        - words
+        - language
+      messages:
+        - word_stats
+      packages:
+        - data_assets:
+            - word_stats_data_asset
+
+</code></pre>
+
+h2. namespace
+
+This field is the namespace for the entire icss. It should be interpreted as the 'category' and 'subcategory' and so on. While the nesting is allowed to be arbitrarily deep, nesting deeper than 2 is strongly discouraged unless you have a very good reason (you probably don't). Each additional category must be appended with a dot ('.').
+
+h2. protocol
+
+The short name of the collection. Together the protocol and namespace should be globally unique and fully qualify the data.
+
+h2. data_assets
+
+This section describes each data asset (a homogeneous chunk of data) as well as where it lives. By _lives_ this means the location, relative to the icss itself where the data asset lives. This section is written in the icss as an array of hashes where the fields of each hash are as follows:
+
+* @name@ - The name of the data asset.
+* @location@ - The _relative_ uri of the described data asset. This is always assumed to be a directory and contains one or more actual files. All of the files must be homogeneous amongst themselves in that they are identically formatted (and have the same fields in the same order when that makes sense).
+* @type@ - The fully qualified @type@ of the described data asset. The @type@ must be defined as a @record@ in the @types@ section of the icss.
+
+h2. code_assets
+
+This section describes each code asset (an auxillary piece of code) as well as where it lives. By _lives_ this means the location, relative to the icss itself, where the code asset lives. A typical code asset is the full definition of classes and functions required to implement a message in the @messages@ section of the icss. The code_assets section is written in the icss as an array of hashes where the fields of each hash are as follows:
+
+* @name@ - The name of the code asset.
+* @location@ - The location, _relative_ to the icss, of where the code asset exists.
+
+h2. types
+
+This section defines the fields (and their @type@) of each data asset, message request, and message response. It is a valid avro @types@ array and adheres to the 1.4.1 avro specification. Each entry in the array is called a @type@ and can be composed of primitive types (eg. string, int, float) as well as other types so long as they are defined in the @types@ array. Any referenced types must be defined in the types array before any definitions that refer to them. A @type@ definition can have the following fields:
+
+* @name@ - The name of the defined type.
+* @type@ - The @type@ of the defined type (think of it as the superclass). Typically @record@.
+* @doc@ - Top level documentation of this type describing what it is and some justification for its existence.
+* @fields@ - An array of @field@ hashes. See below.
+
+h3. fields
+
+The @fields@ section of a @type@ definition is an array of hashes with the following fields:
+
+* @name@ - the name of the field
+* @type@ - the @type@ of the field. Either a primitive type or a complex type. A complex type can be defined in line as a full type definition or previously in the @types@ array. See primitive types.
+* @doc@ - Documentation specific to this field.
+
+h3. Primitive Types
+
+The set of primitive type names is:
+
+* @null@ - no value
+* @boolean@ - a binary value
+* @int@ - 32-bit signed integer
+* @long@ - 64-bit signed integer
+* @float@ - single precision (32-bit) IEEE 754 floating-point number
+* @double@ - double precision (64-bit) IEEE 754 floating-point number
+* @bytes@ - sequence of 8-bit unsigned bytes
+* @string@ - unicode character sequence
+
+h2. messages
+
+This section defines the messages (remote procedure calls) against the collection. It is a hash where each entry has the the following fields:
+
+* @request@ - An array of requests. These are the arguments to the message. A request has two fields, a @name@ and a @type@ where the @type@ is defined in the @types@ section.
+* @response@ - A single response. This is the name of a @type@ defined in the @types@ section.
+* @errors@ - An optional array of named types that this message throws as errors.
+* @doc@ - Documentation specific to this message
+
+h2. targets
+
+This section defines publishing targets for the collection. It is a completely optional field. It is written as a hash with the following possible fields:
+
+h3. mysql
+
+This is an array where each entry is a hash describing how to map one or more data_assets into a MySQL database. Each entry has the following required fields:
+
+* @database@ - The mysql database to write data into
+* @table_name@ - The table name to write data into
+* @data_assets@ - An array of named data assets (that must exist in the @data_assets@ section, to write to @database@.@table_name@.
+
+h3. catalog
+
+This is an array where each entry is a hash describing a catalog entry on the Infochimps data catalog. Each entry has the following fields:
+
+* @name@ - The name of the catalog entry
+* @title@ - The display title of the catalog entry.
+* @description@ - A full description (can be textile) for the catalog entry that is displayed in the overview section on the catalog.
+* @tags@ - An array of tags describing the catalog entry
+* @messages@ - An array of message names to attach to the catalog entry. Each message will be fully documented on the catalog. The last message in the array will be available to explore with the api explorer.
+* @packages@ - An array of hashes. Each hash has a field called @data_assets@ which is an array of named data assets. Each data asset in the array will be bundled together into a single bulk download on the catalog.
+
+One or both of @messages@ and @packages@ must be present.
+
+h3. hbase
+
+TODO
+
+h3. elastic_search
+
+TODO
