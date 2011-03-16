@@ -29,7 +29,8 @@ module Receiver
     end
 
     def merge_from_file! filename
-      deep_merge! self.class.receive_from_file(filename)
+      other_obj = self.class.receive_from_file(filename)
+      deep_merge! other_obj
     end
 
     # put all the things in ClassMethods at class level

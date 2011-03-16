@@ -128,6 +128,7 @@ module Receiver
     # All args after the first are passed to the initializer.
     #
     def receive hsh, *args
+      hsh ||= {}
       obj = self.new(*args)
       obj.receive!(hsh)
     end

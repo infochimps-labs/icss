@@ -1,6 +1,6 @@
 require 'active_support/inflector' # for classify and constantize
 require 'active_support/core_ext/hash/keys'
-require 'active_support/core_ext/hash/deep_merge'
+# require 'active_support/core_ext/hash/deep_merge'
 
 $: << File.dirname(__FILE__)
 require 'icss/receiver'
