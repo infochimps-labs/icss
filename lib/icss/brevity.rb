@@ -3,8 +3,8 @@
 #
 #     require 'icss/brevity'
 #
-# makes the #inspect method on Icss::Type's be nice and readable, not GIGANTE
-# PIQUANTE OY CABRON
+# makes the #inspect method on Icss::Type's be nice and readable,
+# not GIGANTE PIQUANTE OY CABRON
 #
 #
 module Icss

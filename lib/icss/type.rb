@@ -92,6 +92,10 @@ module Icss
     ::Icss::Type::PRIMITIVE_TYPES[:long]    = PrimitiveType.receive(:ruby_klass => Integer,  :pig_name => 'long')
     ::Icss::Type::PRIMITIVE_TYPES[:float]   = PrimitiveType.receive(:ruby_klass => Float,    :pig_name => 'float')
     ::Icss::Type::PRIMITIVE_TYPES[:double]  = PrimitiveType.receive(:ruby_klass => Float,    :pig_name => 'double')
+    #
+    ::Icss::Type::PRIMITIVE_TYPES[:symbol]  = PrimitiveType.receive(:ruby_klass => Symbol,   :pig_name => 'chararray')
+    ::Icss::Type::PRIMITIVE_TYPES[:time]    = PrimitiveType.receive(:ruby_klass => Time,     :pig_name => 'chararray')
+    ::Icss::Type::PRIMITIVE_TYPES[:date]    = PrimitiveType.receive(:ruby_klass => Date,     :pig_name => 'chararray')
     ::Icss::Type::PRIMITIVE_TYPES.freeze
   end
 

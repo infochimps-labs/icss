@@ -65,7 +65,7 @@ class Boolean ; end unless defined?(Boolean)
 module Receiver
 
   RECEIVER_BODIES           = {} unless defined?(RECEIVER_BODIES)
-  RECEIVER_BODIES[Symbol]   = %q{ v.to_sym }
+  RECEIVER_BODIES[Symbol]   = %q{ v.nil? ? nil : v.to_sym }
   RECEIVER_BODIES[String]   = %q{ v.to_s }
   RECEIVER_BODIES[Integer]  = %q{ v.nil? ? nil : v.to_i }
   RECEIVER_BODIES[Float]    = %q{ v.nil? ? nil : v.to_f }
