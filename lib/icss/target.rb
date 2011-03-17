@@ -5,7 +5,7 @@ module Icss
   #
   class TargetListFactory
     def self.receive target_name, target_info_list
-      klass = ("Icss::"+target_name.classify+"Target").constantize
+      klass = ("Icss::"+target_name.camelize+"Target").constantize
       target_info_list.map{|target_info| klass.receive(target_info)}
     end
   end
@@ -24,6 +24,18 @@ module Icss
     rcvr_accessor :data_assets, Array, :of => String
     rcvr_accessor :database,    String
     rcvr_accessor :table_name,  String
+  end
+
+  class S3PkgTarget < Target
+  end
+
+  class BulkdownloadTarget < Target
+  end
+
+  class ApeyeyeTarget < Target
+  end
+
+  class ApidocsTarget < Target
   end
 
   class HbaseTarget < Target
