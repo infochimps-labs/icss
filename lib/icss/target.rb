@@ -41,7 +41,7 @@ module Icss
   class HbaseTarget < Target
     rcvr_accessor :data_assets,     Array, :of => String
     rcvr_accessor :table_name,      String
-    rcvr_accessor :column_families, Array :of => String
+    rcvr_accessor :column_families, Array, :of => String
     rcvr_accessor :column_family,   String
     rcvr_accessor :loader,          String
   end
