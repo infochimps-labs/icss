@@ -118,7 +118,7 @@ class Icss::Protocol
           "request"  => sample_req.request,
           "response" => sample_req.response,
           "error"    => sample_req.error,
-          "url"      => "?"+sample_req.url.query,
+          "url"      => "?"+sample_req.url('').query,
           "doc"      => sample_req.doc,
         }
         hsh["messages"][msg_name]["samples"] << sample_hsh.compact_blank!
