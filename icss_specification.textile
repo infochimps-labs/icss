@@ -208,4 +208,9 @@ TODO
 
 h3. elastic_search
 
-TODO
+This is an array where each entry is a hash describing how to map one or more data_assets into an ElasticSearch data store. Each entry has the following required fields:
+
+* @index_name@ - The name of the index to write data into. It need not already exist.
+* @object_type@ - The object type create. Many different types of objects can exist in the same index. Each @object_type@ has its own schema that will be updated dynamically by ElasticSearch as records of that type are indexed. If this dynamism is unwanted (in the case you have more complex fields like @date@ or @geo_point@) then you should use the rest API and PUT the appropriate schema mapping ahead of time.
+* @id_field@ - If the records have an inherent id then this is the name of the field to use as id when indexing. If this field is left out the records will be assigned an id dynamically during indexing.
+* @data_assets@ - An array of named data assets (that must exist in the @data_assets@ section, to write to the index specified by @index_name@ and with the schema mapping specified by @object_type@.
