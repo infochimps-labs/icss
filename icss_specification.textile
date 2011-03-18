@@ -1,8 +1,10 @@
 h1. The Infochimps Stupid Schema (ICSS) Specification
 
-The icss is intended to be a complete description of a collection of related data and it's associated assets (data assets and code assets). This includes any data records, where those records live, as well as any api calls (messages) based on the the described records.
+The icss is intended to be a *complete* and *expressive* description of a collection of related data and its associated assets. This includes a description of data assets (including their location and schema) and of api calls (messages) based on the the described records (including their call signature and schema).
 
-Before any further proclamations here is complete example:
+Besides this document, please refer to icss_style.textile, which gives agreed style convention for icss authoring.
+
+Before any further proclamations here is a complete example:
 
 <pre><code>
 ---
@@ -130,7 +132,7 @@ targets:
 
 h2. namespace
 
-This field is the namespace for the entire icss. It should be interpreted as the 'category' and 'subcategory' and so on. While the nesting is allowed to be arbitrarily deep, nesting deeper than 2 is strongly discouraged unless you have a very good reason (you probably don't). Each additional category must be appended with a dot ('.').
+The namespace for the entire icss. It should be interpreted as the 'category' and 'subcategory' and so on. While the nesting is allowed to be arbitrarily deep, nesting deeper than 2 is strongly discouraged unless you have a very good reason (you probably don't). Each additional category must be appended with a dot ('.').
 
 h2. protocol
 
@@ -153,25 +155,19 @@ Describes each code asset (an auxillary piece of code) and its location relative
 
 h2. types
 
-This section defines the named types for each data asset, message request, and message response. It is an array of valid avro @record@ schemas, and adheres to the 1.4.1 avro specification. Each entry in the array is called a @type@. Its fields may be composed of primitive types (eg. string, int, float) as well as other named types so long as they are defined _previously_ in the @types@ array. Any referenced types must be defined in the types array before any definitions that refer to them. A @type@ definition can have the following fields:
+Defines named record types for each data asset, message request, and message response. It is an array of valid avro @record@ schemas, and adheres to the 1.4.1 avro specification. Each entry in the array is called a @named record type@. Its fields may be composed of primitive types (eg. string, int, float) as well as other named types so long as they are defined _previously_ in the @types@ array. Any referenced types must be defined in the types array before any definitions that refer to them. A @type@ definition can have the following fields:
 
 * @name@        - The name of the defined type.
 * @type@        - The @type@ of the defined type (think of it as the superclass). Typically @record@.
 * @doc@         - Top level documentation of this type describing what it is and some justification for its existence.
 * @fields@      - An array of @field@ hashes. See below.
 
-Note the following limitations on the avro spec:
-
-* No recursive definitions. A named type may not include a schema that eventually refers to the named type itself.
-* All top-level schemas must be @record@ types.
-* Do not use @union@ or @enum@ schema types.
-
 h3. fields
 
 The @fields@ section of a @record@ definition is an array of hashes with the following fields:
 
 * @name@        - the name of the field (required)
-* @type@        - the @type@ of the field: either a primitive type, a named type, or an avro schema (as defined above under _types_). A complex type can be defined in line as a full type definition or previously in the @types@ array. See primitive types. Note: you *must* define a named type before referring to it. Recursive type definitions are currently unsupported.
+* @type@        - the @type@ of the field: either a primitive type, a named type, or an avro schema (as defined above under _types_). A complex type can be defined in line as a full type definition or previously in the @types@ array. See primitive types. Note: you *must* define a named type before referring to it. Recursive type definitions are currently unsupported. To decide whether to define a named type inline, consider how the documentationwill ultimately read.
 * @doc@         - a string describing this field for users (optional).
 * @default@     - a default value for this field, used when reading instances that lack this field. Note: do _not_ use the @default@ attribute to show an "example" parameter, only to show the value used if none is supplied. 
 * @order@:      - specifies how this field impacts sort ordering of this record (optional). Valid values are "ascending" (the default), "descending", or "ignore". For more details on how this is used, see the the sort order section in the avro spec.
@@ -199,19 +195,19 @@ h2. messages
 
 This section defines the messages (remote procedure calls) against the collection. It is a hash where each entry has the the following fields:
 
-* @request@     - An array of arguments to the message. A request has two fields, a @name@ and a @type@ where the @type@ is defined in the @types@ section. All infochimps API calls take a single argument of either a named @record@ type or a @map@ (hash).
-* @response@    - The named @type@ (defined in the protocol's @types@ section) for the response.
-* @errors@      - An optional array of named types that this message throws as errors.
-* @doc@         - Documentation specific to this message
-* @samples@     - Sample call request and response/error contents (see below).
+* @request@     - An list of arguments to the message (required).. A request has two fields, a @name@ and a @type@ where the @type@ is defined in the @types@ section. All infochimps API calls take a single argument of either a named @record@ type or a @map@ (hash). Although in principle the argument list is processed equivalently to the fields in a @record@ type schema, we demand that the list have exactly one element and that it refer to a named type defined at top level in the @types@ section.
+* @response@    - The named @type@ for the response (required), defined at top level in the protocol's @types@ section.
+* @errors@      - An optional array of named types that this message throws as errors (optional).
+* @doc@         - Documentation specific to this message (optional).
+* @samples@     - Sample call request and response/error contents (optional; see below).
 
 h3. samples
 
 A message may optionally supply @samples@, an array of SampleMessageCalls. Each SampleMessageCall is a hash with the following fields:
 
-* @request@     - an array of one element, that being a hash suitable for populating the message's @request@ type.
-* @response@    - a hash suitable for populating the message's @response@ type.
-* @url@         - Rather than supply the request params, you may supply them as a URL.
+* @request@     - an array of one element giving a hash suitable for populating the message's @request@ type (required).
+* @response@    - a hash suitable for populating the message's @response@ type (optional).
+* @url@         - Rather than supply the request params, you may supply them as a URL (optional).
 
 h2. targets
 
@@ -255,6 +251,16 @@ An array of ElasticSearchTarget hashes. Each ElasticSearchTarget hash describes 
 * @id_field@    - The name of a field withing @object_type@ to use as an inherent id during indexing (optional). If this field is omitted the records will be assigned an id dynamically during indexing.
 * @data_assets@ - An array of named data assets (required to exist in the @data_assets@ section), to write to the index specified by @index_name@ with the schema mapping specified by @object_type@.
 
+h2. Differences between ICSS and Avro
+
+Note the following limitations on the avro spec:
+
+* No recursive definitions. A named type may not include a schema that eventually refers to the named type itself.
+* All top-level schemas must be @record@ types.
+* Do not use @union@ or @enum@ schema types.
+* Do not define a complex schema in the request or response portion of a message -- you MUST use a named type defined at top level in the @types@ section, or use type @map@.
+* Every message request must be an array of exactly one element.
+
 h2. Proposed Alterations and Extensions to the spec
 
 h3. Versioning
@@ -288,4 +294,4 @@ h3. Documentation Extensions
 
 h3. Extended Primitive Types
 
-I'd (flip) like a way for a client to, on a best-effort basis, accept @time@, @date@, and @symbol@.  This could be done by allowing those as primitive types, or by saying they are { "type":"string", "extended_type":"iso_time" }. Needs more thought
+I'd (flip) like a way for a client to, on a best-effort basis, accept @time@, @date@, and @symbol@.  This could be done by allowing those as primitive types, or by saying they are { "type":"string", "extended_type":"iso_time" }. Needs more thought.
