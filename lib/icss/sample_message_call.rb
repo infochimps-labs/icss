@@ -62,7 +62,6 @@ module Icss
     def fetch_response! hostname="", extra_query_params={}
       raw = fetch_raw_response( url(hostname, extra_query_params) )
       begin
-        raw.gsub!(/^george_api_explorer\((.*)\)/, '\1')
         self.response = JSON.load(raw)
       rescue StandardError => e
         warn ["error parsing response: #{e}"].join("\n")

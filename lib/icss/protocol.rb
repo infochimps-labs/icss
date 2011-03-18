@@ -71,11 +71,17 @@ module Icss
 
     # attr_accessor :body
     def after_receive hsh
+      # FIXME: remove once we have defaults built into receiver lib.
+      self.messages    ||= {}
+      self.types       ||= []
+      self.data_assets ||= []
+      self.code_assets ||= []
+      self.targets     ||= {}
       # Set each message's protocol to self, and if the name wasn't given, set
       # it using the message's hash key.
-      self.messages.each{|msg_name, msg| msg.protocol = self; msg.name ||= msg_name } if self.messages
+      self.messages.each{|msg_name, msg| msg.protocol = self; msg.name ||= msg_name }
       # Set all the type's parent to self (for namespace resolution)
-      self.types.each{|type| type.parent  = self } if self.types
+      self.types.each{|type| type.parent  = self }
       validate_name
       validate_namespace
     end
@@ -89,9 +95,15 @@ module Icss
       fullname.gsub('.', '/')
     end
 
-    def find_message name
-      name = name.to_s.gsub("/", ".").split(".").last
-      messages && messages[name]
+    def find_message nm
+      nm = nm.to_s.gsub("/", ".").split(".").last
+      messages && messages[nm]
+    end
+
+    def receive_protocol nm
+      namespace_and_name = nm.to_s.gsub("/", ".").split(".")
+      self.protocol  = namespace_and_name.pop
+      self.namespace = namespace_and_name.join('.')
     end
 
     def receive_targets hsh
