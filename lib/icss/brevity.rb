@@ -45,7 +45,7 @@ module Icss
         :request     => summary_of_request_attr, # (request||[]).map(&:type).map(&:name),
         :response    => summary_of_response_attr,
         :errors      => errors.inspect,
-        :protocol    => (protocol && protocol.protocol),
+        :protocol    => (protocol.present? ? protocol.protocol : nil),
         :doc         => "'#{(doc||"")[0..30].gsub(/[\n\t\r]+/,' ')}...'",
       }
     end
@@ -100,7 +100,7 @@ module Icss
   RecordType.class_eval do
     private
     def inspect_hsh
-      super.merge( :fields  => (fields||[]).inject({}){|h,f| h[f.name] = ((f.type && f.is_reference?) ? f.type.name : f.type) ; h }.inspect )
+      super.merge( :fields  => (fields||[]).inject({}){|h,f| h[f.name] = ((f.type.present? && f.is_reference?) ? f.type.name : f.type) ; h }.inspect )
     end
   end
 

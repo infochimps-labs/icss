@@ -251,7 +251,7 @@ module Receiver
         else  next ; end
         #
         self_val  = self[key]
-        # p ['receiver tree_merge', key, self_val.respond_to?(:tree_merge!), self_val, other_val]
+        # p ['receiver tree_merge', key, self_val.respond_to?(:tree_merge!), self[key], other_val]
         case
         when other_val.nil?                     then next
         when (not has_key?(key))                then _receive_attr(key, other_val)
@@ -409,7 +409,7 @@ class Hash
     # * otherwise, receive the value from other_hash
     #
     def tree_merge!(other_hash)
-      keys.each do |key|
+      [self.keys, other_hash.keys].flatten.uniq.each do |key|
         # get other's val if any
         if    other_hash.has_key?(key.to_sym) then other_val = other_hash[key.to_sym]
         elsif other_hash.has_key?(key.to_s)   then other_val = other_hash[key.to_s]
@@ -419,7 +419,7 @@ class Hash
         # p ['hash tree_merge', key, self_val.respond_to?(:tree_merge!), self_val, other_val]
         case
         when other_val.nil?                     then next
-        when (not has_key?(key))                then _receive_attr(key, other_val)
+        when (not has_key?(key))                then self[key] = other_val
         when self_val.is_a?(Array)              then self[key] += other_val
         when self_val.respond_to?(:tree_merge!) then self[key] = self_val.tree_merge!(other_val)
         when self_val.respond_to?(:merge!)      then self[key] = self_val.merge!(other_val)

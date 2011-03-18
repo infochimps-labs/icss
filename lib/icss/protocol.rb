@@ -96,8 +96,9 @@ module Icss
     end
 
     def find_message nm
+      return if messages.blank?
       nm = nm.to_s.gsub("/", ".").split(".").last
-      messages && messages[nm]
+      messages[nm]
     end
 
     def receive_protocol nm
