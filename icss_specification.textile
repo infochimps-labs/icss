@@ -16,6 +16,19 @@ messages:
         type: word_stats_request
     response: word_statistics_record
     doc: Query on a head word to get back word statistics (and word variants) from the British National Corpus.
+    samples:
+      - request: 
+          - head_word: hello
+        response: 
+          variant_word_dispersion: 0.78
+          variant_word_freq_ppm: 38.0
+          part_of_speech:       Int
+          head_word:            hello
+          variant_word_range:   91
+          variant_word:         hello
+          head_word_dispersion: 0.78
+          head_word_freq_ppm:   38.0
+          head_word_range:      91
 
 data_assets:
   - name: word_stats_data_asset
@@ -125,92 +138,154 @@ The short name of the collection. Together the protocol and namespace should be 
 
 h2. data_assets
 
-This section describes each data asset (a homogeneous chunk of data) as well as where it lives. By _lives_ this means the location, relative to the icss itself where the data asset lives. This section is written in the icss as an array of hashes where the fields of each hash are as follows:
+Describes each data asset (a homogeneous chunk of data) and its location relative to the icss itself. This section is written in the icss as an array of hashes where the fields of each hash are as follows:
 
-* @name@ - The name of the data asset.
-* @location@ - The _relative_ uri of the described data asset. This is always assumed to be a directory and contains one or more actual files. All of the files must be homogeneous amongst themselves in that they are identically formatted (and have the same fields in the same order when that makes sense).
-* @type@ - The fully qualified @type@ of the described data asset. The @type@ must be defined as a @record@ in the @types@ section of the icss.
+* @name@        - The name of the data asset.
+* @location@    - The _relative_ uri of the described data asset. This is always assumed to be a directory and contains one or more actual files. All of the files must be homogeneous amongst themselves in that they are identically formatted (and have the same fields in the same order when that makes sense).
+* @type@        - The fully qualified @type@ of the described data asset. The @type@ must be defined as a @record@ in the @types@ section of the icss.
 
 h2. code_assets
 
-This section describes each code asset (an auxillary piece of code) as well as where it lives. By _lives_ this means the location, relative to the icss itself, where the code asset lives. A typical code asset is the full definition of classes and functions required to implement a message in the @messages@ section of the icss. The code_assets section is written in the icss as an array of hashes where the fields of each hash are as follows:
+Describes each code asset (an auxillary piece of code) and its location relative to the icss itself. A typical code asset is the full definition of classes and functions required to implement a message in the @messages@ section of the icss. The code_assets section is written in the icss as an array of hashes where the fields of each hash are as follows:
 
-* @name@ - The name of the code asset.
-* @location@ - The location, _relative_ to the icss, of where the code asset exists.
+* @name@        - The name of the code asset.
+* @location@    - The location, _relative_ to the icss, of the code asset.
 
 h2. types
 
-This section defines the fields (and their @type@) of each data asset, message request, and message response. It is a valid avro @types@ array and adheres to the 1.4.1 avro specification. Each entry in the array is called a @type@ and can be composed of primitive types (eg. string, int, float) as well as other types so long as they are defined in the @types@ array. Any referenced types must be defined in the types array before any definitions that refer to them. A @type@ definition can have the following fields:
+This section defines the named types for each data asset, message request, and message response. It is an array of valid avro @record@ schemas, and adheres to the 1.4.1 avro specification. Each entry in the array is called a @type@. Its fields may be composed of primitive types (eg. string, int, float) as well as other named types so long as they are defined _previously_ in the @types@ array. Any referenced types must be defined in the types array before any definitions that refer to them. A @type@ definition can have the following fields:
 
-* @name@ - The name of the defined type.
-* @type@ - The @type@ of the defined type (think of it as the superclass). Typically @record@.
-* @doc@ - Top level documentation of this type describing what it is and some justification for its existence.
-* @fields@ - An array of @field@ hashes. See below.
+* @name@        - The name of the defined type.
+* @type@        - The @type@ of the defined type (think of it as the superclass). Typically @record@.
+* @doc@         - Top level documentation of this type describing what it is and some justification for its existence.
+* @fields@      - An array of @field@ hashes. See below.
+
+Note the following limitations on the avro spec:
+
+* No recursive definitions. A named type may not include a schema that eventually refers to the named type itself.
+* All top-level schemas must be @record@ types.
+* Do not use @union@ or @enum@ schema types.
 
 h3. fields
 
-The @fields@ section of a @type@ definition is an array of hashes with the following fields:
+The @fields@ section of a @record@ definition is an array of hashes with the following fields:
 
-* @name@ - the name of the field
-* @type@ - the @type@ of the field. Either a primitive type or a complex type. A complex type can be defined in line as a full type definition or previously in the @types@ array. See primitive types.
-* @doc@ - Documentation specific to this field.
+* @name@        - the name of the field (required)
+* @type@        - the @type@ of the field: either a primitive type, a named type, or an avro schema (as defined above under _types_). A complex type can be defined in line as a full type definition or previously in the @types@ array. See primitive types. Note: you *must* define a named type before referring to it. Recursive type definitions are currently unsupported.
+* @doc@         - a string describing this field for users (optional).
+* @default@     - a default value for this field, used when reading instances that lack this field. Note: do _not_ use the @default@ attribute to show an "example" parameter, only to show the value used if none is supplied. 
+* @order@:      - specifies how this field impacts sort ordering of this record (optional). Valid values are "ascending" (the default), "descending", or "ignore". For more details on how this is used, see the the sort order section in the avro spec.
+
+h4. Extended attributes
+
+* @index@       - a string naming the index group, for databases that choose to take advantage of it (optional).
+* @unique@      - index is unique (optional)
+* @length@      - a length constraint, for downstream consumers that choose to take advantage of it (optional).
 
 h3. Primitive Types
 
 The set of primitive type names is:
 
-* @null@ - no value
-* @boolean@ - a binary value
-* @int@ - 32-bit signed integer
-* @long@ - 64-bit signed integer
-* @float@ - single precision (32-bit) IEEE 754 floating-point number
-* @double@ - double precision (64-bit) IEEE 754 floating-point number
-* @bytes@ - sequence of 8-bit unsigned bytes
-* @string@ - unicode character sequence
+* @null@        - no value
+* @boolean@     - a binary value
+* @int@         - 32-bit signed integer
+* @long@        - 64-bit signed integer
+* @float@       - single precision (32-bit) IEEE 754 floating-point number
+* @double@      - double precision (64-bit) IEEE 754 floating-point number
+* @bytes@       - sequence of 8-bit unsigned bytes
+* @string@      - unicode character sequence
 
 h2. messages
 
 This section defines the messages (remote procedure calls) against the collection. It is a hash where each entry has the the following fields:
 
-* @request@ - An array of requests. These are the arguments to the message. A request has two fields, a @name@ and a @type@ where the @type@ is defined in the @types@ section.
-* @response@ - A single response. This is the name of a @type@ defined in the @types@ section.
-* @errors@ - An optional array of named types that this message throws as errors.
-* @doc@ - Documentation specific to this message
+* @request@     - An array of arguments to the message. A request has two fields, a @name@ and a @type@ where the @type@ is defined in the @types@ section. All infochimps API calls take a single argument of either a named @record@ type or a @map@ (hash).
+* @response@    - The named @type@ (defined in the protocol's @types@ section) for the response.
+* @errors@      - An optional array of named types that this message throws as errors.
+* @doc@         - Documentation specific to this message
+* @samples@     - Sample call request and response/error contents (see below).
+
+h3. samples
+
+A message may optionally supply @samples@, an array of SampleMessageCalls. Each SampleMessageCall is a hash with the following fields:
+
+* @request@     - an array of one element, that being a hash suitable for populating the message's @request@ type.
+* @response@    - a hash suitable for populating the message's @response@ type.
+* @url@         - Rather than supply the request params, you may supply them as a URL.
 
 h2. targets
 
-This section defines publishing targets for the collection. It is a completely optional field. It is written as a hash with the following possible fields:
-
-h3. mysql
-
-This is an array where each entry is a hash describing how to map one or more data_assets into a MySQL database. Each entry has the following required fields:
-
-* @database@ - The mysql database to write data into
-* @table_name@ - The table name to write data into
-* @data_assets@ - An array of named data assets (that must exist in the @data_assets@ section, to write to @database@.@table_name@.
+This section defines publishing targets for the collection. It is an optional field, and each target type is optional as well. It is a hash with the following possible elements:
 
 h3. catalog
 
-This is an array where each entry is a hash describing a catalog entry on the Infochimps data catalog. Each entry has the following fields:
+An array of CatalogTarget hashes. Each CatalogTarget hash describes a catalog entry on the Infochimps data catalog. It contains the following fields:
 
-* @name@ - The name of the catalog entry
-* @title@ - The display title of the catalog entry.
+* @name@        - The name of the catalog entry
+* @title@       - The display title of the catalog entry.
 * @description@ - A full description (can be textile) for the catalog entry that is displayed in the overview section on the catalog.
-* @tags@ - An array of tags describing the catalog entry
-* @messages@ - An array of message names to attach to the catalog entry. Each message will be fully documented on the catalog. The last message in the array will be available to explore with the api explorer.
-* @packages@ - An array of hashes. Each hash has a field called @data_assets@ which is an array of named data assets. Each data asset in the array will be bundled together into a single bulk download on the catalog.
+* @tags@        - An array of tags describing the catalog entry. Tags may only contain characters within [a-z0-9_] (lowercase alphanumeric or underscore). The publishing system MAY augment these tags with additional ones extracted from the protocol as a whole.
+* @messages@    - An array of message names to attach to the catalog entry. Each message will be fully documented on the catalog. The last message in the array will be available to explore with the api explorer.
+* @packages@    - An array of hashes. Each hash has a field called @data_assets@ which is an array of named data assets. Each data asset in the array will be bundled together into a single bulk download on the catalog.
 
 One or both of @messages@ and @packages@ must be present.
 
+h3. mysql
+
+An array of MysqlTarget hashes. Each MysqlTarget hash describes how to map one or more data_assets into a MySQL database. It contains the following fields:
+
+* @database@    - The mysql database to write data into (required).
+* @table_name@  - The table name to write data into (required).
+* @data_assets@ - An array of named data assets (required to exist in the @data_assets@ section) to write to @database@.@table_name@. (required).
+
 h3. hbase
+
+An array of HbaseTarget hashes. Each HabaseTarget hash describes how to map one or more data_assets into an Hbase database. It contains the following fields:
+
+* ...
 
 TODO
 
 h3. elastic_search
 
-This is an array where each entry is a hash describing how to map one or more data_assets into an ElasticSearch data store. Each entry has the following required fields:
+An array of ElasticSearchTarget hashes. Each ElasticSearchTarget hash describes how to map one or more data_assets into an ElasticSearch data store. It contains the following fields:
 
-* @index_name@ - The name of the index to write data into. It need not already exist.
-* @object_type@ - The object type create. Many different types of objects can exist in the same index. Each @object_type@ has its own schema that will be updated dynamically by ElasticSearch as records of that type are indexed. If this dynamism is unwanted (in the case you have more complex fields like @date@ or @geo_point@) then you should use the rest API and PUT the appropriate schema mapping ahead of time.
-* @id_field@ - If the records have an inherent id then this is the name of the field to use as id when indexing. If this field is left out the records will be assigned an id dynamically during indexing.
-* @data_assets@ - An array of named data assets (that must exist in the @data_assets@ section, to write to the index specified by @index_name@ and with the schema mapping specified by @object_type@.
+* @index_name@  - The name of the index to write data into (required). It need not already exist.
+* @object_type@ - The object type create (required). Many different types of objects can exist in the same index. Each @object_type@ has its own schema that will be updated dynamically by ElasticSearch as records of that type are indexed. If this dynamism is unwanted (in the case you have more complex fields like @date@ or @geo_point@) then you should use the rest API and PUT the appropriate schema mapping ahead of time.
+* @id_field@    - The name of a field withing @object_type@ to use as an inherent id during indexing (optional). If this field is omitted the records will be assigned an id dynamically during indexing.
+* @data_assets@ - An array of named data assets (required to exist in the @data_assets@ section), to write to the index specified by @index_name@ with the schema mapping specified by @object_type@.
+
+h2. Proposed Alterations and Extensions to the spec
+
+h3. Versioning
+
+We need to take advantage of the Avro versioning abilities
+
+h3. Many Catalog properties belong at top level
+
+The catalog target entries should be changed:
+
+* @name@ is redundant, should be the fullname of the protocol with '.' converted to '-' and used as a durable handle for the catalog entry.
+* @title@ should become a top-level attribute of the protocol. 
+* @tags@ should become a top-level attribute of the protocol.
+* @description@ should be called @doc@. The catalog description should be the catalog target's @doc@ prepended to the protocol's @doc@.
+* @messages@ should go away - all messages should be published by default.
+
+These attributes should be added at the top level:
+
+* @created_at@  - fixes the notional created_at date of the dataset.
+* @created_by@  - handle for the infochimps user to credit
+* @collection@  - handle for a collection to tie the dataset.
+* @link@        - URL to consider the primary reference link
+* @sources@     - array of handles for the dataset's sources.
+* @license@     - handle for the dataset's license
+
+h3. Documentation Extensions
+
+* @doc_order@   - On @types@, gives the order to display their documentation. Since we have to
+* @doc_hide@    - Hide this type when displaying documentation.
+* @doc_long@    - For cases where the doc string extends to many pages, lets us separate the doc into an abstract (in @doc@) and extended description (in @doc_long@).
+
+h3. Extended Primitive Types
+
+I'd (flip) like a way for a client to, on a best-effort basis, accept @time@, @date@, and @symbol@.  This could be done by allowing those as primitive types, or by saying they are { "type":"string", "extended_type":"iso_time" }. Needs more thought
