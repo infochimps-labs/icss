@@ -14,7 +14,7 @@ module Icss
     rcvr_accessor :request,  Array
     rcvr_accessor :response, Object
     rcvr_accessor :error,    Object
-    rcvr          :url,      String
+    rcvr_accessor :url,      String
     attr_accessor :message
 
     # The URL implied by the given hostname and the sample request parameters.
@@ -25,27 +25,35 @@ module Icss
     # The URI expects string values in the hash used to build the query -- if
     # calling #to_s on a field won't do what you want, clobber the value beforehand.
     #
-    def url hostname, extra_query_params={}
+    def full_url hostname, extra_query_params={}
       host, port = hostname.split(':', 2)
-      url = Addressable::URI.new(:host => host, :port => port, :path => ("/"+message.path), :scheme => 'http')
-      qq = query_hash.merge(extra_query_params)
-      qq.each{|k,v| qq[k] = v.to_s }
-      url.query_values = qq
-      url
+      u = Addressable::URI.new(:host => host, :port => port, :path => self.path, :scheme => 'http')
+      u.query_values = query_hash(extra_query_params)
+      u
     end
 
-    def query_hash
-      request.first.to_hash
+    def query_hash extra_query_params={}
+      hsh = (@url.present? ? @url.query_values : request.first) || {}
+      hsh = hsh.to_hash
+      hsh.merge! extra_query_params
+      hsh.each{|k,v| hsh[k] = v.to_s }
+      hsh
     end
 
-    # @param [String] url a URL to strip for query parameters
+    def path
+      ((@url && @url.path).present? ? @url.path : "/#{message.path}" )
+    end
+
+    # @param [String, Addressable::URI]
     #   the URL can be fully-qualified (htttp://api.infochimps.com/this/that?the=other) or relative (this/that?the=other)
-    #   the path must match that of the message
+    #   and the path must match that of the message.
     #
-    def receive_url url
-      warn "sample request url should have a '?' introducing its query parameters" unless url.include?("?")
-      parsed_url = Addressable::URI.parse(url)
-      receive_request [parsed_url.query_values]
+    def url= new_url
+      if new_url.is_a?(String)
+        unless new_url.include?('?') then warn "sample request url should have a '?' introducing its query parameters: {#{new_url}}" ; end
+        new_url = Addressable::URI.parse(new_url)
+      end
+      @url = new_url
     end
 
     # Whips up the class implied by the ICSS type of this message's response,
@@ -60,7 +68,7 @@ module Icss
     # catches all server errors and constructs a dummy response hash if the call
     # fails.
     def fetch_response! hostname="", extra_query_params={}
-      raw = fetch_raw_response( url(hostname, extra_query_params) )
+      raw = fetch_raw_response( full_url(hostname, extra_query_params) )
       begin
         self.response = JSON.load(raw)
       rescue StandardError => e
@@ -71,12 +79,12 @@ module Icss
 
   private
 
-    def fetch_raw_response host_url
+    def fetch_raw_response full_url
       begin
-        RestClient.get(host_url.to_s)
+        RestClient.get(full_url.to_s)
       rescue StandardError => e
         warn ["error fetching response: #{e}"].join("\n")
-        { :_fetch_error => e.to_s, :_host_url => host_url.to_s }.to_json
+        { :_fetch_error => e.to_s, :_full_url => full_url.to_s }.to_json
       end
     end
   end
@@ -114,12 +122,14 @@ class Icss::Protocol
       msg.samples.each do |sample_req|
         sample_hsh = {
           "name"     => sample_req.name,
-          "request"  => sample_req.request,
           "response" => sample_req.response,
           "error"    => sample_req.error,
-          "url"      => "?"+sample_req.url('').query,
           "doc"      => sample_req.doc,
         }
+        if sample_req.url.present?
+        then sample_hsh['url']     = sample_req.url.to_s
+        else sample_hsh['request'] = sample_req.request
+        end
         hsh["messages"][msg_name]["samples"] << sample_hsh.compact_blank!
       end
     end
