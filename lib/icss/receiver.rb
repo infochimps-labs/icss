@@ -113,7 +113,7 @@ module Receiver
     self
   end
 
-  private
+  protected
   def _receive_attr attr, val
     self.send("receive_#{attr}", val)
   end
