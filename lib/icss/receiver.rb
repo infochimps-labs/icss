@@ -1,5 +1,6 @@
 require 'active_support/core_ext/class'
 require 'time'
+require 'icss/receiver/validations'
 
 # dummy type for receiving True or False
 class Boolean ; end unless defined?(Boolean)
@@ -26,10 +27,10 @@ class Boolean ; end unless defined?(Boolean)
 #      rcvr_accessor :id,           Integer
 #      rcvr_accessor :screen_name,  String
 #      rcvr_accessor :follower_ids, Array, :of => Integer
-#      # protect against receiving an id of "0" or ""
-#      def receive_id(v)
-#        raise "Missing id: #{v.inspect}" if v.to_i == 0
-#        self.id = v
+#      # accumulate unique follower ids
+#      def receive_follower_ids(arr)
+#        @follower_ids = (@follower_ids||[]) + arr.map(&:to_i)
+#        @follower_ids.uniq!
 #      end
 #    end
 #
@@ -37,7 +38,7 @@ class Boolean ; end unless defined?(Boolean)
 #
 #    class TweetWithUser < Tweet
 #      rcvr_accessor :user, TwitterUser
-#      def after_receive(hsh)
+#      after_receive do |hsh|
 #        self.user_id = self.user.id if self.user
 #      end
 #    end
@@ -46,7 +47,8 @@ class Boolean ; end unless defined?(Boolean)
 #
 # TweetWithUser was able to add another receiver, applicable only to itself and its subclasses.
 #
-# The receive method is forgiving of sparse data:
+# The receive method works well with sparse data -- you can accumulate
+# attributes without trampling formerly set values:
 #
 #    tw = Tweet.receive(:id => "7", :user_id => 9 )
 #    p tw
@@ -61,6 +63,19 @@ class Boolean ; end unless defined?(Boolean)
 #    tw.receive!(:user_id => nil, :created_at => "20090506070809" )
 #    p tw
 #    # => #<Tweet @id=7, @user_id=nil, @created_at=2009-05-06 12:08:09 UTC>
+#
+# There are helpers for default and required attributes:
+#
+#    class Foo
+#      include Receiver
+#      rcvr_accessor :is_reqd,     String, :required => true
+#      rcvr_accessor :also_reqd,   String, :required => true
+#      rcvr_accessor :has_default, String, :default => 'hello'
+#    end
+#    foo_obj = Foo.receive(:is_reqd => "hi")
+#    # => #<Foo:0x00000100bd9740 @is_reqd="hi" @has_default="hello">
+#    foo_obj.missing_attrs
+#    # => [:also_reqd]
 #
 module Receiver
 
@@ -109,16 +124,38 @@ module Receiver
       else  next ; end
       _receive_attr attr, val
     end
-    after_receive(hsh) if respond_to?(:after_receive)
+    impose_defaults!(hsh)
+    run_after_receivers(hsh)
     self
+  end
+
+  def unset!(attr)
+    self.send(:remove_instance_variable, "@#{attr}") if self.instance_variable_defined?("@#{attr}")
+  end
+
+  # true if the attr is a receiver variable and it has been set
+  def attr_set?(attr)
+    receiver_attrs.has_key?(attr) && self.instance_variable_defined?("@#{attr}")
   end
 
   protected
   def _receive_attr attr, val
     self.send("receive_#{attr}", val)
   end
-  public
 
+  def impose_defaults!(hsh)
+    self.class.receiver_defaults.each do |attr, val|
+      next if attr_set?(attr)
+      self.instance_variable_set "@#{attr}", val
+    end
+  end
+
+  def run_after_receivers(hsh)
+    self.class.after_receivers.each do |after_receiver|
+      self.instance_exec(hsh, &after_receiver)
+    end
+  end
+  public
 
   module ClassMethods
 
@@ -137,6 +174,10 @@ module Receiver
     # define a receiver attribute.
     # automatically generates an attr_accessor on the class if none exists
     #
+    # @option [Boolean] :required - Adds an error on validation if the attribute is never set
+    # @option [Object]  :default  - After any receive! operation, attribute is set to this value unless attr_set? is true
+    # @option [Class]   :of       - For collections (Array, Hash, etc), the type of the collection's items
+    #
     def rcvr name, type, info={}
       name = name.to_sym
       type = type_to_klass(type)
@@ -147,6 +188,10 @@ module Receiver
       STR
       receiver_attr_names << name unless receiver_attr_names.include?(name)
       receiver_attrs[name] = info.merge({ :name => name, :type => type })
+    end
+
+    def after_receive &block
+      self.after_receivers << block
     end
 
     def type_to_klass(type)
@@ -179,6 +224,35 @@ module Receiver
       rcvr name, type, info
     end
 
+    #
+    # Defines a receiver for attributes sent to receive! that are
+    # * not defined as receivers
+    # * attribute name does not start with '_'
+    #
+    # @example
+    #     class Foo ; include Receiver
+    #       rcvr_accessor  :bob, String
+    #       rcvr_remaining :other_params
+    #     end
+    #     foo_obj = Foo.receive(:bob => 'hi, bob", :joe => 'hi, joe')
+    #     # => <Foo @bob='hi, bob' @other_params={ :joe => 'hi, joe' }>
+    def self.rcvr_remaining name, info={}
+      rcvr_reader name, Hash, info
+      after_receive do |hsh|
+        remaining_vals_hsh = hsh.except(* keys).reject!{|k,v| k.to_s =~ /^_/}
+        self._receive_attr name, remaining_vals_hsh
+      end
+    end
+
+    # a hash from attribute names to their default values if given
+    def receiver_defaults
+      defs = {}
+      receiver_attrs.each do |name, info|
+        defs[name] = info[:default] if info.has_key?(:default)
+      end
+      defs
+    end
+
   private
     def receiver_body_for type, info
       type = type_to_klass(type)
@@ -205,9 +279,10 @@ module Receiver
   # set up receiver attributes, and bring in methods from the ClassMethods module at class-level
   def self.included base
     base.class_eval do
-      class_inheritable_accessor :receiver_attrs, :receiver_attr_names
+      class_inheritable_accessor :receiver_attrs, :receiver_attr_names, :after_receivers
       self.receiver_attrs      = {} # info about the attr
       self.receiver_attr_names = [] # ordered set of attr names
+      self.after_receivers     = [] # blocks to execute following receive!
       extend ClassMethods
     end
   end

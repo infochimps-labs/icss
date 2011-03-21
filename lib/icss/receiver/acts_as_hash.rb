@@ -77,7 +77,7 @@ module Receiver
     #    foo[:b]                        # nil
     #
     def has_key?(key)
-      keys.include?(key) && ((not self[key].nil?) || self.instance_variable_defined?("@#{key}"))
+      keys.include?(key) && ((not self[key].nil?) || attr_set?(key))
     end
 
     # @param key<Object> The key to remove
@@ -88,7 +88,7 @@ module Receiver
     def delete(key)
       val = self[key]
       self[key]= nil
-      self.send(:remove_instance_variable, "@#{key}") if self.instance_variable_defined?("@#{key}")
+      unset!(key)
       val
     end
 
@@ -263,7 +263,7 @@ module Receiver
         else                                         _receive_attr(key, other_val)
         end
       end
-      after_receive(other_hash) if respond_to?(:after_receive)
+      run_after_receivers(other_hash)
       self
     end
 

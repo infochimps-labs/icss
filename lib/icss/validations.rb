@@ -1,5 +1,6 @@
 module Icss
   module Validations
+
     # An avro name must
     # * start with [A-Za-z_]
     # * subsequently contain only [A-Za-z0-9_]

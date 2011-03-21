@@ -176,7 +176,15 @@ module Icss
         warn "Can't handle union or enum types yet: #{self.inspect}"
         return
       end
-      klass.rcvr_accessor name.to_sym, type.ruby_klass
+      klass.rcvr_accessor name.to_sym, type.ruby_klass, field_receiver_attrs
+    end
+
+    def field_receiver_attrs
+      attrs = {}
+      (self.class.receiver_attr_names - [:name, :type]).each do |attr|
+        attrs[attr] = self.send(attr)
+      end
+      attrs
     end
   end
 end

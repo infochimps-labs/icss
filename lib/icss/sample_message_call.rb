@@ -11,7 +11,7 @@ module Icss
     include Receiver
     rcvr_accessor :name,     String
     rcvr_accessor :doc,      String
-    rcvr_accessor :request,  Array
+    rcvr_accessor :request,  Array, :default => []
     rcvr_accessor :response, Object
     rcvr_accessor :error,    Object
     rcvr_accessor :url,      String
@@ -33,8 +33,7 @@ module Icss
     end
 
     def query_hash extra_query_params={}
-      hsh = (@url.present? ? @url.query_values : request.first) || {}
-      hsh = hsh.to_hash
+      hsh = (@url.present? ? @url.query_values : request.first.to_hash) rescue {}
       hsh.merge! extra_query_params
       hsh.each{|k,v| hsh[k] = v.to_s }
       hsh
@@ -94,9 +93,7 @@ class Icss::Message
   rcvr_accessor :samples, Array, :of => Icss::SampleMessageCall
 
   # tie each samples back to this, its parent message
-  # HACK: this doesn't chain off the method defined in message.rb, it just copy/pastes it. This will lead to grief someday.
-  def after_receive hsh, *args
-    @response_is_reference = true if hsh['response'].is_a?(String) || hsh['response'].is_a?(Symbol)
+  after_receive do |hsh|
     (self.samples ||= []).each{|sample| sample.message = self }
   end
 end

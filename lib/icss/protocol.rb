@@ -62,21 +62,15 @@ module Icss
     rcvr_accessor :namespace,   String # must be *dotted* ("foo.bar"), not slashed ("foo/bar")
     rcvr_accessor :doc,         String
     #
-    rcvr_accessor :types,       Array, :of => Icss::TypeFactory
-    rcvr_accessor :messages,    Hash,  :of => Icss::Message
+    rcvr_accessor :types,       Array, :of => Icss::TypeFactory, :default => []
+    rcvr_accessor :messages,    Hash,  :of => Icss::Message,     :default => {}
     # extensions to avro
-    rcvr_accessor :data_assets, Array, :of => Icss::DataAsset
-    rcvr_accessor :code_assets, Array, :of => Icss::CodeAsset
-    rcvr_accessor :targets,     Hash,  :of => Icss::TargetListFactory, :merge_as => :hash_of_arrays
+    rcvr_accessor :data_assets, Array, :of => Icss::DataAsset,   :default => []
+    rcvr_accessor :code_assets, Array, :of => Icss::CodeAsset,   :default => []
+    rcvr_accessor :targets,     Hash,  :of => Icss::TargetListFactory, :default => {}, :merge_as => :hash_of_arrays
 
     # attr_accessor :body
-    def after_receive hsh
-      # FIXME: remove once we have defaults built into receiver lib.
-      self.messages    ||= {}
-      self.types       ||= []
-      self.data_assets ||= []
-      self.code_assets ||= []
-      self.targets     ||= {}
+    after_receive do |hsh|
       # Set each message's protocol to self, and if the name wasn't given, set
       # it using the message's hash key.
       self.messages.each{|msg_name, msg| msg.protocol = self; msg.name ||= msg_name }
@@ -120,22 +114,21 @@ module Icss
         :protocol    => protocol,
         :doc         => doc,
         :types       => (types       && types.map(&:to_hash)),
-        :messages    => (messages   ||{}).inject({}){|h,(k,v)| h[k] = v.to_hash; h },
-        :data_assets => (data_assets && data_assets.map(&:to_hash)),
-        :code_assets => (code_assets && code_assets.map(&:to_hash)),
-        :targets     => (targets_to_hash),
+        :messages    => messages.inject({}){|h,(k,v)| h[k] = v.to_hash; h },
+        :data_assets => data_assets.map(&:to_hash),
+        :code_assets => code_assets.map(&:to_hash),
+        :targets     => targets_to_hash,
       }.reject{|k,v| v.nil? }
     end
 
     def targets_to_hash
       return unless targets
-      targets.inject({}) do |h,(k,targs)|
-        h[k] = targs.map{|t| t.respond_to?(:to_hash) ? t.to_hash : t }
-        h
+      targets.inject({}) do |hsh,(k,targs)|
+        hsh[k] = targs.map{|t| t.respond_to?(:to_hash) ? t.to_hash : t } ; hsh
       end
     end
 
     # This will cause funny errors when it is an element of something that's to_json'ed
-    def to_json() to_hash.to_json ; end
+    def to_json(*args) to_hash.to_json(*args) ; end
   end
 end

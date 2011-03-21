@@ -254,6 +254,8 @@ module Icss
   #             "descending", or "ignore". For more details on how this is used,
   #             see the the sort order section below.
   #
+  # * required: raises an error if the field is unset when validate! is called
+  #
   # See RecordType for examples.
   #
   class RecordField
@@ -263,8 +265,10 @@ module Icss
     rcvr_accessor :doc,       String
     attr_accessor :type # work around a bug in ruby 1.8, which has defined (and deprecated) type
     rcvr_accessor :type,      Icss::Type, :required => true
-    rcvr_accessor :default,   Object # accept and love the object just as it is
+    rcvr_accessor :default,   Object
     rcvr          :order,     String
+    rcvr_accessor :required,  Boolean
+
     # is_reference is true if the type is a named reference to a defined type;
     # false if the type was defined right here in the schema.
     attr_accessor :is_reference
@@ -399,7 +403,7 @@ module Icss
   #
   class ArrayType < EnumerableType
     # FIXME: is items required? The schema doesn't say so.
-    rcvr_accessor :items, TypeFactory
+    rcvr_accessor :items, TypeFactory, :required => true
     self.type = :array
     self.ruby_klass = Array
 
@@ -426,7 +430,7 @@ module Icss
   #
   class MapType < EnumerableType
     # FIXME: is items required? The schema doesn't say so.
-    rcvr_accessor :values, TypeFactory
+    rcvr_accessor :values, TypeFactory, :required => true
     self.type       = :map
     self.ruby_klass = Hash
 

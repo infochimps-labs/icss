@@ -205,9 +205,10 @@ h3. samples
 
 A message may optionally supply @samples@, an array of SampleMessageCalls. Each SampleMessageCall is a hash with the following fields:
 
-* @request@     - an array of one element giving a hash suitable for populating the message's @request@ type (required).
+* @request@     - an array of one element giving a hash suitable for populating the message's @request@ type.
+* @url@         - Rather than supply the request params, you may supply them as a URL. While the URL may be used to imply request parameters, it is permitted to be inconsistent.
 * @response@    - a hash suitable for populating the message's @response@ type (optional).
-* @url@         - Rather than supply the request params, you may supply them as a URL (optional).
+* @error@       - in place of a response, an error expected for this call, from the message's error types.
 
 h2. targets
 
