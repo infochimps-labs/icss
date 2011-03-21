@@ -236,7 +236,7 @@ module Receiver
     #     end
     #     foo_obj = Foo.receive(:bob => 'hi, bob", :joe => 'hi, joe')
     #     # => <Foo @bob='hi, bob' @other_params={ :joe => 'hi, joe' }>
-    def self.rcvr_remaining name, info={}
+    def rcvr_remaining name, info={}
       rcvr_reader name, Hash, info
       after_receive do |hsh|
         remaining_vals_hsh = hsh.except(* keys).reject!{|k,v| k.to_s =~ /^_/}

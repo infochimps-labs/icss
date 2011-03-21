@@ -9,12 +9,13 @@ module Icss
   #
   class SampleMessageCall
     include Receiver
-    rcvr_accessor :name,     String
-    rcvr_accessor :doc,      String
-    rcvr_accessor :request,  Array, :default => []
-    rcvr_accessor :response, Object
-    rcvr_accessor :error,    Object
-    rcvr_accessor :url,      String
+    rcvr_accessor :name,              String
+    rcvr_accessor :doc,               String
+    rcvr_accessor :request,           Array, :default => []
+    rcvr_accessor :response,          Object  # a hash suitable for populating the message's @response@ type
+    attr_accessor :raw_response               # the raw http response from fetching
+    rcvr_accessor :error,             String
+    rcvr_accessor :url,               String
     attr_accessor :message
 
     # The URL implied by the given hostname and the sample request parameters.
@@ -34,7 +35,7 @@ module Icss
 
     def query_hash extra_query_params={}
       hsh = (@url.present? ? @url.query_values : request.first.to_hash) rescue {}
-      hsh.merge! extra_query_params
+      hsh = hsh.merge extra_query_params
       hsh.each{|k,v| hsh[k] = v.to_s }
       hsh
     end
@@ -67,35 +68,36 @@ module Icss
     # catches all server errors and constructs a dummy response hash if the call
     # fails.
     def fetch_response! hostname="", extra_query_params={}
-      raw = fetch_raw_response( full_url(hostname, extra_query_params) )
+      self.raw_response = fetch_raw_response( full_url(hostname, extra_query_params) )
       begin
-        self.response = JSON.load(raw)
+        resp_hsh = JSON.load(raw_response.body)
       rescue StandardError => e
-        warn ["error parsing response: #{e}"].join("\n")
-        self.response = { :_parse_error => e.to_s }
+        warn ["  error parsing response: #{e}"].join("\n")
+        self.response = nil
+        self.error    = "JsonParseError"
+        return
+      end
+      if raw_response.code == 200
+        self.response = resp_hsh
+        self.error    = nil
+      else
+        self.response = nil
+        self.error    = resp_hsh["error"]
       end
     end
 
   private
 
     def fetch_raw_response full_url
-      begin
-        RestClient.get(full_url.to_s)
-      rescue StandardError => e
-        warn ["error fetching response: #{e}"].join("\n")
-        { :_fetch_error => e.to_s, :_full_url => full_url.to_s }.to_json
+      RestClient.get(full_url.to_s) do |response, request, result|
+        response
       end
     end
   end
 end
 
 class Icss::Message
-  rcvr_accessor :samples, Array, :of => Icss::SampleMessageCall
-
-  # tie each samples back to this, its parent message
-  after_receive do |hsh|
-    (self.samples ||= []).each{|sample| sample.message = self }
-  end
+  rcvr_accessor :samples, Array, :of => Icss::SampleMessageCall, :default => []
 end
 
 class Icss::Protocol
@@ -119,10 +121,12 @@ class Icss::Protocol
       msg.samples.each do |sample_req|
         sample_hsh = {
           "name"     => sample_req.name,
-          "response" => sample_req.response,
-          "error"    => sample_req.error,
           "doc"      => sample_req.doc,
         }
+        if sample_req.response.present?
+        then sample_hsh['response'] =  sample_req.response
+        else sample_hsh['error']    =  sample_req.error
+        end
         if sample_req.url.present?
         then sample_hsh['url']     = sample_req.url.to_s
         else sample_hsh['request'] = sample_req.request

@@ -40,7 +40,7 @@ module Receiver
     # Note: indifferent access -- either of :foo or "foo" will work
     #
     def [](name)
-      self.send(name) if keys.include?(name)
+      self.send(name) if keys.include?(name.to_sym)
     end
 
     # Fake hash writer semantics: delegates to self.send("key=", val)

@@ -24,13 +24,23 @@ module Icss
     rcvr_accessor :response, Icss::TypeFactory
     rcvr_accessor :errors,   Icss::UnionType, :default => []
     attr_accessor :protocol
+    # this is defined in sample_message_call.rb -- since we don't do referenced types yet
+    # rcvr_accessor :samples, Array, :of => Icss::SampleMessageCall, :default => []
 
     after_receive do |hsh|
+      # track recursion of type references
       @response_is_reference = true if hsh['response'].is_a?(String) || hsh['response'].is_a?(Symbol)
+      # tie each sample back to this, its parent message
+      self.samples.each{|sample| sample.message = self }
     end
 
     def path
       File.join(protocol.path, name)
+    end
+
+    def first_sample_request_param
+      req = samples.first.request.first rescue nil
+      req || {}
     end
 
     #

@@ -176,13 +176,18 @@ module Icss
         warn "Can't handle union or enum types yet: #{self.inspect}"
         return
       end
+      p self if type.nil?
       klass.rcvr_accessor name.to_sym, type.ruby_klass, field_receiver_attrs
     end
 
     def field_receiver_attrs
       attrs = {}
       (self.class.receiver_attr_names - [:name, :type]).each do |attr|
-        attrs[attr] = self.send(attr)
+        val = attr_set?(attr) && self.send(attr) or next
+        attrs[attr] = val
+      end
+      case self.type
+      when Icss::ArrayType then attrs[:of] = self.type.items.ruby_klass
       end
       attrs
     end

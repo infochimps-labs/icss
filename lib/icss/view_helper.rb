@@ -2,9 +2,9 @@ module Icss
   Message.class_eval do
 
     def query_string
-      fields = request.first.type.fields rescue nil ; return unless fields
+      fields = request.first.type.fields     rescue nil ; return unless fields
       fields.map do |field|
-        "#{field.name}="
+        "#{field.name}=#{first_sample_request_param[field.name.to_s]}"
       end.join("&")
     end
 
