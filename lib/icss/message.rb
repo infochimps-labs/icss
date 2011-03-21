@@ -31,7 +31,7 @@ module Icss
       # track recursion of type references
       @response_is_reference = true if hsh['response'].is_a?(String) || hsh['response'].is_a?(Symbol)
       # tie each sample back to this, its parent message
-      self.samples.each{|sample| sample.message = self }
+      (self.samples ||= []).each{|sample| sample.message = self }
     end
 
     def path

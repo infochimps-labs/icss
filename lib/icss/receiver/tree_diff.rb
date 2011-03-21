@@ -1,6 +1,7 @@
 module Receiver
   def tree_diff(other)
     diff_hsh = {}
+    other = other.symbolize_keys if other.respond_to?(:symbolize_keys)
     each do |k, v|
       case
       when v.is_a?(Array) && other[k].is_a?(Array)
@@ -16,12 +17,24 @@ module Receiver
     other_hsh = other.dup.delete_if{|k, v| has_key?(k) }
     diff_hsh.merge!(other_hsh)
   end
+
+  module ActsAsHash
+    def <=>(other)
+      return 1 if other.blank?
+      each_key do |k|
+        if has_key?(k) && other.has_key?(k)
+          cmp = self[k] <=> other[k]
+          return cmp unless cmp == 0
+        end
+      end
+      0
+    end
+  end
 end
 
 class Array
   def tree_diff(other)
-    arr   = self - other.to_a
-    other = other.to_a - self
+    arr = dup
     if other.length > arr.length then arr = arr + ([nil] * (other.length - arr.length)) end
     diff_ary = arr.zip(other).map do |arr_el, other_el|
       if arr_el.respond_to?(:tree_diff)  && other_el.respond_to?(:to_hash)
