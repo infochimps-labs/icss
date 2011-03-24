@@ -26,16 +26,8 @@ module Icss
     rcvr_accessor :table_name,  String
   end
 
-  class S3PkgTarget < Target
-  end
-
-  class BulkdownloadTarget < Target
-  end
-
   class ApeyeyeTarget < Target
-  end
-
-  class ApidocsTarget < Target
+    rcvr_accessor :code_assets, Array, :of => String
   end
 
   class HbaseTarget < Target
