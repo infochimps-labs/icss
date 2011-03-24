@@ -19,6 +19,7 @@ module Icss
     # Schema factory
     rcvr_accessor :ruby_klass, Object
     rcvr_accessor :pig_name,   String
+    rcvr_accessor :mysql_name,   String
 
     #
     # Factory methods
@@ -86,12 +87,12 @@ module Icss
     ::Icss::Type::PRIMITIVE_TYPES = {}
     ::Icss::Type::PRIMITIVE_TYPES[:null]    = PrimitiveType.receive(:ruby_klass => NilClass, :pig_name => 'FIXME WHAT GOES HERE' )
     ::Icss::Type::PRIMITIVE_TYPES[:boolean] = PrimitiveType.receive(:ruby_klass => Boolean,  :pig_name => 'FIXME WHAT GOES HERE')
-    ::Icss::Type::PRIMITIVE_TYPES[:string]  = PrimitiveType.receive(:ruby_klass => String,   :pig_name => 'chararray')
-    ::Icss::Type::PRIMITIVE_TYPES[:bytes]   = PrimitiveType.receive(:ruby_klass => String,   :pig_name => 'bytearray')
-    ::Icss::Type::PRIMITIVE_TYPES[:int]     = PrimitiveType.receive(:ruby_klass => Integer,  :pig_name => 'int')
-    ::Icss::Type::PRIMITIVE_TYPES[:long]    = PrimitiveType.receive(:ruby_klass => Integer,  :pig_name => 'long')
-    ::Icss::Type::PRIMITIVE_TYPES[:float]   = PrimitiveType.receive(:ruby_klass => Float,    :pig_name => 'float')
-    ::Icss::Type::PRIMITIVE_TYPES[:double]  = PrimitiveType.receive(:ruby_klass => Float,    :pig_name => 'double')
+    ::Icss::Type::PRIMITIVE_TYPES[:string]  = PrimitiveType.receive(:ruby_klass => String,   :pig_name => 'chararray',:mysql_name => 'VARCHAR')
+    ::Icss::Type::PRIMITIVE_TYPES[:bytes]   = PrimitiveType.receive(:ruby_klass => String,   :pig_name => 'bytearray',:mysql_name => 'VARCHAR')
+    ::Icss::Type::PRIMITIVE_TYPES[:int]     = PrimitiveType.receive(:ruby_klass => Integer,  :pig_name => 'int',:mysql_name => 'INT')
+    ::Icss::Type::PRIMITIVE_TYPES[:long]    = PrimitiveType.receive(:ruby_klass => Integer,  :pig_name => 'long',:mysql_name => 'BIGINT')
+    ::Icss::Type::PRIMITIVE_TYPES[:float]   = PrimitiveType.receive(:ruby_klass => Float,    :pig_name => 'float',:mysql_name => 'FLOAT')
+    ::Icss::Type::PRIMITIVE_TYPES[:double]  = PrimitiveType.receive(:ruby_klass => Float,    :pig_name => 'double',:mysql_name => 'DOUBLE')
     #
     ::Icss::Type::PRIMITIVE_TYPES[:symbol]  = PrimitiveType.receive(:ruby_klass => Symbol,   :pig_name => 'chararray')
     ::Icss::Type::PRIMITIVE_TYPES[:time]    = PrimitiveType.receive(:ruby_klass => Time,     :pig_name => 'chararray')
