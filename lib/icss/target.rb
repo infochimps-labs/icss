@@ -49,6 +49,7 @@ module Icss
     rcvr_accessor :name,        String
     rcvr_accessor :license,     String
     rcvr_accessor :title,       String
+    rcvr_accessor :link,        String
     rcvr_accessor :description, String
     rcvr_accessor :price,       Float
     rcvr_accessor :tags,        Array, :of => String
