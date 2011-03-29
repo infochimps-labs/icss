@@ -51,7 +51,7 @@ module Icss
         :doc      => doc,
         :request  => summary_of_request_attr,
         :response => summary_of_response_attr,
-        :errors   => (errors && errors.to_hash),
+        :errors   => errors,
       }.reject{|k,v| v.nil? }
     end
     def to_json(*args) to_hash.to_json(*args) ; end
