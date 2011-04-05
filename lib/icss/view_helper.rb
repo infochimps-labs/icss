@@ -9,7 +9,8 @@ module Icss
     end
 
     def api_url
-      "http://api.infochimps.com/#{path}.json?#{query_string}"
+      # all calls accept xml or json
+      "http://api.infochimps.com/#{path}?#{query_string}"
     end
   end
 
