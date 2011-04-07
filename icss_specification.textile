@@ -237,11 +237,36 @@ An array of MysqlTarget hashes. Each MysqlTarget hash describes how to map one o
 
 h3. hbase
 
-An array of HbaseTarget hashes. Each HabaseTarget hash describes how to map one or more data_assets into an Hbase database. It contains the following fields:
+An array of HbaseTarget hashes. There are two possibilities here:
 
-* ...
+h4. Fourple
 
-TODO
+Here your data itself will contain the hbase column family, and column name each line of data will be stored into. In this case the HbaseTarget hash will contain the following fields:
+
+* @table_name@ - The hbase table to write data into (required)
+* @column_families@ - An array of hbase column families that data will be written into (required). These column families will be created if they do not already exist.
+* @loader@ - 'fourple_loader', this tells Troop to load _this_ target with the FourpleLoader class (required)
+* @data_assets@ - An array of named data assets (required to exist in the @data_assets@ section. (required)
+
+Your data *must* have the following schema to use this loader:
+
+(@row_key@, @column_family@, @column_name@, @column_value@)
+
+and optionally,
+
+(@row_key@, @column_family@, @column_name@, @column_value@, @timestamp@)
+
+where @timestamp@ is unix time.
+
+h4. Tsv
+
+Here your data will simply be tsv records. In this case the HbaseTarget hash will contain the following fields:
+
+* @table_name@ - The hbase table to write data into (required)
+* @column_family@ - An single hbase column family that data will be written into (required). This column family will be created if it does not already exist.
+* @id_field@ - The name of a field to use as the row key during indexing (required).
+* @loader@ - 'tsv_loader', this tells Troop to load _this_ target with the TsvLoader class (required)
+* @data_assets@ - An array of named data assets (required to exist in the @data_assets@ section. (required)
 
 h3. elastic_search
 
@@ -249,7 +274,7 @@ An array of ElasticSearchTarget hashes. Each ElasticSearchTarget hash describes 
 
 * @index_name@  - The name of the index to write data into (required). It need not already exist.
 * @object_type@ - The object type create (required). Many different types of objects can exist in the same index. Each @object_type@ has its own schema that will be updated dynamically by ElasticSearch as records of that type are indexed. If this dynamism is unwanted (in the case you have more complex fields like @date@ or @geo_point@) then you should use the rest API and PUT the appropriate schema mapping ahead of time.
-* @id_field@    - The name of a field withing @object_type@ to use as an inherent id during indexing (optional). If this field is omitted the records will be assigned an id dynamically during indexing.
+* @id_field@    - The name of a field within @object_type@ to use as an inherent id during indexing (optional). If this field is omitted the records will be assigned an id dynamically during indexing.
 * @data_assets@ - An array of named data assets (required to exist in the @data_assets@ section), to write to the index specified by @index_name@ with the schema mapping specified by @object_type@.
 
 h2. Differences between ICSS and Avro
