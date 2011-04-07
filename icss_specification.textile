@@ -268,6 +268,16 @@ Here your data will simply be tsv records. In this case the HbaseTarget hash wil
 * @loader@ - 'tsv_loader', this tells Troop to load _this_ target with the TsvLoader class (required)
 * @data_assets@ - An array of named data assets (required to exist in the @data_assets@ section. (required)
 
+h3. geo_index
+
+This is for storing data into the infochimps geo index. An array of GeoIndexTarget hashes. Each hash has the following fields:
+
+* @table_name@ - The hbase table to write data into. It *must* be one of @geo_location_infochimps_place@, @geo_location_infochimps_event@, or @geo_location_infochimps_path@ (required)
+* @data_assets@ - An array of named data assets (required to exist in the @data_assets@ section. (required)
+* @resolutions@ - A comma separated string of integer resolutions, each one between 1 and 13, at which to index the data (required)
+* @chars_per_page@ - An integer number of approximate characters per page. One or more pages, combined into a geoJSON "FeatureCollection" are returned from the infochimps geo api. This parameter affects how large a single page is. (required)
+* @sort_field@ - A field within the @properties@ portion of each geoJSON feature indexed. This @sort_field@ will be used to sort the pages returned when a request is made against the infochimps geo api.
+
 h3. elastic_search
 
 An array of ElasticSearchTarget hashes. Each ElasticSearchTarget hash describes how to map one or more data_assets into an ElasticSearch data store. It contains the following fields:

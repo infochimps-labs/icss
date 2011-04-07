@@ -46,6 +46,14 @@ module Icss
     rcvr_accessor :object_type, String
   end
 
+  class GeoIndexTarget < Target
+    rcvr_accessor :data_assets,    Array, :of => String
+    rcvr_accessor :table_name,     String
+    rcvr_accessor :resolutions,    String
+    rcvr_accessor :chars_per_page, Integer
+    rcvr_accessor :sort_field,     String
+  end
+
   class CatalogTarget < Target
     rcvr_accessor :name,        String
     rcvr_accessor :license,     String
