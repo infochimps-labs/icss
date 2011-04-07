@@ -36,6 +36,7 @@ module Icss
     rcvr_accessor :column_families, Array, :of => String
     rcvr_accessor :column_family,   String
     rcvr_accessor :loader,          String
+    rcvr_accessor :id_field,        String
   end
 
   class ElasticSearchTarget < Target
