@@ -107,7 +107,8 @@ module Icss
     def to_xml options={}, &block
       options = options.reverse_merge(:root => self.class.xml_type_name)
       xml_hsh = self.to_hash
-      xml_hsh.merge!(:_note => "XML support is experimental, structure may change in future") unless options[:skip_instruct]
+      # # remove once microsoft has signed off on this
+      # xml_hsh.merge!(:_note => "XML support is experimental, structure may change in future") unless options[:skip_instruct]
       xml_hsh.to_xml(options, &block)
     end
 
