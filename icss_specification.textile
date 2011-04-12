@@ -296,6 +296,7 @@ An array of ElasticSearchTarget hashes. Each ElasticSearchTarget hash describes 
 * @object_type@ - The object type create (required). Many different types of objects can exist in the same index. Each @object_type@ has its own schema that will be updated dynamically by ElasticSearch as records of that type are indexed. If this dynamism is unwanted (in the case you have more complex fields like @date@ or @geo_point@) then you should use the rest API and PUT the appropriate schema mapping ahead of time.
 * @id_field@    - The name of a field within @object_type@ to use as an inherent id during indexing (optional). If this field is omitted the records will be assigned an id dynamically during indexing.
 * @data_assets@ - An array of named data assets (required to exist in the @data_assets@ section), to write to the index specified by @index_name@ with the schema mapping specified by @object_type@.
+* @loader@      - The way in which to load the data. One of @tsv_loader@ or @json_loader@. Choose the appropriate one based on what type of data you have.
 
 h2. Differences between ICSS and Avro
 

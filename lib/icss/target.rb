@@ -44,6 +44,7 @@ module Icss
     rcvr_accessor :index_name,  String
     rcvr_accessor :id_field,    String
     rcvr_accessor :object_type, String
+    rcvr_accessor :loader,      String
   end
 
   class GeoIndexTarget < Target
