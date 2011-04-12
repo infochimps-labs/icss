@@ -214,6 +214,16 @@ h2. targets
 
 This section defines publishing targets for the collection. It is an optional field, and each target type is optional as well. It is a hash with the following possible elements:
 
+h3. Summary
+
+* *@Mysql@*          - Create tables and push data into MySQL
+* *@Hbase@*          - Create tables and push data into HBase
+* *@ElasticSearch@*  - Index data into Elasticsearch
+* *@Catalog@*        - Create a dataset page on the "Infochimps":http://www.infochimps.com site.
+                     - Attaches API documentation and Packages
+* *@Apeyeye@*        - Publishes ICSS and Endpoint code assets to the Apeyeye
+* *@GeoIndex@*       - Index data into GeoIndex
+
 h3. catalog
 
 An array of CatalogTarget hashes. Each CatalogTarget hash describes a catalog entry on the Infochimps data catalog. It contains the following fields:

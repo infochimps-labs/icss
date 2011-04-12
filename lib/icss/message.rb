@@ -20,6 +20,11 @@ module Icss
     include Receiver::ActsAsHash
     rcvr_accessor :name,     String
     rcvr_accessor :doc,      String
+
+    #we're starting to attach a lot of pork to this lib...
+    rcvr_accessor :initial_free_qty,      Integer
+    rcvr_accessor :price_per_k,           Integer
+
     rcvr_accessor :request,  Array, :of => Icss::RecordField, :default => []
     rcvr_accessor :response, Icss::TypeFactory
     rcvr_accessor :errors,   Icss::UnionType, :default => []
