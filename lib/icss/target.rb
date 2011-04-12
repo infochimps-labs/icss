@@ -61,6 +61,7 @@ module Icss
     rcvr_accessor :title,       String
     rcvr_accessor :link,        String
     rcvr_accessor :description, String
+    rcvr_accessor :owner,       String
     rcvr_accessor :price,       Float
     rcvr_accessor :tags,        Array, :of => String
     rcvr_accessor :messages,    Array, :of => String
