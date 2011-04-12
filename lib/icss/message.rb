@@ -23,7 +23,7 @@ module Icss
 
     #we're starting to attach a lot of pork to this lib...
     rcvr_accessor :initial_free_qty,      Integer
-    rcvr_accessor :price_per_k,           Integer
+    rcvr_accessor :price_per_k_in_cents,  Integer
 
     rcvr_accessor :request,  Array, :of => Icss::RecordField, :default => []
     rcvr_accessor :response, Icss::TypeFactory
