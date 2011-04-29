@@ -39,7 +39,7 @@ data_assets:
 
 code_assets:
   - location: code/bnc_endpoint.rb
-    name: word_stats
+    name: bnc_endpoint
 
 types:
 
@@ -99,7 +99,9 @@ targets:
       name: word_freq_bnc
       data_assets:
         - word_stats_data_asset
-
+  apeyeye:
+    - code_assets:
+      - bnc_endpoint.rb
   catalog:
     - name: word_freq_bnc
       title: Word Frequencies From the British National Corpus
@@ -236,6 +238,17 @@ An array of CatalogTarget hashes. Each CatalogTarget hash describes a catalog en
 * @packages@    - An array of hashes. Each hash has a field called @data_assets@ which is an array of named data assets. Each data asset in the array will be bundled together into a single bulk download on the catalog.
 
 One or both of @messages@ and @packages@ must be present.
+
+h3. Apeyeye
+
+* @code_assets@ - An array of named code_assets (required to exist in the top-level @code_assets@ section) to copy to an Apeyeye repository
+
+h4. Note
+
+* The @Apeyeye@ target also places a copy of the @ICSS@ next to the endpoint code assets.
+
+* The @Apeyeye@ target creates necessary subdirectories and copies data_assets to the directory specified by the @apeyeye:repo_path@ in the @troop.yaml@ configuration file.
+  Troop will **not** currently perform an actual deployment to the cluster running the Infochimps API. After Troop has finished, the @endpoint@ and @icss.yaml@ files will need to be manually committed to the repo and the Chef deployment performed.
 
 h3. mysql
 
