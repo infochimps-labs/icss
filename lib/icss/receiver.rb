@@ -1,7 +1,3 @@
-require 'active_support/core_ext/class'
-require 'time'
-require 'icss/receiver/validations'
-
 # dummy type for receiving True or False
 class Boolean ; end unless defined?(Boolean)
 
@@ -186,12 +182,12 @@ module Receiver
           self.#{name} = #{receiver_body_for(type, info)}
         end
       STR
-      receiver_attr_names << name unless receiver_attr_names.include?(name)
-      receiver_attrs[name] = info.merge({ :name => name, :type => type })
+      self.receiver_attr_names += [name] unless receiver_attr_names.include?(name)
+      self.receiver_attrs[name] = info.merge({ :name => name, :type => type })
     end
 
     def after_receive &block
-      self.after_receivers << block
+      self.after_receivers += [block]
     end
 
     def type_to_klass(type)
@@ -279,7 +275,9 @@ module Receiver
   # set up receiver attributes, and bring in methods from the ClassMethods module at class-level
   def self.included base
     base.class_eval do
-      class_inheritable_accessor :receiver_attrs, :receiver_attr_names, :after_receivers
+      class_attribute :receiver_attrs
+      class_attribute :receiver_attr_names
+      class_attribute :after_receivers
       self.receiver_attrs      = {} # info about the attr
       self.receiver_attr_names = [] # ordered set of attr names
       self.after_receivers     = [] # blocks to execute following receive!

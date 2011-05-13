@@ -128,7 +128,7 @@ module Icss
     rcvr_accessor :namespace, String
     attr_accessor :parent
     # the avro base type name
-    class_inheritable_accessor :type
+    class_attribute :type
     include Icss::Validations
 
     # In named types, the namespace and name are determined in one of the following ways:
@@ -385,7 +385,8 @@ module Icss
   # (do not confuse with EnumType, which is not an EnumerableType. sigh).
   #
   class EnumerableType < Type
-    class_inheritable_accessor :type, :ruby_klass
+    class_attribute :type
+    class_attribute :ruby_klass
     def to_hash
       super.merge( :type => type.to_s )
     end
@@ -488,7 +489,7 @@ module Icss
   #
   class FixedType < NamedType
     rcvr_accessor :size, Integer, :required => true
-    class_inheritable_accessor :ruby_klass
+    class_attribute :ruby_klass
     self.type = :fixed
     self.ruby_klass = String
 
