@@ -10,6 +10,8 @@ Before any further proclamations here is a complete example:
 ---
 namespace: language.corpora.word_freq
 protocol: bnc
+under_consideration: true
+update_frequency: monthly
 
 messages:
   word_stats:
@@ -140,6 +142,13 @@ h2. protocol
 
 The short name of the collection. Together the protocol and namespace should be globally unique and fully qualify the data.
 
+h2. under_consideration
+
+This flag is set to true while you are working on a procuring a dataset. The icss can still be published, and the webpage will reflect the current status of the icss based upon this flag.
+
+h2. update_frequency
+
+The frequency with which that the dataset needs to be updated. Acceptable strings are _daily_, _weekly_, _monthly_, _quarterly_, and _never_.
 h2. data_assets
 
 Describes each data asset (a homogeneous chunk of data) and its location relative to the icss itself. This section is written in the icss as an array of hashes where the fields of each hash are as follows:

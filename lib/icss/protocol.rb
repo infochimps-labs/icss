@@ -68,6 +68,8 @@ module Icss
     rcvr_accessor :data_assets, Array, :of => Icss::DataAsset,   :default => []
     rcvr_accessor :code_assets, Array, :of => Icss::CodeAsset,   :default => []
     rcvr_accessor :targets,     Hash,  :of => Icss::TargetListFactory, :default => {}, :merge_as => :hash_of_arrays
+    rcvr_accessor :under_consideration, Boolean
+    rcvr_accessor :update_frequency, String # must be of the form daily, weekly, monthly, quarterly, never
 
     # attr_accessor :body
     after_receive do |hsh|
@@ -113,6 +115,8 @@ module Icss
         :namespace   => @namespace, # use accessor so unset namespace isn't given
         :protocol    => protocol,
         :doc         => doc,
+        :under_consideration => under_consideration,
+        :update_frequency    => update_frequency,
         :types       => (types       && types.map(&:to_hash)),
         :messages    => messages.inject({}){|h,(k,v)| h[k] = v.to_hash; h },
         :data_assets => data_assets.map(&:to_hash),
