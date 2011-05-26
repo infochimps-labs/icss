@@ -122,7 +122,7 @@ module Icss
         :data_assets => data_assets.map(&:to_hash),
         :code_assets => code_assets.map(&:to_hash),
         :targets     => targets_to_hash,
-      }.reject{|k,v| v.nil? }
+      }.reject{|k,v| v.nil? }.tree_merge! self.message_samples_hash
     end
 
     def targets_to_hash
