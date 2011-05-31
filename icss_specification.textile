@@ -230,14 +230,17 @@ h3. catalog
 
 An array of CatalogTarget hashes. Each CatalogTarget hash describes a catalog entry on the Infochimps data catalog. It contains the following fields:
 
-* @name@        - The name of the catalog entry
-* @title@       - The display title of the catalog entry.
-* @description@ - A full description (can be textile) for the catalog entry that is displayed in the overview section on the catalog.
-* @tags@        - An array of tags describing the catalog entry. Tags may only contain characters within [a-z0-9_] (lowercase alphanumeric or underscore). The publishing system MAY augment these tags with additional ones extracted from the protocol as a whole.
-* @messages@    - An array of message names to attach to the catalog entry. Each message will be fully documented on the catalog. The last message in the array will be available to explore with the api explorer.
-* @packages@    - An array of hashes. Each hash has a field called @data_assets@ which is an array of named data assets. Each data asset in the array will be bundled together into a single bulk download on the catalog.
+* @name@        - The name of the catalog entry. [String] (required)
+* @title@       - The display title of the catalog entry. [String] (required)
+* @description@ - A full description (can be textile) for the catalog entry that is displayed in the overview section on the catalog. [String] (required)
+* @license@     - The name of an existing license on Infochips.com [String] (optional)
+* @link@        - The source URL of the data described by this catalog entry. [String] (optional)
+* @owner@       - Who will own this catalog entry on Infochimps.com; the user must already exist. [String] (optional, defaults to user **Infochimps**)
+* @price@       - The price in USD that this catalog's packages will be available for. Data is free if price is not provided [Float] (optional)
+* @tags@        - An array of tags describing the catalog entry. Tags may only contain characters within [a-z0-9_] (lowercase alphanumeric or underscore). The publishing system MAY augment these tags with additional ones extracted from the protocol as a whole. (optional)
 
-One or both of @messages@ and @packages@ must be present.
+* @messages@    - An array of message names to attach to the catalog entry. Each message will be fully documented on the catalog. The last message in the array will be available to explore with the api explorer. 
+* @packages@    - An array of hashes. Each hash has a field called @data_assets@ which is an array of named data assets. Each data asset in the array will be bundled together into a single bulk download on the catalog. 
 
 h3. Apeyeye
 
