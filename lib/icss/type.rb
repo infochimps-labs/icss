@@ -342,6 +342,10 @@ module Icss
     rcvr_accessor :fields, Array, :of => Icss::RecordField, :required => true
     self.type = :record
 
+    after_receive do |hsh|
+      Icss::Type::DERIVED_TYPES[name.to_sym] = self
+    end
+
     def to_hash
       super.merge( :fields => (fields||[]).map{|field| field.to_hash} )
     end

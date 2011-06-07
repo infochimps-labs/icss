@@ -59,7 +59,7 @@ module Icss
         :request  => summary_of_request_attr,
         :response => summary_of_response_attr,
         :samples  => samples.map(&:to_hash).map(&:compact),
-        :errors   => errors,
+        :errors   => (errors.blank? ? nil : errors),
       }.reject{|k,v| v.nil? }
     end
     def to_json(*args) to_hash.to_json(*args) ; end

@@ -116,23 +116,24 @@ class Icss::Protocol
   #             response:       { "time": "2010-08-07 05:06:07 UTC", "epoch_seconds": 1281225967 }
   #
   def message_samples_hash
-    hsh = { "namespace" => namespace, "protocol" => protocol, "messages" => {} }
+    hsh = { :namespace => namespace, :protocol => protocol, :messages => {} }
     messages.each do |msg_name, msg|
-      hsh["messages"][msg_name] = { "samples" => [] }
+      hsh[:messages][msg_name] = { :samples => [] }
       msg.samples.each do |sample_req|
         sample_hsh = {
-          "name"     => sample_req.name,
-          "doc"      => sample_req.doc,
+          :name     => sample_req.name,
+          :doc      => sample_req.doc,
         }
         if sample_req.response.present?
-        then sample_hsh['response'] =  sample_req.response
-        else sample_hsh['error']    =  sample_req.error
+        then sample_hsh[:response] =  sample_req.response
+        else sample_hsh[:error]    =  sample_req.error
         end
         if sample_req.url.present?
-        then sample_hsh['url']     = sample_req.url.to_s
-        else sample_hsh['request'] = sample_req.request
+        then sample_hsh[:url]      = sample_req.url.to_s
+        else sample_hsh[:request]  = sample_req.request
         end
-        hsh["messages"][msg_name]["samples"] << sample_hsh.compact_blank!
+        sample_hsh.compact_blank!
+        hsh[:messages][msg_name][:samples] << sample_hsh
       end
     end
     return hsh
