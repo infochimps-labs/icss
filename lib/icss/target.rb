@@ -4,8 +4,8 @@ module Icss
   # Instantiates an array of target objects
   #
   class TargetListFactory
-    def self.receive target_name, target_info_list
-      klass = ("Icss::"+target_name.camelize+"Target").constantize
+    def self.receive target_info_list, target_name
+      klass = "Icss::#{target_name.camelize}Target".constantize
       target_info_list.map{|target_info| klass.receive(target_info)}
     end
   end

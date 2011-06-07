@@ -1,4 +1,6 @@
+require 'gorillib/object/blank'
 require 'gorillib/string/inflections'
 require 'gorillib/string/constantize'
+require 'gorillib/array/extract_options'
 require 'gorillib/hash/keys'
 require 'gorillib/metaprogramming/class_attribute'
