@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{icss}
-  s.version = "0.0.2"
+  s.version = "0.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Philip (flip) Kromer for Infochimps"]
-  s.date = %q{2011-05-12}
+  s.date = %q{2011-06-07}
   s.description = %q{Infochimps Stupid Schema library: an avro-compatible data description standard. ICSS completely describes a collection of data (and associated assets) in a way that is expressive, scalable and sufficient to drive remarkably complex downstream processes.}
   s.email = %q{coders@infochimps.com}
   s.extra_rdoc_files = [
@@ -19,40 +19,39 @@ Gem::Specification.new do |s|
   s.files = [
     ".document",
     ".rspec",
+    ".watchr",
+    "CHANGELOG.textile",
     "Gemfile",
     "Gemfile.lock",
     "LICENSE.textile",
     "README.textile",
     "Rakefile",
     "VERSION",
-    "examples/BulkData.avpr",
-    "examples/complicated.icss.yaml",
-    "examples/interop.avsc",
-    "examples/mail.avpr",
-    "examples/namespace.avpr",
-    "examples/org/apache/avro/ipc/HandshakeRequest.avsc",
-    "examples/org/apache/avro/ipc/HandshakeResponse.avsc",
-    "examples/org/apache/avro/ipc/trace/avroTrace.avdl",
-    "examples/org/apache/avro/ipc/trace/avroTrace.avpr",
-    "examples/org/apache/avro/mapred/tether/InputProtocol.avpr",
-    "examples/org/apache/avro/mapred/tether/OutputProtocol.avpr",
-    "examples/simple.avpr",
-    "examples/weather.avsc",
+    "examples/avro_examples/BulkData.avpr",
+    "examples/avro_examples/complicated.icss.yaml",
+    "examples/avro_examples/interop.avsc",
+    "examples/avro_examples/mail.avpr",
+    "examples/avro_examples/namespace.avpr",
+    "examples/avro_examples/org/apache/avro/ipc/HandshakeRequest.avsc",
+    "examples/avro_examples/org/apache/avro/ipc/HandshakeResponse.avsc",
+    "examples/avro_examples/org/apache/avro/ipc/trace/avroTrace.avdl",
+    "examples/avro_examples/org/apache/avro/ipc/trace/avroTrace.avpr",
+    "examples/avro_examples/org/apache/avro/mapred/tether/InputProtocol.avpr",
+    "examples/avro_examples/org/apache/avro/mapred/tether/OutputProtocol.avpr",
+    "examples/avro_examples/simple.avpr",
+    "examples/avro_examples/weather.avsc",
+    "icss.gemspec",
     "icss_specification.textile",
     "init.rb",
     "lib/icss.rb",
     "lib/icss/brevity.rb",
     "lib/icss/code_asset.rb",
+    "lib/icss/core_ext.rb",
     "lib/icss/data_asset.rb",
     "lib/icss/message.rb",
     "lib/icss/old.rb",
     "lib/icss/protocol.rb",
     "lib/icss/protocol_set.rb",
-    "lib/icss/receiver.rb",
-    "lib/icss/receiver/acts_as_hash.rb",
-    "lib/icss/receiver/acts_as_loadable.rb",
-    "lib/icss/receiver/tree_diff.rb",
-    "lib/icss/receiver/validations.rb",
     "lib/icss/sample_message_call.rb",
     "lib/icss/target.rb",
     "lib/icss/type.rb",
@@ -77,7 +76,7 @@ Gem::Specification.new do |s|
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<yajl-ruby>, ["~> 0.8.2"])
-      s.add_runtime_dependency(%q<gorillib>, ["~> 0.0.4"])
+      s.add_runtime_dependency(%q<gorillib>, ["~> 0.1.0"])
       s.add_development_dependency(%q<rspec>, ["~> 2.3.0"])
       s.add_development_dependency(%q<yard>, ["~> 0.6.0"])
       s.add_development_dependency(%q<bundler>, ["~> 1.0.0"])
@@ -85,7 +84,7 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<rcov>, [">= 0"])
     else
       s.add_dependency(%q<yajl-ruby>, ["~> 0.8.2"])
-      s.add_dependency(%q<gorillib>, ["~> 0.0.4"])
+      s.add_dependency(%q<gorillib>, ["~> 0.1.0"])
       s.add_dependency(%q<rspec>, ["~> 2.3.0"])
       s.add_dependency(%q<yard>, ["~> 0.6.0"])
       s.add_dependency(%q<bundler>, ["~> 1.0.0"])
@@ -94,7 +93,7 @@ Gem::Specification.new do |s|
     end
   else
     s.add_dependency(%q<yajl-ruby>, ["~> 0.8.2"])
-    s.add_dependency(%q<gorillib>, ["~> 0.0.4"])
+    s.add_dependency(%q<gorillib>, ["~> 0.1.0"])
     s.add_dependency(%q<rspec>, ["~> 2.3.0"])
     s.add_dependency(%q<yard>, ["~> 0.6.0"])
     s.add_dependency(%q<bundler>, ["~> 1.0.0"])
