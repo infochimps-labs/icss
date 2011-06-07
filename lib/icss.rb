@@ -1,7 +1,5 @@
-require 'gorillib/string/inflections'
-require 'gorillib/string/constantize'
-require 'gorillib/hash/keys'
-require 'gorillib/metaprogramming/class_attribute'
+require 'icss/core_ext' unless Object.respond_to?(:class_attribute)
+
 require 'gorillib/receiver'
 require 'gorillib/receiver/acts_as_hash'
 require 'gorillib/receiver/acts_as_loadable'
