@@ -1,4 +1,3 @@
-require 'rubygems' unless defined?(Gem)
 require 'spork'
 require 'rspec'
 

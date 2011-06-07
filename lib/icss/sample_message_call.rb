@@ -9,6 +9,7 @@ module Icss
   #
   class SampleMessageCall
     include Receiver
+    include Receiver::ActsAsHash
     rcvr_accessor :name,              String
     rcvr_accessor :doc,               String
     rcvr_accessor :request,           Array, :default => []

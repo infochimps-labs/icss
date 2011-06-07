@@ -19,7 +19,7 @@ module Icss
     # Schema factory
     rcvr_accessor :ruby_klass, Object
     rcvr_accessor :pig_name,   String
-    rcvr_accessor :mysql_name,   String
+    rcvr_accessor :mysql_name, String
 
     #
     # Factory methods
@@ -37,7 +37,7 @@ module Icss
         warn "crap. can't properly do namespaced types yet."
         type_name = type_name.to_s.gsub(/(.*)\./, "")
       end
-      VALID_TYPES[type_name.to_sym] || DERIVED_TYPES[type_name.to_sym]
+      Icss::Type::VALID_TYPES[type_name.to_sym] || Icss::Type::DERIVED_TYPES[type_name.to_sym]
     end
 
     def self.primitive? name
@@ -203,7 +203,7 @@ module Icss
   #
   class TypeFactory
     def self.receive type_info
-      # p ['----------', self, 'receive', type_info] # , Icss::Type::DERIVED_TYPES]
+      # p ['----------', self, 'receive', type_info, Icss::Type::DERIVED_TYPES] if type_info.is_a?(String) && type_info =~ /abstr/
       case
       when type_info.is_a?(Icss::Type)
         type_info

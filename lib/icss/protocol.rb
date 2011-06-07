@@ -128,7 +128,7 @@ module Icss
     def targets_to_hash
       return unless targets
       targets.inject({}) do |hsh,(k,targs)|
-        hsh[k] = targs.map{|t| t.respond_to?(:to_hash) ? t.to_hash : t } ; hsh
+        hsh[k] = targs.map(&:to_hash).map(&:compact) ; hsh
       end
     end
 
