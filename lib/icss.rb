@@ -1,6 +1,4 @@
 require 'icss/core_ext' unless Object.respond_to?(:class_attribute)
-require 'gorillib/hash/compact'
-require 'gorillib/hash/tree_merge'
 require 'gorillib/receiver'
 require 'gorillib/receiver/acts_as_hash'
 require 'gorillib/receiver/acts_as_loadable'
