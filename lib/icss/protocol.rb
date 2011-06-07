@@ -105,7 +105,7 @@ module Icss
 
     def receive_targets hsh
       self.targets = hsh.inject({}) do |target_obj_hsh, (target_name, target_info_list)|
-        target_obj_hsh[target_name] = TargetListFactory.receive(target_name, target_info_list) # returns an arry of targets
+        target_obj_hsh[target_name] = TargetListFactory.receive(target_info_list, target_name) # returns an arry of targets
         target_obj_hsh
       end
     end

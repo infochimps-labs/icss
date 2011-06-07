@@ -1,12 +1,12 @@
-require 'active_support/inflector' # for classify and constantize
-require 'active_support/core_ext/hash/keys'
-# require 'active_support/core_ext/hash/deep_merge'
+require 'icss/core_ext' unless Object.respond_to?(:class_attribute)
+
+require 'gorillib/receiver'
+require 'gorillib/receiver/acts_as_hash'
+require 'gorillib/receiver/acts_as_loadable'
+require 'gorillib/receiver/validations'
+require 'time' # ain't that always the way
 
 $: << File.dirname(__FILE__)
-require 'icss/receiver'
-require 'icss/receiver/acts_as_hash'
-require 'icss/receiver/acts_as_loadable'
-#
 require 'icss/validations'
 require 'icss/type'
 require 'icss/message'
