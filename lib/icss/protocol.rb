@@ -119,8 +119,8 @@ module Icss
         :update_frequency    => update_frequency,
         :types       => (types       && types.map(&:to_hash)),
         :messages    => messages.inject({}){|h,(k,v)| h[k] = v.to_hash; h },
-        :data_assets => data_assets.map(&:to_hash),
-        :code_assets => code_assets.map(&:to_hash),
+        :data_assets => data_assets.map(&:to_hash).map(&:compact_blank),
+        :code_assets => code_assets.map(&:to_hash).map(&:compact_blank),
         :targets     => targets_to_hash,
       }.reject{|k,v| v.nil? }
     end
@@ -128,7 +128,7 @@ module Icss
     def targets_to_hash
       return unless targets
       targets.inject({}) do |hsh,(k,targs)|
-        hsh[k] = targs.map(&:to_hash).map(&:compact) ; hsh
+        hsh[k] = targs.map(&:to_hash).map(&:compact_blank) ; hsh
       end
     end
 

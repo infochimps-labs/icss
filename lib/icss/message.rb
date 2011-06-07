@@ -58,7 +58,7 @@ module Icss
         :price_per_k_in_cents => price_per_k_in_cents,
         :request  => summary_of_request_attr,
         :response => summary_of_response_attr,
-        :samples  => samples.map(&:to_hash).map(&:compact),
+        :samples  => samples.map(&:to_hash).map(&:compact_blank),
         :errors   => (errors.blank? ? nil : errors),
       }.reject{|k,v| v.nil? }
     end
