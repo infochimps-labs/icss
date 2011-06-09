@@ -91,6 +91,10 @@ module Icss
       fullname.gsub('.', '/')
     end
 
+    def tree_merge! arg
+      to_hash.tree_merge!(arg)
+    end
+
     def find_message nm
       return if messages.blank?
       nm = nm.to_s.gsub("/", ".").split(".").last
