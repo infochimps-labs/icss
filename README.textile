@@ -1,6 +1,14 @@
-= icss
+= The Infochimps Stupid Schema (ICSS)
 
-Description goes here.
+An ICSS file is a *complete*, *expressive* description of a collection of related data and all associated assets.
+
+Assets may include
+* data assets (including their location and schema)
+* code for api calls (messages) based on the the described records (including their call signature and schema)
+* other referenced schema
+
+See [icss_specification.textile](icss_specification.textile) for more.
+
 
 == Contributing to icss
  
