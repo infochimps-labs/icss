@@ -251,7 +251,7 @@ An array of CatalogTarget hashes. Each CatalogTarget hash describes a catalog en
 * @messages@    - An array of message names to attach to the catalog entry. Each message will be fully documented on the catalog. The last message in the array will be available to explore with the api explorer. 
 * @packages@    - An array of hashes. Each hash has a field called @data_assets@ which is an array of named data assets. Each data asset in the array will be bundled together into a single bulk download on the catalog. 
 
-h3. Apeyeye
+h3. apeyeye
 
 * @code_assets@ - An array of named code_assets (required to exist in the top-level @code_assets@ section) to copy to an Apeyeye repository
 
@@ -323,6 +323,10 @@ An array of ElasticSearchTarget hashes. Each ElasticSearchTarget hash describes 
 * @id_field@    - The name of a field within @object_type@ to use as an inherent id during indexing (optional). If this field is omitted the records will be assigned an id dynamically during indexing.
 * @data_assets@ - An array of named data assets (required to exist in the @data_assets@ section), to write to the index specified by @index_name@ with the schema mapping specified by @object_type@.
 * @loader@      - The way in which to load the data. One of @tsv_loader@ or @json_loader@. Choose the appropriate one based on what type of data you have.
+
+h3. apitest
+
+**AWAITING DOCUMENTATION**
 
 h2. Differences between ICSS and Avro
 
