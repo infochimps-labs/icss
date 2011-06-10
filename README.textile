@@ -7,7 +7,7 @@ Assets may include
 * code for api calls (messages) based on the the described records (including their call signature and schema)
 * other referenced schema
 
-See "icss_specification.textile":blob/master/icss_specification.textile for more.
+See "icss_specification.textile":icss/blob/master/icss_specification.textile for more.
 
 
 h2. Colophon
