@@ -113,7 +113,7 @@ module Icss
     end
 
     def self.xml_type_name
-      self.to_s.demodulize.underscore.dasherize
+      self.to_s.demodulize.underscore.gsub(/_/, '-')
     end
 
     def to_json *args
