@@ -6,7 +6,7 @@ source "http://rubygems.org"
 gem   'yajl-ruby', "~> 0.8.2"
 gem   'gorillib',  "~> 0.1.1"
 
-gem   'activemodel', "~> 3.0.6"
+gem   'activemodel', "~> 3.0.9"
 
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.
