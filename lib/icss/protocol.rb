@@ -55,7 +55,8 @@ module Icss
     include Receiver
     include Receiver::ActsAsHash
     include Receiver::ActsAsLoadable
-    include Icss::Validations
+    include Gorillib::Hashlike::TreeMerge
+    include Receiver::ActiveModelShim
 
     rcvr_accessor :protocol,    String, :required => true
     alias_method  :name, :protocol
@@ -71,15 +72,18 @@ module Icss
     rcvr_accessor :under_consideration, Boolean
     rcvr_accessor :update_frequency, String # must be of the form daily, weekly, monthly, quarterly, never
 
-    # attr_accessor :body
+    validates_presence_of :protocol, :namespace
+    validates_format_of :protocol,  :with => /\A[A-Za-z_]\w*\z/,       :message => "must start with [A-Za-z_] and contain only [A-Za-z0-9_].",                                            :allow_blank => true
+    validates_format_of :namespace, :with => /\A([A-Za-z_]\w*\.?)+\z/, :message => "must be a dot-separated sequence of avro names (start with [A-Za-z_] and contain only [A-Za-z0-9_])", :allow_blank => true
+
     after_receive do |hsh|
       # Set each message's protocol to self, and if the name wasn't given, set
       # it using the message's hash key.
       self.messages.each{|msg_name, msg| msg.protocol = self; msg.name ||= msg_name }
-      # Set all the type's parent to self (for namespace resolution)
+      # Set each type's parent to self (for namespace resolution)
       self.types.each{|type| type.parent  = self }
-      validate_name
-      validate_namespace
+      # warn if invalid
+      warn errors.inspect unless valid?
     end
 
     # String: namespace.name
@@ -87,12 +91,9 @@ module Icss
       [namespace, name].compact.join(".")
     end
 
+    # a / separated version of the name, with no / at start
     def path
       fullname.gsub('.', '/')
-    end
-
-    def tree_merge! arg
-      to_hash.tree_merge!(arg)
     end
 
     def find_message nm
@@ -107,11 +108,13 @@ module Icss
       self.namespace = namespace_and_name.join('.')
     end
 
-    def receive_targets hsh
-      self.targets = hsh.inject({}) do |target_obj_hsh, (target_name, target_info_list)|
-        target_obj_hsh[target_name] = TargetListFactory.receive(target_info_list, target_name) # returns an arry of targets
-        target_obj_hsh
+    def receive_targets tgts
+      return unless tgts.present?
+      self.targets ||= {}
+      tgts.each do |target_name, target_info_list|
+        targets[target_name] = TargetListFactory.receive(target_info_list, target_name) # array of targets
       end
+      targets
     end
 
     def to_hash()
