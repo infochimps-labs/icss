@@ -10,9 +10,7 @@ require 'gorillib/metaprogramming/class_attribute'
 
 require 'gorillib/hashlike'
 require 'gorillib/receiver'
-require 'gorillib/receiver/acts_as_hash'
-require 'gorillib/receiver/acts_as_loadable'
-require 'gorillib/receiver/active_model_shim'
+require 'gorillib/receiver_model'
 
 require 'time' # ain't that always the way
 

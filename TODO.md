@@ -25,3 +25,7 @@ moves *to* catalog_entry:
 * `under_consideration` 
 * `update_frequency` (?? def. doesn't feel like a top-level thing, but this feels weird too)
 
+
+___________________________________________________________________________
+
+Make the get_data part of culture/books/comics/grand_comics_db a three-liner
