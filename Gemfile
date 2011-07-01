@@ -3,7 +3,6 @@ source "http://rubygems.org"
 # Example:
 #   gem "activesupport", ">= 2.3.5"
 
-gem   'yajl-ruby', "~> 0.8.2"
 gem   'gorillib',  "~> 0.1.1"
 
 # Add dependencies to develop your gem here.
