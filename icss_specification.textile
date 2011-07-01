@@ -235,6 +235,8 @@ h3. Summary
 * *@Apeyeye@*        - Publishes ICSS and Endpoint code assets to the Apeyeye
 * *@GeoIndex@*       - Index data into GeoIndex
 
+* *@Apitest@*        - Generate Rspec integration test for ICSS messages
+
 h3. catalog
 
 An array of CatalogTarget hashes. Each CatalogTarget hash describes a catalog entry on the Infochimps data catalog. It contains the following fields:
@@ -326,7 +328,24 @@ An array of ElasticSearchTarget hashes. Each ElasticSearchTarget hash describes 
 
 h3. apitest
 
-**AWAITING DOCUMENTATION**
+This target exists to generate simple unit tests apeyeye calls in troop.  This target always runs when troop runs and does not need to be declared in the ICSS for a hackbox.  The unit tests are described as a request/response pairs, as in this example from the provider_lookup message in the cedexis ICSS file:
+
+<pre><code>
+    samples:
+      - request:
+          - q:          rackspace
+        response:       {"results": [{ "label": "rackspace_cloudfiles", "name": "*Rackspace CloudFiles"}, {"label": "rackspace_cloudserver", "name": "*Rackspace CloudServer"}], "total": 2 }
+</code></pre>
+
+In order to run properly, the troop config must include these fields:
+
+<pre><code>
+apitest:
+  api_key: api_test-W1cipwpcdu9Cbd9pmm8D4Cjc469
+  test_dir: /path/to/api/tests
+</code></pre>
+
+@api_key@ should be a valid IC API key and @test_dir@ is where the generated tests will be written.  Each test is named by its @namespace.protocol@ UID and is in @rspec@ format.  
 
 h2. Differences between ICSS and Avro
 
