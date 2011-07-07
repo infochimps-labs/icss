@@ -60,7 +60,7 @@ module Icss
 
     rcvr_accessor :protocol,    String, :required => true
     alias_method  :name, :protocol
-    rcvr_accessor :namespace,   String # must be *dotted* ("foo.bar"), not slashed ("foo/bar")
+    rcvr_accessor :namespace,   String
     rcvr_accessor :doc,         String
     #
     rcvr_accessor :types,       Array, :of => Icss::TypeFactory, :default => []
@@ -70,11 +70,12 @@ module Icss
     rcvr_accessor :code_assets, Array, :of => Icss::CodeAsset,   :default => []
     rcvr_accessor :targets,     Hash,  :of => Icss::TargetListFactory, :default => {}, :merge_as => :hash_of_arrays
     rcvr_accessor :under_consideration, Boolean
-    rcvr_accessor :update_frequency, String # must be of the form daily, weekly, monthly, quarterly, never
+    rcvr_accessor :update_frequency, String
 
     validates_presence_of :protocol, :namespace
     validates_format_of :protocol,  :with => /\A[A-Za-z_]\w*\z/,       :message => "must start with [A-Za-z_] and contain only [A-Za-z0-9_].",                                            :allow_blank => true
     validates_format_of :namespace, :with => /\A([A-Za-z_]\w*\.?)+\z/, :message => "must be a dot-separated sequence of avro names (start with [A-Za-z_] and contain only [A-Za-z0-9_])", :allow_blank => true
+    validates_format_of :update_frequency, :with => /daily|weekly|monthly|quarterly|never/, :message => "must be one of daily, weekly, monthly, quarterly, never",                        :allow_blank => true
 
     after_receive do |hsh|
       # Set each message's protocol to self, and if the name wasn't given, set
