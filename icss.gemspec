@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Philip (flip) Kromer for Infochimps"]
-  s.date = %q{2011-07-01}
+  s.date = %q{2011-07-08}
   s.description = %q{Infochimps Stupid Schema library: an avro-compatible data description standard. ICSS completely describes a collection of data (and associated assets) in a way that is expressive, scalable and sufficient to drive remarkably complex downstream processes.}
   s.email = %q{coders@infochimps.com}
   s.extra_rdoc_files = [
