@@ -10,9 +10,8 @@ require 'gorillib/metaprogramming/class_attribute'
 
 require 'gorillib/hashlike'
 require 'gorillib/receiver'
-require 'gorillib/receiver/acts_as_hash'
-require 'gorillib/receiver/acts_as_loadable'
-require 'gorillib/receiver/validations'
+require 'gorillib/receiver_model'
+
 require 'time' # ain't that always the way
 
 $: << File.dirname(__FILE__)

@@ -2,6 +2,9 @@
 namespace: util.time
 protocol: chronic
 
+doc: >-
+  A series of calls hooking into the Chronic ruby gem
+
 code_assets:
   - location:   code/chronic_endpoint.rb
     type:       apeyeye_endpoint
