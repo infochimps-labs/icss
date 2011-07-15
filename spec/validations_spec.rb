@@ -52,17 +52,6 @@ types:
     doc: The second test parameter
     type: string
 
-- name: test_data_record
-  doc: A template data record
-  type: record
-  fields:
-  - name: simple_data
-    doc: A simple piece of data
-    type: int
-  - name: complex_data
-    doc: A complex piece of data
-    type: test_complex_data
-
 - name: test_complex_data
   doc: A template complex data type
   type: record
@@ -73,6 +62,17 @@ types:
   - name: field_two
     doc: Another simple field for a complex data type
     type: string
+
+- name: test_data_record
+  doc: A template data record
+  type: record
+  fields:
+  - name: simple_data
+    doc: A simple piece of data
+    type: int
+  - name: complex_data
+    doc: A complex piece of data
+    type: test_complex_data
 
 EOS
 end
