@@ -5,22 +5,36 @@ require 'rspec'
 
 def test_hash
   {
-    'test1' => 'foo',
-    'test2' => { :a => 'foo' },
-    'test3' => ['foo', 'bar'],
-    'test4' => { :a => { :b => 'foo'} },
-    'test5' => { :a => ['foo', 'bar'] },
-    'test6' => { :a => { :b => 'foo', :c => 'bar' } },
-    'test7' => { :a => [ { :b => 'foo' }, { :c => 'bar' } ] }
+    'namespace'   => 'foo.bar',
+    'protocol'    => 'baz',
+    'targets'     => [
+      {
+        'catalog' => {
+          'title' => "Foo Bar Baz Dataset",
+          'desc'  => "The best dataset ins the world!",
+          'tags'  => %w[ foo bar baz ]
+        }
+      },
+      {
+        'hbase'   => {
+          'table' => 'foo_bar_table'
+        }
+      }
+    ],
+    'types'       => [
+      {
+        'name'    => 'baz_record',
+        'doc'     => 'A baz data record.',
+        'type'    => 'record',
+        'fields'  => []
+      }
+    ]
   }
 end
 
 class Hash
-  def super_merge! obj
-    case obj
-    when Hash then self.merge(obj)
-    when Array then self.merge(obj)
-    end
+  def super_merge! icss
+
   end
 end
 
@@ -34,84 +48,67 @@ describe "The #super_merge! method" do
     @icss = test_hash
   end
 
-  it "should add a new key when no matching key is found" do
-    overlay = { 'test0' => 'foo' }
+  it "should allow a change to a top level key => value" do
+    overlay = { 'protocol' => 'TEST' }
     @icss.super_merge!(overlay).should == {
-      'test0' => 'foo',
-      'test1' => 'foo',
-      'test2' => { :a => 'foo' },
-      'test3' => ['foo', 'bar'],
-      'test4' => { :a => { :b => 'foo'} },
-      'test5' => { :a => ['foo', 'bar'] },
-      'test6' => { :a => { :b => 'foo', :c => 'bar' } },
-      'test7' => { :a => [ { :b => 'foo' }, { :c => 'bar' } ] }
+      'namespace'   => 'foo.bar',
+      'protocol'    => 'TEST',
+      'targets'     => [
+        {
+          'catalog' => {
+            'title' => "Foo Bar Baz Dataset",
+            'desc'  => "The best dataset ins the world!",
+            'tags'  => %w[ foo bar baz ]
+          }
+        },
+        {
+          'hbase'   => {
+            'table' => 'foo_bar_table'
+          }
+        }
+      ],
+      'types'       => [
+        {
+          'name'    => 'baz_record',
+          'doc'     => 'A baz data record.',
+          'type'    => 'record',
+          'fields'  => []
+        }
+      ]
     }
   end
 
-  it "should update the string value of a key when a match is found" do
-    overlay = { 'test1' => 'bar' }
+  it "should allow an addition to the targets hash" do
+    overlay = { 'targets' => [ { 'TEST' => 'TEST'} ] }
     @icss.super_merge!(overlay).should == {
-      'test1' => 'bar',
-      'test2' => { :a => 'foo' },
-      'test3' => ['foo', 'bar'],
-      'test4' => { :a => { :b => 'foo'} },
-      'test5' => { :a => ['foo', 'bar'] },
-      'test6' => { :a => { :b => 'foo', :c => 'bar' } },
-      'test7' => { :a => [ { :b => 'foo' }, { :c => 'bar' } ] }
+      'namespace'   => 'foo.bar',
+      'protocol'    => 'baz',
+      'targets'     => [
+        { 'TEST' => 'TEST' },
+        {
+          'catalog' => {
+            'title' => "Foo Bar Baz Dataset",
+            'desc'  => "The best dataset ins the world!",
+            'tags'  => %w[ foo bar baz ]
+          }
+        },
+        {
+          'hbase'   => {
+            'table' => 'foo_bar_table'
+          }
+        }
+      ],
+      'types'       => [
+        {
+          'name'    => 'baz_record',
+          'doc'     => 'A baz data record.',
+          'type'    => 'record',
+          'fields'  => []
+        }
+      ]
     }
   end
 
-  it "should update the hash value of a key when a match is found" do
-    overlay = { 'test2' => { :b => 'bar' } }
-    @icss.super_merge!(overlay).should == {
-      'test1' => 'foo',
-      'test2' => { :b => 'bar' },
-      'test3' => ['foo', 'bar'],
-      'test4' => { :a => { :b => 'foo'} },
-      'test5' => { :a => ['foo', 'bar'] },
-      'test6' => { :a => { :b => 'foo', :c => 'bar' } },
-      'test7' => { :a => [ { :b => 'foo' }, { :c => 'bar' } ] }
-    }
-  end
-
-  it "should update the internal string value of a key when a match is found internally" do
-    overlay = { 'test2' => { :a => 'bar' } }
-    @icss.super_merge!(overlay).should == {
-      'test1' => 'foo',
-      'test2' => { :a => 'bar' },
-      'test3' => ['foo', 'bar'],
-      'test4' => { :a => { :b => 'foo'} },
-      'test5' => { :a => ['foo', 'bar'] },
-      'test6' => { :a => { :b => 'foo', :c => 'bar' } },
-      'test7' => { :a => [ { :b => 'foo' }, { :c => 'bar' } ] }
-  }
-  end
-
-  it "should update the array value of a key when a match is found" do
-    overlay = { 'test3' => ['baz', 'qux'] }
-    @icss.super_merge!(overlay).should == {
-      'test1' => 'foo',
-      'test2' => { :a => 'foo' },
-      'test3' => ['baz', 'qux'],
-      'test4' => { :a => { :b => 'foo'} },
-      'test5' => { :a => ['foo', 'bar'] },
-      'test6' => { :a => { :b => 'foo', :c => 'bar' } },
-      'test7' => { :a => [ { :b => 'foo' }, { :c => 'bar' } ] }
-    }
-  end
-
-  it "should update the internal hash value of a key when a match is found internally" do
-    overlay = { 'test4' => { :a => { :c => 'foo' } } }
-    @icss.super_merge!(overlay).should == {
-      'test1' => 'foo',
-      'test2' => { :a => 'foo' },
-      'test3' => ['foo', 'bar'],
-      'test4' => { :a => { :c => 'foo' } },
-      'test5' => { :a => ['foo', 'bar'] },
-      'test6' => { :a => { :b => 'foo', :c => 'bar' } },
-      'test7' => { :a => [ { :b => 'foo' }, { :c => 'bar' } ] }
-    }
-  end
 end
 
 
