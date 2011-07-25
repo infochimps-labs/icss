@@ -1,0 +1,61 @@
+--- 
+# namespace: iccs.core
+# protocol: schema
+# ...ontology
+# ...type_def
+
+
+is_a: 
+- thing
+namespace: org.schema
+protocol: core
+types: 
+- name: place
+  doc: Entities that have a somewhat fixed, physical extension.
+  fields: 
+  - name: description
+    doc: A short description of the item.
+    type: string
+  - name: image
+    doc: URL of an image of the item.
+    type: url
+  - name: name
+    doc: The name of the item.
+    type: string
+  - name: url
+    doc: URL of the item.
+    type: url
+  - name: address
+    doc: Physical address of the item.
+    type: postal_address
+  - name: aggregate_rating
+    doc: The overall rating, based on a collection of reviews or ratings, of the item.
+    type: aggregate_rating
+  - name: contained_in
+    doc: The basic containment relation between places.
+    type: place
+  - name: events
+    doc: The events held at this place or organization.
+    type: event
+  - name: fax_number
+    doc: The fax number.
+    type: string
+  - name: geo
+    doc: The geo coordinates of the place.
+    type: geo_coordinates
+  - name: interaction_count
+    doc: "A count of a specific user interactions with this item\xE2\x80\x94for example, 20 UserLikes, 5 UserComments, or 300 UserDownloads. The user interaction type should be one of the sub types of UserInteraction."
+    type: string
+  - name: maps
+    doc: A URL to a map of the place.
+    type: url
+  - name: photos
+    doc: Photographs of this place.
+    type: photograph
+  - name: reviews
+    doc: Review of the item.
+    type: review
+  - name: telephone
+    doc: The telephone number.
+    type: string
+  type: record

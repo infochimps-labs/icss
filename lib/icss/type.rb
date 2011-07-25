@@ -9,9 +9,9 @@ module Icss
     Icss::Type::DERIVED_TYPES = {} unless defined?(Icss::Type::DERIVED_TYPES)
 
     def self.find type_name
-      if type_name.to_s.include?('.')
-        warn "crap. can't properly do namespaced types yet."
-        type_name = type_name.to_s.gsub(/(.*)\./, "")
+      if type_name.is_a?(String) && type_name.include?('.')
+        ReferencedType.receive(type_name)
+        type_name = type_name.split('.').pop
       end
       Icss::Type::VALID_TYPES[type_name.to_sym] || Icss::Type::DERIVED_TYPES[type_name.to_sym]
     end
@@ -102,11 +102,11 @@ module Icss
       when type_info.is_a?(Array)
         UnionType.receive(type_info)
       else
-        type_info  = type_info.symbolize_keys
+        type_info = type_info.symbolize_keys
         raise "No type was given in #{type_info.inspect}" if type_info[:type].blank?
         type_name = type_info[:type].to_sym
         type = Icss::Type.find(type_name)
-        obj  = type.receive(type_info)
+        obj = type.receive(type_info)
       end
     end
 
@@ -115,6 +115,7 @@ module Icss
   class RecordField
     include Receiver
     include Receiver::ActsAsHash
+    include Receiver::ActiveModelShim
 
     rcvr_accessor :name,      String, :required => true
     rcvr_accessor :doc,       String
@@ -125,27 +126,15 @@ module Icss
     rcvr          :order,     String
     rcvr_accessor :required,  Boolean
 
+    rcvr_accessor :validates, Hash
+
     attr_accessor :is_reference
+
     def is_reference?() is_reference ; end
 
     def receive_type type_info
       self.is_reference = type_info.is_a?(String) || type_info.is_a?(Symbol)
       self.type = TypeFactory.receive(type_info)
-    end
-
-    ALLOWED_ORDERS = %w[ascending descending ignore].freeze unless defined?(ALLOWED_ORDERS)
-
-    def order
-      @order || 'ascending'
-    end
-
-    def order_direction
-      case order when 'ascending' then 1 when 'descending' then -1 else 0 ; end
-    end
-    # QUESTION: should this be an override of order=, or of receive_order?
-    def order= v
-      raise "'order' may only take the values ascending (the default), descending, or ignore." unless v.nil? || ALLOWED_ORDERS.include?(v)
-      @order = v
     end
 
     def record?() type.is_a? Icss::RecordType end

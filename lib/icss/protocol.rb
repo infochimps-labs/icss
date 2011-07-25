@@ -63,7 +63,6 @@ module Icss
     rcvr_accessor :namespace,   String
     rcvr_accessor :doc,         String
     #
-    rcvr_accessor :includes,    Array, :of => Icss::PredefinedTypes
     rcvr_accessor :types,       Array, :of => Icss::TypeFactory, :default => []
     rcvr_accessor :messages,    Hash,  :of => Icss::Message,     :default => {}
     # extensions to avro

@@ -11,12 +11,6 @@ module Icss
     rcvr_accessor :type,      String
     rcvr_accessor :doc,       String
 
-    put "fuck you!"
-    validates_each :type do |record, attr, value|
-      puts value
-      record.errors[attr] << "data_asset #{type} must be defined in types:" unless Icss::Type::DERIVED_TYPES.key.include?(value)
-    end
-
     def named? nm
       name == nm
     end
