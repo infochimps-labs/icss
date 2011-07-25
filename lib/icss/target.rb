@@ -11,20 +11,16 @@ module Icss
   end
 
   class Target
-    include Receiver
-    include Receiver::ActsAsHash
-    include Gorillib::Hashlike
-    #
-    # Name should not be something like 'default', it should be something
-    # that 'appeals' to the message name.
-    #
+    include Gorillib::ReceiverModel
     rcvr_accessor :name, String
+
   end
 
   class MysqlTarget < Target
     rcvr_accessor :data_assets, Array, :of => String
     rcvr_accessor :database,    String
     rcvr_accessor :table_name,  String
+
   end
 
   class ApeyeyeTarget < Target

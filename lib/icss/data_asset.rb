@@ -11,6 +11,8 @@ module Icss
     rcvr_accessor :type,      String
     rcvr_accessor :doc,       String
 
+    validates :type, :inclusion => Icss::Type::DERIVED_TYPES.keys.map(&:to_s)
+
     def named? nm
       name == nm
     end

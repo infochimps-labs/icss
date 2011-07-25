@@ -13,7 +13,7 @@ module Icss
         ReferencedType.receive(type_name)
         type_name = type_name.split('.').pop
       end
-      Icss::Type::VALID_TYPES[type_name.to_sym] || Icss::Type::DERIVED_TYPES[type_name.to_sym]
+      Icss::Type::VALID_TYPES[type_name.to_sym] || Icss::Type::DERIVED_TYPES[type_name.to_sym] || type_name
     end
 
     def self.primitive? name
@@ -120,7 +120,7 @@ module Icss
     rcvr_accessor :name,      String, :required => true
     rcvr_accessor :doc,       String
     attr_accessor :type # work around a bug in ruby 1.8, which has defined (and deprecated) type
-    rcvr_accessor :type,      Icss::Type, :required => true
+    rcvr_accessor :type,      String, :required => true
 
     rcvr_accessor :default,   Object
     rcvr          :order,     String
@@ -129,6 +129,12 @@ module Icss
     rcvr_accessor :validates, Hash
 
     attr_accessor :is_reference
+
+    def type
+      return @type if @type.is_a?(Icss::Type)
+      @type = Icss::Type::DERIVED_TYPES[@type.to_sym]
+      @type
+    end
 
     def is_reference?() is_reference ; end
 
