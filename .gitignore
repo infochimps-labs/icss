@@ -42,3 +42,7 @@ pkg
 *.rdb
 lib/gorillib.rb
 lib/gorillib
+
+.vendor
+.bundle
+Gemfile.lock
