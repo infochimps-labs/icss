@@ -5,8 +5,10 @@ module Icss
     rcvr_accessor :name,       String
     rcvr_accessor :doc,        String
     rcvr_accessor :ruby_klass, Object
+    rcvr_accessor :validates,  Hash
 
     Icss::Type::DERIVED_TYPES = {} unless defined?(Icss::Type::DERIVED_TYPES)
+
 
     def self.find type_name
       if type_name.is_a?(String) && type_name.include?('.')
@@ -48,6 +50,10 @@ module Icss
     ::Icss::Type::PRIMITIVE_TYPES[:symbol]  = PrimitiveType.receive(:ruby_klass => Symbol,   :pig_name => 'chararray')
     ::Icss::Type::PRIMITIVE_TYPES[:time]    = PrimitiveType.receive(:ruby_klass => Time,     :pig_name => 'chararray')
     ::Icss::Type::PRIMITIVE_TYPES[:date]    = PrimitiveType.receive(:ruby_klass => Date,     :pig_name => 'chararray')
+
+    ::Icss::Type::PRIMITIVE_TYPES[:url]      = PrimitiveType.receive(:ruby_klass => String, :validates => { :format => { :with => /\.com$/ }})
+    ::Icss::Type::PRIMITIVE_TYPES[:duration] = PrimitiveType.receive(:ruby_klass => Time,   :validates => { :format => { :with => // }})
+
     ::Icss::Type::PRIMITIVE_TYPES.freeze
   end
 

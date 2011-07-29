@@ -104,11 +104,25 @@ module Icss
     # options like <tt>:dasherize</tt> and friends, they are forwarded to the
     #builder.
     #
+    def to_geohash
+      if self.respond_to?(:spacial_extent)
+        geo   = self.spacial_extent
+        props = self.to_hash.reject { |k,v| k == :spacial_extent }.merge({ "_type"=> self.class })
+        Icss::Feature.receive({ :type => 'Feature', :geometry => geo, :properties => props })
+      elsif self.respond_to?(:geo)
+        geo   = self.geo
+        props = self.to_hash.reject { |k,v| k == :geo }.merge({ "_type"=> self.class })
+        Icss::Feature.receive({ :type => 'Feature', :geometry => geo, :properties => props })
+      else
+        geo   = { :type => "Null", :coordinates => null }
+        props = self.to_hash.merge({ "_type"=> self.class })
+      Icss::Feature.receive({ :type => 'Feature', :geometry => geo, :properties => props})
+      end
+    end
+
     def to_xml options={}, &block
       options = options.reverse_merge(:root => self.class.xml_type_name)
       xml_hsh = self.to_hash
-      # # remove once microsoft has signed off on this
-      # xml_hsh.merge!(:_note => "XML support is experimental, structure may change in future") unless options[:skip_instruct]
       xml_hsh.to_xml(options, &block)
     end
 
@@ -119,6 +133,14 @@ module Icss
     def to_json *args
       to_hash.to_json(*args)
     end
+  end
+
+  class Feature
+    include Gorillib::ReceiverModel
+    attr_accessor :type
+    rcvr_accessor :type, String
+    rcvr_accessor :geometry, Hash
+    rcvr_accessor :properties, Hash
   end
 
   class RecordType < NamedType
@@ -156,6 +178,7 @@ module Icss
       klass = define_klass
       decorate_with_receivers(klass)
       decorate_with_conveniences(klass)
+      decorate_with_validators(klass)
       @klass = klass
     end
 
@@ -167,6 +190,17 @@ module Icss
 
     def decorate_with_conveniences klass
       klass.send :include, Receiver::ActsAsHash
+      klass.send :include, Receiver::ActiveModelShim
+    end
+
+    def decorate_with_validators klass
+      fields.each do |field|
+        puts field.to_hash
+        if field.validates
+          puts field.validates
+          klass.validates(field.name.to_sym, field.validates)
+        end
+      end
     end
 
   end
