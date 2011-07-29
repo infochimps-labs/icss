@@ -15,8 +15,6 @@ require 'gorillib/receiver_model'
 require 'time' # ain't that always the way
 
 $: << File.dirname(__FILE__)
-# require 'icss/core_ext' unless Object.respond_to?(:class_attribute)
-# require 'icss/validations'
 require 'icss/type'
 require 'icss/message'
 require 'icss/sample_message_call'
