@@ -71,14 +71,14 @@ describe Icss::Protocol do
   describe 'validations' do
     it 'validates protocol name' do
       simple_icss.should be_valid
-      simple_icss.protocol = '' ;    simple_icss.should_not be_valid ; simple_icss.errors[:protocol].should == ["can't be blank"]
-      simple_icss.protocol = '1bz' ; simple_icss.should_not be_valid ; simple_icss.errors[:protocol].should == ["must start with [A-Za-z_] and contain only [A-Za-z0-9_]."]
+      simple_icss.protocol = '' ;    simple_icss.should_not be_valid ; simple_icss.errors[:protocol].should include("can't be blank")
+      simple_icss.protocol = '1bz' ; simple_icss.should_not be_valid ; simple_icss.errors[:protocol].should include("must start with [A-Za-z_] and contain only [A-Za-z0-9_].")
     end
 
     it 'validates namespace' do
       simple_icss.should be_valid
-      simple_icss.namespace = '' ;    simple_icss.should_not be_valid ; simple_icss.errors[:namespace].should == ["can't be blank"]
-      simple_icss.namespace = '1bz' ; simple_icss.should_not be_valid ; simple_icss.errors[:namespace].first.should =~ /must be a dot-s/
+      simple_icss.namespace = '' ;    simple_icss.should_not be_valid ; simple_icss.errors[:namespace].should include("can't be blank")
+      simple_icss.namespace = '1bz' ; simple_icss.should_not be_valid ; simple_icss.errors[:namespace].first.should =~ /Segments that start with.*joined by.*dots/
     end
   end
 

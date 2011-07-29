@@ -72,8 +72,8 @@ module Icss
     rcvr_accessor :under_consideration, Boolean
     rcvr_accessor :update_frequency, String
 
-    validates :protocol,  :presence => true, :format => { :with => /\A[A-Za-z_]\w*\z/ }
-    validates :namespace, :presence => true, :format => { :with => /\A([A-Za-z_]\w*\.?)+\z/ }
+    validates :protocol,  :presence => true, :format => { :with => /\A[A-Za-z_]\w*\z/, :message => "must start with [A-Za-z_] and contain only [A-Za-z0-9_]." }
+    validates :namespace, :presence => true, :format => { :with => /\A([A-Za-z_]\w*\.?)+\z/, :message => "Segments that start with [A-Za-z_] and contain only [A-Za-z0-9_], joined by '.'dots" }
     validates :update_frequency, :format => { :with => /daily|weekly|monthly|quarterly|never/ }, :allow_blank => true
 
     after_receive do |hsh|

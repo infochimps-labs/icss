@@ -14,7 +14,12 @@ require 'gorillib/receiver_model'
 
 require 'time' # ain't that always the way
 
-$: << File.dirname(__FILE__)
+module Icss
+  module Meta
+  end
+end
+
+require 'icss/type/entity'
 require 'icss/type'
 require 'icss/message'
 require 'icss/sample_message_call'
@@ -23,3 +28,6 @@ require 'icss/code_asset'
 require 'icss/target'
 require 'icss/protocol'
 require 'icss/type/factory'
+
+require 'icss/deprecated'
+
