@@ -1,21 +1,34 @@
 require 'icss'
 
 def test_icss
-  YAML.load File.read(File.join(File.dir_name(__FILE__), 'test_icss.yaml'))
+  YAML.load File.read(File.join(File.dirname(__FILE__), 'test_icss.yaml'))
 end
 
-# This is only the coverage associated with the Great Schematizing. It still
-# needs spec coverage in other areas.
 describe Icss::Protocol do
   before :each do
     @icss = Icss::Protocol.receive test_icss
   end
 
+  it "should be able to receive valid YAML files" do
+    @icss.should be_a Icss::Protocol
+  end
+
   context "receiving referenced types" do
 
-    it "should be able to identify the referenced type specified"
+    it "should be able to identify the referenced type specified" do
+      ref_type  = @icss.types.select{ |t| t.name == 'test_ref_type' }.first
+      ref_field = ref_type.fields.select{ |f| f.name == 'ref_field' }.first
+      ref_field.to_hash.should == {
+        :name => "ref_field",
+        :doc  => "A field that references a type.",
+        :type => "place"
+      }
+    end
 
-    it "should add the referenced type to the array of types for this protocol"
+    it "should add the referenced type to the array of types for this protocol" do
+      puts Icss::Type::DERIVED_TYPES.keys.inspect
+      @icss.types.map(&:name).should include 'place'
+    end
 
   end
 
@@ -47,7 +60,7 @@ describe Icss::Protocol do
 
   end
 
-  context "Icss::Klasses" do
+  context "Icss::Klass" do
 
     it "should be able to return its values with dotted accessors"
 

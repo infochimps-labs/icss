@@ -21,10 +21,9 @@ module Icss
 
     Icss::Type::DERIVED_TYPES = {} unless defined?(Icss::Type::DERIVED_TYPES)
 
-
     def self.find type_name
       if type_name.is_a?(String) && type_name.include?('.')
-        ReferencedType.receive(type_name)
+        ref_type = ReferencedType.receive(type_name)
         type_name = type_name.split('.').pop
       end
       Icss::Type::VALID_TYPES[type_name.to_sym] || Icss::Type::DERIVED_TYPES[type_name.to_sym] || type_name

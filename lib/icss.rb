@@ -14,12 +14,12 @@ require 'gorillib/receiver_model'
 
 require 'time' # ain't that always the way
 
-module Icss
-  module Meta
-  end
-end
+# module Icss
+#   module Meta
+#   end
+# end
 
-require 'icss/type/entity'
+# require 'icss/type/entity'
 require 'icss/type'
 require 'icss/message'
 require 'icss/sample_message_call'
@@ -29,5 +29,5 @@ require 'icss/target'
 require 'icss/protocol'
 require 'icss/type/factory'
 
-require 'icss/deprecated'
+# require 'icss/deprecated'
 
