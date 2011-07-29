@@ -1,67 +1,15 @@
 require 'icss'
 
 def test_icss
-  return <<EOF
----
-namespace: foo.bar
-protocol: baz
-types:
-
-- name: test_ref_type
-  doc: A record to test referenced types.
-  type: record
-  fields:
-  - name: ref_field
-    doc: A field that references a type.
-    type: icss.core.place
-
-- name: test_is_a_method
-  doc: A record to test the is_a method.
-  type: record
-  is_a:
-  - icss.core.place
-  fields:
-  - name: additional_field
-    doc: A field to test the ability to add additional fields with the is_a method.
-    type: int
-  - name: description
-    doc: A field to test the override of is_a properties.
-    type: string
-
-- name: test_identifiers
-  doc: A record to test the identifier methods.
-  type: record
-  domain_id: ssn
-  fields:
-  - name: name
-    doc: A field that is NOT an identifier.
-    type: string
-  - name: age
-    doc: A field that IS an identifier.
-    type: int
-    identifier: true
-  - name: ssn
-    doc: A field to test the domain_id.
-    type: int
-    identifier: true
-
-- name: test_validators
-  doc: A record to test validations.
-  type: record
-  fields:
-  - name: homepage
-    doc: A field needing formatting validation.
-    type: string
-    validates:
-      format:
-        with: "/[\w+]\.[com?|org|net]/"
-
-EOF
+  YAML.load File.read(File.join(File.dir_name(__FILE__), 'test_icss.yaml'))
 end
 
 # This is only the coverage associated with the Great Schematizing. It still
 # needs spec coverage in other areas.
 describe Icss::Protocol do
+  before :each do
+    @icss = Icss::Protocol.receive test_icss
+  end
 
   context "receiving referenced types" do
 
