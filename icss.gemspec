@@ -73,8 +73,6 @@ Gem::Specification.new do |s|
     "spec/icss_spec.rb",
     "spec/protocol_spec.rb",
     "spec/spec_helper.rb",
-    "spec/support/load_example_protocols.rb",
-    "spec/type_spec.rb",
     "spec/validations_spec.rb"
   ]
 
