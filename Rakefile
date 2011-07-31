@@ -23,6 +23,14 @@ Jeweler::Tasks.new do |gem|
   # and development dependencies are only needed for development (ie running rake tasks, tests, etc)
   #  gem.add_runtime_dependency 'jabber4r', '> 0.1'
   #  gem.add_development_dependency 'rspec', '> 1.2.3'
+  ignores = File.readlines(".gitignore").grep(/^[^#]\S+/).map{|s| s.chomp }
+  dotfiles = [".gemtest", ".gitignore", ".rspec", ".yardopts", ".bundle", ".vendor"]
+  gem.files = dotfiles + Dir["**/*"].
+    reject{|f| f =~ /^\.vendor\// }.
+    reject{|f| File.directory?(f) }.
+    reject{|f| ignores.any?{|i| File.fnmatch(i, f) || File.fnmatch(i+'/**/*', f) || File.fnmatch(i+'/*', f) } }
+  gem.test_files = gem.files.grep(/^spec\//)
+  gem.require_paths = ['lib']
 end
 Jeweler::RubygemsDotOrgTasks.new
 

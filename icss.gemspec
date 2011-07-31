@@ -8,8 +8,8 @@ Gem::Specification.new do |s|
   s.version = "0.1.3"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Philip (flip) Kromer for Infochimps"]
-  s.date = %q{2011-07-15}
+  s.authors = [%q{Philip (flip) Kromer for Infochimps}]
+  s.date = %q{2011-07-31}
   s.description = %q{Infochimps Stupid Schema library: an avro-compatible data description standard. ICSS completely describes a collection of data (and associated assets) in a way that is expressive, scalable and sufficient to drive remarkably complex downstream processes.}
   s.email = %q{coders@infochimps.com}
   s.extra_rdoc_files = [
@@ -17,12 +17,10 @@ Gem::Specification.new do |s|
     "README.textile"
   ]
   s.files = [
-    ".document",
+    ".gitignore",
     ".rspec",
-    ".watchr",
     "CHANGELOG.textile",
     "Gemfile",
-    "Gemfile.lock",
     "LICENSE.textile",
     "README.textile",
     "Rakefile",
@@ -60,25 +58,27 @@ Gem::Specification.new do |s|
     "lib/icss/type/factory.rb",
     "lib/icss/validations.rb",
     "lib/icss/view_helper.rb",
+    "overlay.rb",
     "spec/icss_spec.rb",
     "spec/protocol_spec.rb",
     "spec/spec_helper.rb",
     "spec/validations_spec.rb"
   ]
   s.homepage = %q{http://github.com/mrflip/icss}
-  s.licenses = ["MIT"]
-  s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.3.7}
+  s.licenses = [%q{MIT}]
+  s.require_paths = [%q{lib}]
+  s.rubygems_version = %q{1.8.6}
   s.summary = %q{Infochimps Stupid Schema library: an avro-compatible data description standard. ICSS completely describes a collection of data (and associated assets) in a way that is expressive, scalable and sufficient to drive remarkably complex downstream processes.}
   s.test_files = [
     "spec/icss_spec.rb",
     "spec/protocol_spec.rb",
     "spec/spec_helper.rb",
+    "spec/support/load_example_protocols.rb",
+    "spec/type_spec.rb",
     "spec/validations_spec.rb"
   ]
 
   if s.respond_to? :specification_version then
-    current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
