@@ -3,6 +3,20 @@ namespace: foo.bar
 protocol: baz
 types:
 
+- name: test_simple_type
+  doc: A record to test simple record types.
+  type: record
+  fields:
+  - name: my_happy_string
+    doc:  field 1
+    type: string
+  - name: my_happy_int
+    doc:  field 2
+    type: int
+  - name: my_happy_boolean
+    doc:  field 3
+    type: boolean
+
 - name: test_ref_type
   doc: A record to test referenced types.
   type: record
