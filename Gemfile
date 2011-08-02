@@ -3,7 +3,7 @@ source "http://rubygems.org"
 # Example:
 #   gem "activesupport", ">= 2.3.5"
 
-gem   'gorillib',  "~> 0.1.1"
+gem   'gorillib',  "~> 0.1.5"
 
 gem   'activemodel', "~> 3.0.9"
 
