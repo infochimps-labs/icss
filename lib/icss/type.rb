@@ -273,7 +273,6 @@ module Icss
       @order = v
     end
 
-
     def record?() type.is_a? Icss::RecordType end
     def union?()  type.is_a? Array            end
     def enum?()   type.is_a? Icss::EnumType   end
@@ -291,7 +290,7 @@ module Icss
       case
       when is_reference? && type.respond_to?(:name) then type.name
       when is_reference?                            then '(_unspecified_)'
-      when type.is_a?(Array) then type.map{|t| t.to_hash }
+      when type.is_a?(Array)          then type.map{|t| t.to_hash }
       when type.respond_to?(:to_hash) then type.to_hash
       else type.to_s
       end

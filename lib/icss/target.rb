@@ -20,7 +20,6 @@ module Icss
     rcvr_accessor :data_assets, Array, :of => String
     rcvr_accessor :database,    String
     rcvr_accessor :table_name,  String
-
   end
 
   class ApeyeyeTarget < Target
@@ -65,4 +64,5 @@ module Icss
     rcvr_accessor :messages,    Array, :of => String
     rcvr_accessor :packages,    Array, :of => Hash
   end
+
 end

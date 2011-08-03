@@ -1,9 +1,0 @@
-h3. v0.1.0 June 7 2011
-
-* New receiver from gorillib
-
-h3. v0.0.3 May 22 2011
-
-* used gorillib, got rid of active_support, extlib HOORAY
-* moved Receiver to gorillib.
-* *breaking change*. Gorillib changed the signature of receive() to be @receive(*constructor_args, hsh)@ (formerly, the hsh was first).
