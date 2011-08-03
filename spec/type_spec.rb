@@ -122,6 +122,8 @@ describe 'Icss::Something::Doohickey' do
       it 'try_dups the object on receipt'
       it 'try_dups the object when setting default'
       it 'creates an after_receive hook to set the default'
+      it 'accepts a proc'
+
     end
 
     context ':required =>' do
@@ -151,7 +153,13 @@ describe 'Icss::Something::Doohickey' do
     context ':sort_order =>' do
     end
 
-    context ':access => ' do
+    # context ':accessor / :reader / :writer' do
+    #   it ':private         -- attr_whatever is private'
+    #   it ':protected       -- attr_whatever is protected'
+    #   it ':none            -- no accessor/reader/writer'
+    # end
+
+    context ':access' do
       it '[default or nil] -- attr_accessor'
       it ':read_only       -- attr_reader'
       it ':write_only      -- attr_writer'

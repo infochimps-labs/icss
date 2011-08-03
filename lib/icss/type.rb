@@ -73,6 +73,7 @@ module Icss
     ::Icss::Type::PRIMITIVE_TYPES.freeze
   end
 
+
   # ---------------------------------------------------------------------------
   #
   # Complex Types
