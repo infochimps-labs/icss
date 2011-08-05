@@ -10,6 +10,20 @@ Spork.prefork do # Must restart for changes to config / code from libraries load
   $LOAD_PATH.unshift(ENV.root_path('lib'))
   Dir[ENV.root_path('spec/support/matchers/*.rb')].each {|f| require f}
 
+  require 'gorillib/object/blank'
+  require 'gorillib/string/inflections'
+  require 'gorillib/string/constantize'
+  require 'gorillib/array/compact_blank'
+  require 'gorillib/array/extract_options'
+  require 'gorillib/hash/compact'
+  require 'gorillib/hash/keys'
+  require 'gorillib/hash/tree_merge'
+  require 'gorillib/metaprogramming/class_attribute'
+  #
+  require 'gorillib/hashlike'
+
+  require 'time' # ain't that always the way
+
   # Configure rspec
   RSpec.configure do |config|
   end

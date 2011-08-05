@@ -1,38 +1,26 @@
 module Icss
-  module Meta
-
-
-
+  module Type
     class RecordField
-      include Receiver
-      include Receiver::ActsAsHash
-      include Receiver::ActiveModelShim
+      include Icss::Type::RecordType
+      remove_possible_method(:type)
 
-      rcvr_accessor :name,      String, :required => true
-      rcvr_accessor :doc,       String
-      attr_accessor :type # work around a bug in ruby 1.8, which has defined (and deprecated) type
-      rcvr_accessor :type,      String, :required => true
-
-      rcvr_accessor :default,   Object
-      rcvr          :order,     String
-      rcvr_accessor :required,  Boolean
-
-      rcvr_accessor :validates, Hash
-
+      field :name,      String, :required => true
+      field :doc,       String
+      field :type,      String, :required => true
+      field :default,   Object
+      field :required,  Boolean
+      field :order,     String
+      field :validates, Hash
+      attr_reader   :parent
       attr_accessor :is_reference
 
-      def type
-        return @type if @type.is_a?(Icss::Type)
-        @type = Icss::Type::DERIVED_TYPES[@type.to_sym]
-        @type
-      end
-
-      def is_reference?() is_reference ; end
-
       def receive_type type_info
-        self.is_reference = type_info.is_a?(String) || type_info.is_a?(Symbol)
         self.type = TypeFactory.receive(type_info)
       end
+
+      # is the field a reference to a named type defined elsewhere, or is it an
+      # inline schema?
+      def is_reference?() is_reference ; end
 
       ALLOWED_ORDERS = %w[ascending descending ignore].freeze unless defined?(ALLOWED_ORDERS)
       def order
@@ -40,11 +28,6 @@ module Icss
       end
       def order_direction
         case order when 'ascending' then 1 when 'descending' then -1 else 0 ; end
-      end
-      # QUESTION: should this be an override of order=, or of receive_order?
-      def order= v
-        raise "'order' may only take the values ascending (the default), descending, or ignore." unless v.nil? || ALLOWED_ORDERS.include?(v)
-        @order = v
       end
 
       def record?() type.is_a? Icss::RecordType end

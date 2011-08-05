@@ -1,6 +1,5 @@
 module Icss
   module Type
-
     module RecordType
 
       #
@@ -163,8 +162,8 @@ module Icss
         # * field's name does not start with '_'
         #
         # @example
-        #     class Foo ; include Receiver
-        #       rcvr_accessor  :bob, String
+        #     class Foo ; include RecordType
+        #       field  :bob, String
         #       rcvr_remaining :other_params
         #     end
         #     foo_obj = Foo.receive(:bob => 'hi, bob", :joe => 'hi, joe')
@@ -254,7 +253,6 @@ module Icss
         end
 
         def self.receiver_body_for type, field_info
-          type = type_to_klass(type)
           # Note that Array and Hash only need (and only get) special treatment when
           # they have an :of => SomeType option.
           case
@@ -264,8 +262,8 @@ module Icss
           when field_info[:of] && (type == Hash)
             receiver_type = field_info[:of]
             lambda{|v| v.nil? ? nil : v.inject({}){|h, (el,val)| h[el] = receiver_type.receive(val); h } }
-          when Receiver::RECEIVER_BODIES.include?(type)
-            Receiver::RECEIVER_BODIES[type]
+          when RECEIVER_BODIES.include?(type)
+            RECEIVER_BODIES[type]
           when type.is_a?(Class)
             lambda{|v| v.blank? ? nil : type.receive(v) }
           else

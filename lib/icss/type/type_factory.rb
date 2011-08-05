@@ -100,6 +100,41 @@ module Icss
         end
       end
 
+
+    # #
+    # # Avro Schema Declaration
+    # #
+    # # A Schema is represented in JSON by one of:
+    # #
+    # # * A JSON string, naming a defined type.
+    # # * A JSON object, of the form:
+    # #       {"type": "typeName" ...attributes...}
+    # #   where typeName is either a primitive or derived type name, as defined
+    # #   in the Icss::Type class
+    # # * A JSON array, representing a union of embedded types.
+    # #
+    # #
+    # class TypeFactory
+    #
+    #   def self.receive type_info
+    #     case
+    #     when type_info.is_a?(Icss::Type)
+    #       type_info
+    #     when type_info.is_a?(String) || type_info.is_a?(Symbol)
+    #       Icss::Type.find(type_info)
+    #     when type_info.is_a?(Array)
+    #       UnionType.receive(type_info)
+    #     else
+    #       type_info = type_info.symbolize_keys
+    #       raise "No type was given in #{type_info.inspect}" if type_info[:type].blank?
+    #       type_name = type_info[:type].to_sym
+    #       type = Icss::Type.find(type_name)
+    #       obj = type.receive(type_info)
+    #     end
+    #   end
+    #
+    # end
+
     end
   end
 end

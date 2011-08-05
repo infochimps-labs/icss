@@ -13,7 +13,9 @@ require 'gorillib/hashlike'
 require 'time' # ain't that always the way
 
 require 'icss/type'
-require 'icss/type/factory'
+require 'icss/type/record_type'
+
+# require 'icss/type/factory'
 
 # require 'icss/message'
 # require 'icss/message/sample_message_call'
