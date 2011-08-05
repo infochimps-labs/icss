@@ -1,12 +1,17 @@
+require 'icss/receiver_model/acts_as_hash'
 module Icss
   module Type
     class RecordField
       include Icss::Type::RecordType
+      include Icss::Type::ReceiverRecord
+      include Icss::ReceiverModel::ActsAsHash
+      include Gorillib::Hashlike
+      include Gorillib::Hashlike::TreeMerge
       remove_possible_method(:type)
 
-      field :name,      String, :required => true
+      field :name,      Symbol, :required => true
+      field :type,      Class, :required => true
       field :doc,       String
-      field :type,      String, :required => true
       field :default,   Object
       field :required,  Boolean
       field :order,     String
@@ -15,11 +20,11 @@ module Icss
       attr_accessor :is_reference
 
       def receive_type type_info
-        self.type = TypeFactory.receive(type_info)
+        # self.type = TypeFactory.receive(type_info)
+        self.type = type_info
       end
 
-      # is the field a reference to a named type defined elsewhere, or is it an
-      # inline schema?
+      # is the field a reference to a named type (true), or an inline schema (false)?
       def is_reference?() is_reference ; end
 
       ALLOWED_ORDERS = %w[ascending descending ignore].freeze unless defined?(ALLOWED_ORDERS)
@@ -30,19 +35,21 @@ module Icss
         case order when 'ascending' then 1 when 'descending' then -1 else 0 ; end
       end
 
-      def record?() type.is_a? Icss::RecordType end
-      def union?()  type.is_a? Array            end
-      def enum?()   type.is_a? Icss::EnumType   end
+      def record?() type.is_a? Icss::Type::RecordType end
+      def union?()  type.is_a? Icss::Type::UnionType  end
+      def enum?()   type.is_a? Icss::Type::EnumType   end
 
-      def to_hash()
-        { :name    => name,
-          :type    => expand_type,
-          :default => default,
-          :order   => @order,
-          :doc     => doc,
+      def as_json()
+        { :name     => name,
+          :type     => expand_type,
+          :doc      => doc,
+          :default  => default,
+          :required => required,
+          :order    => @order,
         }.reject{|k,v| v.nil? }
       end
 
+    protected
       def expand_type
         case
         when is_reference? && type.respond_to?(:name) then type.name
@@ -51,6 +58,18 @@ module Icss
         when type.respond_to?(:to_hash) then type.to_hash
         else type.to_s
         end
+      end
+    end
+
+    module RecordType
+      module FieldDecorators
+        # protected
+        # def add_field_info(name, type, info_hsh)
+        #   @field_names ||= [] ; @fields ||= {}
+        #   @field_names << name unless respond_to?(:field_names) && field_names.include?(name)
+        #   field_info = RecordField.receive(info_hsh.merge({ :name => name, :type => type }))
+        #   @fields[name] = field_info
+        # end
       end
     end
   end

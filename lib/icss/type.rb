@@ -6,40 +6,25 @@ module Icss
 
     unless defined?(Icss::Type::PRIMITIVE_TYPES)
       Icss::Type::PRIMITIVE_TYPES = {
-        :null    => NilClass,
-        :boolean => Boolean,
-        :int     => Integer,
-        :long    => Integer,
-        :float   => Float,
-        :double  => Float,
-        :bytes   => Binary,
-        :string  => String,
+        :null     => NilClass,
+        :boolean  => Boolean,
+        :int      => Integer,
+        :long     => Integer,
+        :float    => Float,
+        :double   => Float,
+        :bytes    => Binary,
+        :string   => String,
       }.freeze
     end
+    # :integer    => Integer,
 
     unless defined?(::Icss::Type::SIMPLE_TYPES)
       Icss::Type::SIMPLE_TYPES = Icss::Type::PRIMITIVE_TYPES.merge({
-          :symbol    => Symbol,
-          :time      => Time,
-          :date      => Date,
+          :symbol => Symbol,
+          :time   => Time,
+          :date   => Date,
+          :object => Object,
         })
-    end
-
-    unless defined?(TYPE_ALIASES)
-      TYPE_ALIASES = {
-        :null    => NilClass,
-        :boolean => Boolean,
-        :int     => Integer, :integer => Integer,  :long    => Integer,
-        :float   => Float,   :double  => Float,
-        :string  => String,  :bytes   => Binary,
-        #
-        :hash    => Hash,    :map     => Hash,
-        :array   => Array,
-        #
-        :symbol  => Symbol,
-        :time    => Time,    :date    => Date,
-        :object  => Object,
-      }
     end
 
     # ::Icss::Type::DERIVED_TYPES = {} unless defined?(::Icss::Type::DERIVED_TYPES)

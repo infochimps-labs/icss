@@ -3,32 +3,56 @@ module Icss
     module TypeFactory
 
       #
-      # for type science.astronomy.nuforc.ufo_sighting, we synthesize
-      # * a module, ::Icss::Meta::Science::Astronomy::Nuforc::UfoSightingType
-      # * a class,  ::Icss::Science::Astronomy::Nuforc::UfoSighting
+      # Avro Schema Declaration
       #
-      # If no superklass is given, Icss::Entity is used.
-      def self.make(fullname, superklass=nil)
-        superklass   ||= Icss::Entity
-        scope_names    = scope_names_for(fullname)
-        klass_name     = scope_names.pop
-        meta_module    = get_meta_module(scope_names, klass_name)
-        klass          = get_type_klass( scope_names, klass_name, superklass)
-        klass.class_eval{ include meta_module }
-        [klass, meta_module]
+      # A Schema is represented in JSON by one of:
+      #
+      # * A JSON string, naming a defined type.
+      # * A JSON object, of the form:
+      #       {"type": "typeName" ...attributes...}
+      #   where typeName is either a primitive or derived type name, as defined
+      #   in the Icss::Type class
+      # * A JSON array, representing a union of embedded types.
+      #
+      #
+      def self.receive type_info
+        if    type_info.is_a?(Class)
+          return type_info
+        elsif type_info.is_a?(Array)
+          return receive_union_type(type_info)
+        elsif type_info.respond_to?(:each_pair)
+          return receive_complex_type(type_info)
+        elsif type_info.respond_to?(:to_sym)
+          return receive_named_type(type_info)
+        else
+          raise %Q{Type must be either: the handle for a named type; an array (representing a union type); one of #{Icss::Type::TYPE_ALIASES.join(',')}; or a hash of the form {"type": "type_name" ...attributes...}.}
+        end
       end
 
-      # def decorate_with_receivers klass
-      #   fields.each do |field|
-      #     field.define_receiver_on(klass)
-      #   end
-      # end
-      #
-      # def decorate_with_conveniences klass
-      #   klass.send :include, Receiver::ActsAsHash
-      #   klass.send :include, Receiver::ActiveModelShim
-      # end
-      #
+      def self.receive_named_type(type_info)
+        type_info = type_info.to_sym
+        if   Icss::Type::PRIMITIVE_TYPES.has_key?(type_info)
+          return Icss::Type::PRIMITIVE_TYPES[type_info]
+        elsif Icss::Type::SIMPLE_TYPES.has_key?(type_info)
+          return Icss::Type::SIMPLE_TYPES[type_info]
+        else
+          type_name = Icss::Type::NamedType.klassname_for(type_info)
+          return type_name.constantize
+        end
+      end
+
+      def self.receive_union_type(type_info)
+        UnionType.receive(type_info)
+      end
+
+      def self.receive_complex_type(type_info)
+        type_info = type_info.symbolize_keys
+        raise "No type was given in #{type_info.inspect}" if type_info[:type].blank?
+        type_name = type_info[:type].to_sym
+        type = Icss::Type.find(type_name)
+        obj = type.receive(type_info)
+      end
+
       # def decorate_with_validators klass
       #   fields.each do |field|
       #     puts field.to_hash
@@ -38,102 +62,6 @@ module Icss
       #     end
       #   end
       # end
-
-      protected
-
-      #
-      # Manufacture of klass and meta_module
-      #
-
-      # Turns a dotted namespace.name into camelized rubylike names for a class
-      # @example
-      #   scope_names_for('this.that.the_other')
-      #   # ["This", "That", "TheOther"]
-      def self.scope_names_for(fullname)
-        fullname.split('.').map(&:camelize)
-      end
-
-      # Returns the meta-module for the given scope and name, starting with
-      # '::Icss::Meta' and creating all necessary parents along the way.
-      # @example
-      #   Icss::Meta::TypeFactory.get_meta_module(["This", "That"], "TheOther")
-      #   # Icss::Meta::This::That::TheOtherType
-      def self.get_meta_module(scope_names, klass_name)
-        meta_module_name = "#{klass_name}Type"
-        get_module_scope(%w[Icss Meta] + scope_names + [meta_module_name])
-      end
-
-      # Returns the klass for the given scope and name, starting with '::Icss'
-      # and creating all necessary parents along the way. Note that if the given
-      # class or its parent scopes already exist, they're trusted to be correct
-      # -- we don't do any error checking as to their type or superclass.
-      #
-      # @example
-      #   Icss::Meta::TypeFactory.get_klass(["This", "That"], "TheOther")
-      #   # Icss::This::That::TheOther
-      #
-      # @param scope_names [Array of String]
-      # @param superklass  [Class] - the superclass to use if the class doesn't exist.
-      def self.get_type_klass(scope_names, klass_name, superklass)
-        parent_module = get_module_scope(%w[Icss] + scope_names)
-        if parent_module.const_defined?(klass_name)
-          klass = parent_module.const_get(klass_name)
-        else
-          klass = parent_module.const_set(klass_name, Class.new(superklass))
-        end
-        klass
-      end
-
-      # Returns a module for the given scope names, rooted always at Object (so
-      # implicity with '::').
-      # @example
-      #   get_module_scope(["This", "That", "TheOther"])
-      #   # This::That::TheOther
-      def self.get_module_scope(scope_names)
-        scope_names.inject(Object) do |parent_module, module_name|
-          if parent_module.const_defined?(module_name)
-            new_parent = parent_module.const_get(module_name)
-          else
-            new_parent = parent_module.const_set(module_name.to_sym, Module.new)
-          end
-          new_parent
-        end
-      end
-
-
-    # #
-    # # Avro Schema Declaration
-    # #
-    # # A Schema is represented in JSON by one of:
-    # #
-    # # * A JSON string, naming a defined type.
-    # # * A JSON object, of the form:
-    # #       {"type": "typeName" ...attributes...}
-    # #   where typeName is either a primitive or derived type name, as defined
-    # #   in the Icss::Type class
-    # # * A JSON array, representing a union of embedded types.
-    # #
-    # #
-    # class TypeFactory
-    #
-    #   def self.receive type_info
-    #     case
-    #     when type_info.is_a?(Icss::Type)
-    #       type_info
-    #     when type_info.is_a?(String) || type_info.is_a?(Symbol)
-    #       Icss::Type.find(type_info)
-    #     when type_info.is_a?(Array)
-    #       UnionType.receive(type_info)
-    #     else
-    #       type_info = type_info.symbolize_keys
-    #       raise "No type was given in #{type_info.inspect}" if type_info[:type].blank?
-    #       type_name = type_info[:type].to_sym
-    #       type = Icss::Type.find(type_name)
-    #       obj = type.receive(type_info)
-    #     end
-    #   end
-    #
-    # end
 
     end
   end

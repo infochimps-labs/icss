@@ -13,7 +13,11 @@ require 'gorillib/hashlike'
 require 'time' # ain't that always the way
 
 require 'icss/type'
+require 'icss/type/named_type'
+require 'icss/type/field_decorators'
+require 'icss/type/receiver_decorators'
 require 'icss/type/record_type'
+require 'icss/type/record_field'
 
 # require 'icss/type/factory'
 

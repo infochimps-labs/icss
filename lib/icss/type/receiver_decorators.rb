@@ -1,13 +1,13 @@
 module Icss
   module Type
-    module RecordType
+    module ReceiverRecord
 
       #
       # modify object in place with new typecast values.
       #
       def receive!(hsh={})
         raise ArgumentError, "Can't receive (it isn't hashlike): {#{hsh.inspect}}" unless hsh.respond_to?(:[]) && hsh.respond_to?(:has_key?)
-        fields.each do |attr, field_info|
+        self.class.fields.each do |attr, field_info|
           next if field_info[:receiver] == :none
           if    hsh.has_key?(attr.to_sym) then val = hsh[attr.to_sym]
           elsif hsh.has_key?(attr.to_s)   then val = hsh[attr.to_s]
@@ -52,7 +52,7 @@ module Icss
       end
       protected :run_after_receivers
 
-      module ReceiverDecorators
+      module ClassMethods
 
         #
         # Describes a field in a Record object.
@@ -148,12 +148,28 @@ module Icss
         #
         def add_receiver(field_name, type, field_info={})
           return if field_info[:receiver] == :none
-          body = ReceiverDecorators.receiver_body_for(type, field_info)
+          body = ReceiverRecord.receiver_body_for(type, field_info)
           define_method("receive_#{field_name}") do |*args|
             v = body.call(*args)
             self.instance_variable_set("@#{field_name}", v)
             v
           end
+        end
+
+        #
+        # Returns a new instance with the given hash used to set all rcvrs.
+        #
+        # All args up to the last one are passed to the initializer.
+        # The last arg must be a hash -- its attributes are set on the newly-created object
+        #
+        # @param hsh [Hash] attr-value pairs to set on the newly created object.
+        # @param *args [Array] arguments to pass to the constructor
+        # @return [Object] a new instance
+        def receive *args
+          hsh = args.pop
+          raise ArgumentError, "Can't receive (it isn't hashlike): {#{hsh.inspect}} -- the hsh should be the *last* arg" unless hsh.respond_to?(:[]) && hsh.respond_to?(:has_key?)
+          obj = self.new(*args)
+          obj.receive!(hsh)
         end
 
         #
@@ -227,50 +243,6 @@ module Icss
           obj
         end
 
-        protected
-
-        RECEIVER_BODIES           = {} unless defined?(RECEIVER_BODIES)
-        RECEIVER_BODIES[NilClass] = lambda{|v| raise ArgumentError, "This field must be nil, but [#{v}] was given" unless (v.nil?) ; nil }
-        RECEIVER_BODIES[Boolean]  = lambda{|v| case when v.nil? then nil when v.to_s.strip.blank? then false else v.to_s.strip != "false" end }
-        RECEIVER_BODIES[Integer]  = lambda{|v| v.blank? ? nil : v.to_i }
-        RECEIVER_BODIES[Float]    = lambda{|v| v.blank? ? nil : v.to_f }
-        RECEIVER_BODIES[String]   = lambda{|v| v.to_s }
-        #
-        RECEIVER_BODIES[Symbol]   = lambda{|v| v.blank? ? nil : v.to_sym }
-        RECEIVER_BODIES[Time]     = lambda{|v| v.nil?   ? nil : Time.parse(v.to_s).utc rescue nil }
-        RECEIVER_BODIES[Date]     = lambda{|v| v.nil?   ? nil : Date.parse(v.to_s)     rescue nil }
-        #
-        RECEIVER_BODIES[Object]   = lambda{|v| v } # accept and love the object just as it is
-        #
-        RECEIVER_BODIES[Array]    = lambda{|v| case when v.nil? then nil when v.blank? then [] else Array(v) end }
-        RECEIVER_BODIES[Hash]     = lambda{|v| case when v.nil? then nil when v.blank? then {} else v end }
-        #
-        # Give each base class a receive method
-        RECEIVER_BODIES.each do |k,b|
-          if k.is_a?(Class)
-            k.class_eval{ define_singleton_method(:receive, &b) }
-          end
-        end
-
-        def self.receiver_body_for type, field_info
-          # Note that Array and Hash only need (and only get) special treatment when
-          # they have an :of => SomeType option.
-          case
-          when field_info[:of] && (type == Array)
-            receiver_type = field_info[:of]
-            lambda{|v|  v.nil? ? nil : v.map{|el| receiver_type.receive(el) } }
-          when field_info[:of] && (type == Hash)
-            receiver_type = field_info[:of]
-            lambda{|v| v.nil? ? nil : v.inject({}){|h, (el,val)| h[el] = receiver_type.receive(val); h } }
-          when RECEIVER_BODIES.include?(type)
-            RECEIVER_BODIES[type]
-          when type.is_a?(Class)
-            lambda{|v| v.blank? ? nil : type.receive(v) }
-          else
-            raise("Can't receive #{type} #{field_info}")
-          end
-        end
-
         # make a block to run after each time  .receive! is invoked
         def after_receive &block
           @after_receivers = (@after_receivers || []) | [block]
@@ -282,6 +254,8 @@ module Icss
           call_ancestor_chain(:after_receivers){|anc_f| all_f = anc_f | all_f }
           all_f
         end
+        
+      protected
 
         # Adds after_receivers to implement some of the options to .field
         #
@@ -313,8 +287,54 @@ module Icss
           end
           super(attr, type, field_info) if defined?(super)
         end
+      end # ClassMethods
 
+      RECEIVER_BODIES           = {} unless defined?(RECEIVER_BODIES)
+      RECEIVER_BODIES[NilClass] = lambda{|v| raise ArgumentError, "This field must be nil, but [#{v}] was given" unless (v.nil?) ; nil }
+      RECEIVER_BODIES[Boolean]  = lambda{|v| case when v.nil? then nil when v.to_s.strip.blank? then false else v.to_s.strip != "false" end }
+      RECEIVER_BODIES[Integer]  = lambda{|v| v.blank? ? nil : v.to_i }
+      RECEIVER_BODIES[Float]    = lambda{|v| v.blank? ? nil : v.to_f }
+      RECEIVER_BODIES[String]   = lambda{|v| v.to_s }
+      #
+      RECEIVER_BODIES[Symbol]   = lambda{|v| v.blank? ? nil : v.to_sym }
+      RECEIVER_BODIES[Time]     = lambda{|v| v.nil?   ? nil : Time.parse(v.to_s).utc rescue nil }
+      RECEIVER_BODIES[Date]     = lambda{|v| v.nil?   ? nil : Date.parse(v.to_s)     rescue nil }
+      #
+      RECEIVER_BODIES[Object]   = lambda{|v| v } # accept and love the object just as it is
+      #
+      RECEIVER_BODIES[Array]    = lambda{|v| case when v.nil? then nil when v.blank? then [] else Array(v) end }
+      RECEIVER_BODIES[Hash]     = lambda{|v| case when v.nil? then nil when v.blank? then {} else v end }
+      #
+      # Give each base class a receive method
+      RECEIVER_BODIES.each do |k,b|
+        if k.is_a?(Class) && (k != Object)
+          k.class_eval{ define_singleton_method(:receive, &b) }
+        end
+      end
+
+      def self.receiver_body_for type, field_info
+        # Note that Array and Hash only need (and only get) special treatment when
+        # they have an :of => SomeType option.
+        case
+        when field_info[:of] && (type == Array)
+          receiver_type = field_info[:of]
+          lambda{|v|  v.nil? ? nil : v.map{|el| receiver_type.receive(el) } }
+        when field_info[:of] && (type == Hash)
+          receiver_type = field_info[:of]
+          lambda{|v| v.nil? ? nil : v.inject({}){|h, (el,val)| h[el] = receiver_type.receive(val); h } }
+        when RECEIVER_BODIES.include?(type)
+          RECEIVER_BODIES[type]
+        when type.is_a?(Class)
+          lambda{|v| v.blank? ? nil : type.receive(v) }
+        else
+          raise("Can't receive #{type} #{field_info}")
+        end
+      end
+      
+      def self.included(base)
+        base.extend(Icss::Type::ReceiverRecord::ClassMethods)
       end
     end
+    
   end
 end

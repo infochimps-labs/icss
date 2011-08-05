@@ -3,8 +3,8 @@ source "http://rubygems.org"
 # Example:
 #   gem "activesupport", ">= 2.3.5"
 
-gem   'gorillib',        :git => 'https://github.com/infochimps/gorillib.git'
-#gem   'gorillib',  "~> 0.1.5"
+# gem   'gorillib',        :git => 'https://github.com/infochimps/gorillib.git'
+# gem   'gorillib',  "~> 0.1.5"
 gem   'activemodel', "~> 3.0.9"
 
 # Add dependencies to develop your gem here.

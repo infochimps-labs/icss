@@ -7,17 +7,16 @@ require 'icss/receiver_model/active_model_shim'
 module Icss
   module ReceiverModel
 
-
-
     # put all the things in ClassMethods at class level
     def self.included base
       base.class_eval do
+        include Icss::Type::RecordType
+        include Icss::Type::ReceiverRecord
         include Icss::ReceiverModel::ActsAsHash
         include Icss::ReceiverModel::ActsAsLoadable
-        include Icss::ReceiverModel::ActiveModel
+        include Icss::ReceiverModel::ActiveModelShim
         include Gorillib::Hashlike
         include Gorillib::Hashlike::TreeMerge
-        include Icss::ReceiverModel::ActsAsReceiver
       end
     end
 

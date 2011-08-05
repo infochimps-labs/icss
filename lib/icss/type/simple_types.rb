@@ -20,6 +20,7 @@ module Icss
         :url       => Url,
         :epoch_time => EpochTime,
       })
+    Icss::Type::TYPE_ALIASES.merge!(Icss::Type::SIMPLE_TYPES)
 
     # class Apikey     < String ; end
     # class BCryptHash < String ; end

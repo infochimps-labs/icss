@@ -52,25 +52,21 @@ module Icss
   #     }
   #
   class Protocol
-    include Receiver
-    include Receiver::ActsAsHash
-    include Receiver::ActsAsLoadable
-    include Gorillib::Hashlike::TreeMerge
-    include Receiver::ActiveModelShim
+    include Icss::ReceiverModel
 
-    rcvr_accessor :protocol,    String
+    field :protocol,    String
     alias_method  :name, :protocol
-    rcvr_accessor :namespace,   String
-    rcvr_accessor :doc,         String
+    field :namespace,   String
+    field :doc,         String
     #
-    rcvr_accessor :types,       Array, :of => Icss::TypeFactory, :default => []
-    rcvr_accessor :messages,    Hash,  :of => Icss::Message,     :default => {}
-    # extensions to avro
-    rcvr_accessor :data_assets, Array, :of => Icss::DataAsset,   :default => []
-    rcvr_accessor :code_assets, Array, :of => Icss::CodeAsset,   :default => []
-    rcvr_accessor :targets,     Hash,  :of => Icss::TargetListFactory, :default => {}, :merge_as => :hash_of_arrays
-    rcvr_accessor :under_consideration, Boolean
-    rcvr_accessor :update_frequency, String
+    field :types,       Array, :of => Icss::Type::TypeFactory, :default => []
+    field :messages,    Hash,  :of => Icss::Message,           :default => {}
+    #
+    # field :data_assets, Array, :of => Icss::DataAsset,   :default => []
+    # field :code_assets, Array, :of => Icss::CodeAsset,   :default => []
+    # field :targets,     Hash,  :of => Icss::TargetListFactory, :default => {}, :merge_as => :hash_of_arrays
+    # field :under_consideration, Boolean
+    # field :update_frequency, String
 
     validates :protocol,  :presence => true, :format => { :with => /\A[A-Za-z_]\w*\z/, :message => "must start with [A-Za-z_] and contain only [A-Za-z0-9_]." }
     validates :namespace, :presence => true, :format => { :with => /\A([A-Za-z_]\w*\.?)+\z/, :message => "Segments that start with [A-Za-z_] and contain only [A-Za-z0-9_], joined by '.'dots" }
