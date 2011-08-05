@@ -17,6 +17,7 @@ module Icss
         include Icss::ReceiverModel::ActiveModel
         include Gorillib::Hashlike
         include Gorillib::Hashlike::TreeMerge
+        include Icss::ReceiverModel::ActsAsReceiver
       end
     end
 

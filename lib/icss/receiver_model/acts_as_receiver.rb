@@ -1,7 +1,6 @@
 module Icss
-  module Meta
-
-    module ReceiverModel
+  module ReceiverModel
+    module ActsAsReceiver
 
       #
       # modify object in place with new typecast values.
@@ -63,7 +62,7 @@ module Icss
         # @param [Symbol] field_name -- a string providing the name of the field
         #   (required)
         #
-        # @param [Class, Icss::Meta::Type] type a schema, or a string or symbol
+        # @param [Class, Icss::Type] type a schema, or a string or symbol
         #   naming a record definition (required)
         #
         #     avro type     json type   ruby type   kind        example
@@ -228,7 +227,7 @@ module Icss
           obj
         end
 
-      protected
+        protected
 
         RECEIVER_BODIES           = {} unless defined?(RECEIVER_BODIES)
         RECEIVER_BODIES[NilClass] = lambda{|v| raise ArgumentError, "This field must be nil, but [#{v}] was given" unless (v.nil?) ; nil }

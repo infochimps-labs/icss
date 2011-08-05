@@ -6,7 +6,7 @@ module Icss
   class Entity
   end
   class Thing < Icss::Entity
-    extend Icss::Meta::RecordType::ClassMethods
+    extend Icss::Type::RecordType::ClassMethods
     include Icss::Primitive
     field :name,        String, :doc => 'The name of the item.'
     field :description, Text,   :doc => 'A short description of the item.'
@@ -15,7 +15,7 @@ module Icss
   end
   module Core
     class Place < Icss::Thing
-      # extend Icss::Meta::RecordType
+      # extend Icss::Type::RecordType
       field :address_locality, String
       field :address_region,   String
     end

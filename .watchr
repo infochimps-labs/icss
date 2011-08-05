@@ -18,3 +18,7 @@ end
 watch("lib/icss/(.*)\.rb") do |match|
   run_spec %{spec/#{match[1]}_spec.rb}
 end
+
+watch("lib/icss/type/(.*)\.rb") do |match|
+  run_spec %{spec/type/record_type_spec.rb} unless (match =~ /record_type$/)
+end

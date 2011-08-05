@@ -6,25 +6,25 @@ require 'icss/type/new_factory'
 
 module Icss::Smurf
   class Base
-    include Icss::Meta::RecordType
+    include Icss::Type::RecordType
     field :smurfiness, Integer
   end
   class Poppa < Base
   end
   module Brainy
-    include Icss::Meta::RecordType
+    include Icss::Type::RecordType
     field :doing_it, Boolean
   end
   class Smurfette < Poppa
     include Brainy
-    include Icss::Meta::RecordType
+    include Icss::Type::RecordType
     field :blondness, Integer
   end
 end
 
 module Howdy
 module Bob
-  include Icss::Meta::RecordType
+  include Icss::Type::RecordType
 
   field :my_happy_field,       String
 
@@ -35,7 +35,7 @@ end
 
 class Fred
   p [(self.methods - Class.methods), (self.new.methods - Object.new.methods)]
-  include Icss::Meta::RecordType
+  include Icss::Type::RecordType
   p [(self.methods - Class.methods), (self.new.methods - Object.new.methods)]
 
   field :my_happy_field,       String
@@ -53,10 +53,10 @@ end
 
 end
 
-describe Icss::Meta::RecordType do
+describe Icss::Type::RecordType do
   it 'has a doc field' do
-    # Icss::Meta::RecordType.doc = "All about me!"
-    # Icss::Meta::RecordType.doc.should == "All about me!"
+    # Icss::Type::RecordType.doc = "All about me!"
+    # Icss::Type::RecordType.doc.should == "All about me!"
   end
 
   it 'Bob' do
@@ -67,7 +67,7 @@ describe Icss::Meta::RecordType do
   end
 end
 
-describe Icss::Meta::RecordType do
+describe Icss::Type::RecordType do
   let(:new_smurf_klass){    k = Class.new(Icss::Smurf::Poppa)  }
 
   context '.field' do
@@ -220,10 +220,10 @@ end
 
 
 
-# describe Icss::Meta::RecordType::FieldDecorators do
+# describe Icss::Type::RecordType::FieldDecorators do
 #
 #   #
-#   let(:module_smurf){ m = Module.new; m.send(:include, Icss::Meta::RecordType) ; m }
+#   let(:module_smurf){ m = Module.new; m.send(:include, Icss::Type::RecordType) ; m }
 #
 #   context '.fields' do
 #     #
@@ -262,7 +262,7 @@ end
 
 
 
-# describe Icss::Meta::TypeFactory do
+# describe Icss::Type::TypeFactory do
 #   module Icss
 #     module This
 #       module That

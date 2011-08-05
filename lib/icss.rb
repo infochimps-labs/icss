@@ -7,27 +7,23 @@ require 'gorillib/hash/compact'
 require 'gorillib/hash/keys'
 require 'gorillib/hash/tree_merge'
 require 'gorillib/metaprogramming/class_attribute'
-
+#
 require 'gorillib/hashlike'
-require 'gorillib/receiver'
-require 'gorillib/receiver_model'
 
 require 'time' # ain't that always the way
 
-# module Icss
-#   module Meta
-#   end
-# end
-
-# require 'icss/type/entity'
 require 'icss/type'
-require 'icss/message'
-require 'icss/sample_message_call'
-require 'icss/data_asset'
-require 'icss/code_asset'
-require 'icss/target'
-require 'icss/protocol'
 require 'icss/type/factory'
 
+# require 'icss/message'
+# require 'icss/message/sample_message_call'
+# require 'icss/protocol'
+# require 'icss/protocol/target'
+# require 'icss/protocol/data_asset'
+# require 'icss/protocol/code_asset'
+
 # require 'icss/deprecated'
+
+# require 'icss/type/entity'
+# require 'icss/type/core'
 

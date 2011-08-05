@@ -1,18 +1,18 @@
-module Icss
-  module Primitive
+class Text       < String ; end
+class FilePath   < String ; end
+class Regexp     < String ; end
+class Url        < String ; end
+class EpochTime < Integer ; end
 
-    class Text       < String ; end
-    class FilePath   < String ; end
-    class Regexp     < String ; end
-    class Url        < String ; end
-    class EpochTime < Integer ; end
+module Icss
+  module Type
 
     [Text, FilePath, Regexp, Url].each do |klass|
-      Icss::Meta::RecordType::ReceiverDecorators::RECEIVER_BODIES[klass] = RECEIVER_BODIES[String]
+      Icss::Type::RecordType::ReceiverDecorators::RECEIVER_BODIES[klass] = RECEIVER_BODIES[String]
     end
-    Icss::Meta::RecordType::ReceiverDecorators::RECEIVER_BODIES[EpochTime] = RECEIVER_BODIES[Integer]
+    Icss::Type::RecordType::ReceiverDecorators::RECEIVER_BODIES[EpochTime] = RECEIVER_BODIES[Integer]
 
-    Icss::Meta::SIMPLE_TYPES.merge!({
+    Icss::Type::SIMPLE_TYPES.merge!({
         :text      => Text,
         :file_path => FilePath,
         :regexp    => Regexp,
@@ -48,6 +48,7 @@ module Icss
     #     super({})
     #   end
     # end
+
 
   end
 end
