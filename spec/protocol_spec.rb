@@ -3,7 +3,7 @@ require 'icss'
 
 describe Icss::Protocol do
   let(:simple_icss) do
-    Icss::Protocol.receive_from_file(ICSS_ROOT_DIR('examples/chronic.icss.yaml'))
+    Icss::Protocol.receive_from_file(ENV.root_path('examples/chronic.icss.yaml'))
   end
 
   it 'loads cleanly' do
