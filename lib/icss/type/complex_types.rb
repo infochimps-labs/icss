@@ -1,9 +1,9 @@
 module Icss
   module Type
 
-    # module ErrorType
-    #   include RecordType
-    # end
+    module ErrorType
+      include RecordType
+    end
 
     #
     # Describes an Avro Enum type.
@@ -24,10 +24,11 @@ module Icss
     # }
     #
     module EnumType
-      extend NamedType
-      field :symbols, Array, :of => String, :required => true
-      def schema_hash
-        super.merge( :symbols => symbols )
+      include NamedType
+      extend  RecordType::FieldDecorators
+      field :symbols, Array, :of => String, :required => true, :default => []
+      def to_schema
+        (defined?(super) ? super : {}).merge({ :symbols   => symbols })
       end
     end
 
@@ -36,12 +37,11 @@ module Icss
     #
     # (do not confuse with EnumType, which is not an EnumerableType. sigh).
     #
-    class EnumerableType < Type
-      class_attribute :type
-      class_attribute :ruby_klass
+    module EnumerableType
+      include Type
 
-      def schema_hash
-        super.merge( :type => type.to_s )
+      def to_schema
+        (defined?(super) ? super : {}).merge({ :type => type.to_s })
       end
     end
 
@@ -56,17 +56,18 @@ module Icss
     #
     #     {"type": "array", "items": "string"}
     #
-    class ArrayType < EnumerableType
-      rcvr_accessor :items, TypeFactory, :required => true
-      self.type = :array
-      self.ruby_klass = Array
+    module ArrayType
+      include EnumerableType
+      extend  RecordType::FieldDecorators
+      #
+      field :items, TypeFactory, :required => true
 
       def title
         "array of #{items.title}"
       end
 
-      def schema_hash
-        super.merge( :items => (items && items.name) )
+      def to_schema
+        (defined?(super) ? super : {}).merge({ :items => (items && items.name) })
       end
     end
 
@@ -82,12 +83,14 @@ module Icss
     #
     #     {"type": "map", "values": "long"}
     #
-    class MapType < EnumerableType
-      rcvr_accessor :values, TypeFactory, :required => true
-      self.type       = :map
-      self.ruby_klass = Hash
-      def schema_hash
-        super.merge( :values => values.to_hash )
+    module MapType
+      include EnumerableType
+      extend  RecordType::FieldDecorators
+      #
+      field :values, TypeFactory, :required => true
+
+      def to_schema
+        (defined?(super) ? super : {}).merge({ :values => values.to_hash })
       end
     end
 
@@ -107,19 +110,30 @@ module Icss
     #
     # Unions may not immediately contain other unions.
     #
-    class UnionType < EnumerableType
+    class UnionType
+      include EnumerableType
+      include RecordType
       attr_accessor :available_types
-      attr_accessor :referenced_types
-      self.type = :union
+      attr_accessor :declaration_flavors
+
+      def self.receive(*args)
+        obj = new()
+        obj.receive!(*args)
+        obj
+      end
+
       def receive! type_list
-        self.available_types = type_list.map do |type_info|
-          type = TypeFactory.receive(type_info)
-          (referenced_types||=[]) << type if (type_info.is_a?(String) || type_info.is_a?(Symbol))
+        self.declaration_flavors = []
+        self.available_types = type_list.map do |schema|
+          type = TypeFactory.receive(schema)
+          declaration_flavors << TypeFactory.classify_schema_declaration(schema)
           type
         end
       end
-      def schema_hash
-        available_types.map{|t| t.name } #  (referenced_types||=[]).include?(t) ? t.name : t.schema_hash }
+      def to_schema
+        available_types.zip(declaration_flavors).map do |t,fl|
+          [:named_type].include?(fl) ? t.name : t.to_schema
+        end
       end
     end
 
@@ -136,12 +150,12 @@ module Icss
     #
     #     {"type": "fixed", "size": 16, "name": "md5"}
     #
-    class FixedType < NamedType
-      rcvr_accessor :size, Integer, :required => true
-      class_attribute :ruby_klass
-      self.type = :fixed
-      self.ruby_klass = String
-      def schema_hash
+    module FixedType
+      include NamedType
+      extend  RecordType::FieldDecorators
+
+      field :size, Integer, :required => true
+      def to_schema
         super.merge( :size => size )
       end
     end

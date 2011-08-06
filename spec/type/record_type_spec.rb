@@ -32,7 +32,7 @@ require 'icss/type/record_field'
 #         :add_receiver, :after_receive, :after_receivers, :consume_tuple,
 #         :doc, :doc=, :field, :field_names, :fields,
 #         :fullname, :namespace,
-#         :rcvr_remaining, :receive, :schema_hash, :tuple_keys, :typename
+#         :rcvr_remaining, :receive, :to_schema, :tuple_keys, :typename
 #       ]
 #     end
 #     it 'works' do
@@ -109,7 +109,7 @@ require 'icss/type/record_field'
 #         :doc, :doc=, :field, :field_names, :fields,
 #         :fullname, :namespace,
 #         # :rcvr_remaining, :receive, :tuple_keys,
-#         :schema_hash, :typename
+#         :to_schema, :typename
 #       ]
 #     end
 #     it 'adds few methods' do

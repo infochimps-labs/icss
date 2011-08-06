@@ -47,7 +47,7 @@ module Icss
         end
       end
 
-      def schema_hash
+      def to_schema
         (defined?(super) ? super : {}).merge(
           :name      => typename,
           :namespace => namespace,

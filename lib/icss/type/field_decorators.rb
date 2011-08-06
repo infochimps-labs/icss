@@ -111,21 +111,20 @@ module Icss
         # it's the first member of its inheritance chain to define the method.
         # We want it to do so for each ancestor that has added fields.
 
-
-        def schema_hash
+        def to_schema
           (defined?(super) ? super : {}).merge(
             :fields => fields.to_hash,
             # :is_a   => ( is_a   || [] ).map{|k| k.fullname },
             )
         end
 
-        # def fields_schema_hash
+        # def fields_to_schema
         #   return {} if fields.blank?
         #   ( fields || {} ).map do |fn,fi|
         #     type = fi[:type]
         #     type_name = Icss::Type::PRIMITIVE_TYPES.key(type)
         #     p [self, type_name, type]
-        #     x = type_name ? type_name : type.schema_hash
+        #     x = type_name ? type_name : type.to_schema
         #     p x
         #     x
         #   end

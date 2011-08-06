@@ -1,17 +1,17 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 require 'icss/type'
 require 'icss/type/named_type'
-# require 'icss/type/complex_types'
 require 'icss/type/record_type'
 require 'icss/type/field_decorators'
 require 'icss/type/type_factory'
+require 'icss/type/complex_types'
 
 describe Icss::Type::TypeFactory do
   module EnumType
     include Icss::Type::NamedType
     extend Icss::Type::RecordType::FieldDecorators
     field :symbols, Array, :of => String, :required => true, :default => []
-    def schema_hash
+    def to_schema
         (defined?(super) ? super : {}).merge({ :symbols   => symbols })
     end
   end
@@ -20,44 +20,64 @@ describe Icss::Type::TypeFactory do
     p [EnumType.public_methods - Module.public_methods]
     p [EnumType.public_methods - Class.public_methods]
 
-    p EnumType.schema_hash
+    p EnumType.to_schema
     # FooType.extend(Icss::Type::NamedType)
     #p [FooType.namespace, FooType.typename, FooType.public_methods - Class.public_methods]
   end
 
-  # module Icss
-  #   module This
-  #     module That
-  #       class TheOther
-  #       end
-  #     end
-  #   end
-  #   Blinken = 7
-  # end
-  #
-  # context '.receive' do
-  #   it 'on a primitive type' do
-  #     Icss::Type::PRIMITIVE_TYPES.each do |al, kl|
-  #       Icss::Type::TypeFactory.receive(al).should == kl
-  #     end
-  #     Icss::Type::TypeFactory.receive('string').should == String
-  #     Icss::Type::TypeFactory.receive('int'   ).should == Integer
-  #   end
-  #   it 'on a simple type' do
-  #     Icss::Type::SIMPLE_TYPES.each do |al, kl|
-  #       Icss::Type::TypeFactory.receive(al).should == kl
-  #     end
-  #   end
-  #   it 'on a named type' do
-  #     p [ Icss::This::That::TheOther.ancestors, (Icss::This::That::TheOther < Icss::Type::RecordType) ]
-  #     Icss::Type::TypeFactory.receive('this.that.the_other').should == Icss::This::That::TheOther
-  #     Icss::Type::TypeFactory.receive('Icss::This::That::TheOther').should == Icss::This::That::TheOther
-  #   end
-  #   it 'on a union type (array)' do
-  #     uu = Icss::Type::TypeFactory.receive([ 'Icss::This::That::TheOther', Integer ])
-  #     uu.should be_a(Icss::Type::UnionType)
-  #   end
-  # end
+  module Icss
+    module This
+      module That
+        class TheOther
+        end
+      end
+    end
+    Blinken = 7
+  end
+
+  context '.receive' do
+    it 'on a primitive type' do
+      Icss::Type::PRIMITIVE_TYPES.each do |al, kl|
+        Icss::Type::TypeFactory.receive(al).should == kl
+      end
+      Icss::Type::TypeFactory.receive('string').should == String
+      Icss::Type::TypeFactory.receive('int'   ).should == Integer
+    end
+    it 'on a simple type' do
+      Icss::Type::SIMPLE_TYPES.each do |al, kl|
+        Icss::Type::TypeFactory.receive(al).should == kl
+      end
+    end
+    it 'on a named type' do
+      p [ Icss::This::That::TheOther.ancestors, (Icss::This::That::TheOther < Icss::Type::RecordType) ]
+      Icss::Type::TypeFactory.receive('this.that.the_other'       ).should == Icss::This::That::TheOther
+      Icss::Type::TypeFactory.receive('Icss::This::That::TheOther').should == Icss::This::That::TheOther
+    end
+    it 'on a union type (array)' do
+      uu = Icss::Type::TypeFactory.receive([ 'Icss::This::That::TheOther', Integer ])
+      uu.should be_a(Icss::Type::UnionType)
+    end
+  end
+
+  it '.classify_schema_declaration' do
+    { Icss::This::That::TheOther                  => :is_type,
+      [ 'int', 'string' ]                         => :union_type,
+      { 'type' => 'record', 'name' => 'bob' }     => :schema,
+      { 'type' => 'array', 'items' => 'string' }  => :schema,
+      { 'type' => 'map',   'values' => 'string' } => :schema,
+      { 'type' => 'array', 'items' => 'string' }  => :schema,
+      [ 'boolean', 'double', {'type' => 'array', 'items' => 'bytes'}] => :union_type,
+      { 'type' => 'enum',  'name' => 'Kind', 'symbols' => ['A','B','C']} => :schema,
+      { 'type' => 'fixed', 'name' => 'MD5',  'size' => 16} => :schema,
+      { 'type' => 'map', 'values' => { 'name' => 'Foo', 'type' => 'record', 'fields' => [{'name' => 'label', 'type' => 'string'}]} } => :schema,
+      { 'type' => 'record','name' => 'Node', 'fields' => [
+          { 'name' => 'label',    'type' => 'string'}, { 'name' => 'children', 'type' => {'type' => 'array', 'items' => 'Node'}}]} => :schema,
+      'string' => :primitive, :string => :primitive, :date => :simple, 'time' => :simple,
+      'this.that.the_other' => :named_type,
+    }.each do |schema_dec, schema_flavor|
+      Icss::Type::TypeFactory.classify_schema_declaration(schema_dec).should == schema_flavor
+    end
+  end
 
   # context '.ensure_module_scope' do
   #   it 'adds a new child when parents exist' do
@@ -75,32 +95,6 @@ describe Icss::Type::TypeFactory do
   #     Icss::Winken::Blinken.class.should      == Module
   #     Icss::Winken.class.should               == Module
   #     Icss.send(:remove_const, :Winken)
-  #   end
-  # end
-  #
-  # context '.make' do
-  #   it 'succeeds when the class already exists' do
-  #     klass, meta_module = Icss::Type::TypeFactory.make('this.that.the_other')
-  #     klass.should be_a(Class)
-  #     klass.name.should == 'Icss::This::That::TheOther'
-  #     meta_module.should be_a(Module)
-  #     meta_module.name.should == 'Icss::Type::This::That::TheOtherType'
-  #   end
-  #   it 'succeeds when the class does not already exist' do
-  #     Icss.should_not be_const_defined(:YourMom)
-  #     klass, meta_module = Icss::Type::TypeFactory.make('your_mom.wears.combat_boots')
-  #     klass.name.should == 'Icss::YourMom::Wears::CombatBoots'
-  #     Icss::Type::YourMom::Wears::CombatBootsType.class.should == Module
-  #     Icss::Type::YourMom::Wears.class.should                  == Module
-  #     Icss::YourMom::Wears::CombatBoots.class.should           == Class
-  #     Icss::YourMom::Wears.class.should                        == Module
-  #     Icss::Type.send(:remove_const, :YourMom)
-  #     Icss.send(:remove_const, :YourMom)
-  #   end
-  #   it 'includes its meta type as a module' do
-  #     Icss.should_not be_const_defined(:YourMom)
-  #     klass, meta_module = Icss::Type::TypeFactory.make('your_mom.wears.combat_boots')
-  #     # klass.should < Icss::Type::YourMom::Wears::CombatBootsType
   #   end
   # end
 

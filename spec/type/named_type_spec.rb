@@ -38,5 +38,32 @@ describe Icss::Type::NamedType do
     end
   end
 
+
+  context '.make' do
+    it 'succeeds when the class already exists' do
+      klass, meta_module = Icss::Type::NamedType.make('this.that.the_other')
+      klass.should be_a(Class)
+      klass.name.should == 'Icss::This::That::TheOther'
+      meta_module.should be_a(Module)
+      meta_module.name.should == 'Icss::Type::This::That::TheOtherType'
+    end
+    it 'succeeds when the class does not already exist' do
+      Icss.should_not be_const_defined(:YourMom)
+      klass, meta_module = Icss::Type::NamedType.make('your_mom.wears.combat_boots')
+      klass.name.should == 'Icss::YourMom::Wears::CombatBoots'
+      Icss::Type::YourMom::Wears::CombatBootsType.class.should == Module
+      Icss::Type::YourMom::Wears.class.should                  == Module
+      Icss::YourMom::Wears::CombatBoots.class.should           == Class
+      Icss::YourMom::Wears.class.should                        == Module
+      Icss::Type.send(:remove_const, :YourMom)
+      Icss.send(:remove_const, :YourMom)
+    end
+    it 'includes its meta type as a module' do
+      Icss.should_not be_const_defined(:YourMom)
+      klass, meta_module = Icss::Type::NamedType.make('your_mom.wears.combat_boots')
+      # klass.should < Icss::Type::YourMom::Wears::CombatBootsType
+    end
+  end
+
 end
 

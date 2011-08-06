@@ -1,17 +1,15 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 require 'icss'
-require 'icss/type/new_factory'
 
 module Icss
   class Entity
   end
   class Thing < Icss::Entity
-    extend Icss::Type::RecordType::ClassMethods
-    include Icss::Primitive
+    include Icss::Type::RecordType
     field :name,        String, :doc => 'The name of the item.'
-    field :description, Text,   :doc => 'A short description of the item.'
-    field :image,       Url,    :doc => 'URL of an image of the item.'
-    field :url,         Url,    :doc => 'URL of the item.'
+    field :description, String,   :doc => 'A short description of the item.'
+    field :image,       String,    :doc => 'URL of an image of the item.'
+    field :url,         String,    :doc => 'URL of the item.'
   end
   module Core
     class Place < Icss::Thing
@@ -24,7 +22,7 @@ module Icss
       field :start_date,  Time,   :doc => 'The start date and time of the event (in [ISO 8601 date format](http://en.wikipedia.org/wiki/ISO_8601)).'
       field :attendees,   Array,  :of => Object # Icss::Core::Person
       field :location,    Icss::Core::Place
-      field :duration,    Duration, :doc => 'The duration of the item (movie, audio recording, event, etc.) in [ISO 8601 date format](http://en.wikipedia.org/wiki/ISO_8601)).'
+      field :duration,    Object, :doc => 'The duration of the item (movie, audio recording, event, etc.) in [ISO 8601 date format](http://en.wikipedia.org/wiki/ISO_8601)).'
     end
   end
   module Astronomy
