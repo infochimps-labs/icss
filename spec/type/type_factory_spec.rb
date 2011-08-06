@@ -59,23 +59,26 @@ describe Icss::Type::TypeFactory do
     end
   end
 
-  it '.classify_schema_declaration' do
+  context '.classify_schema_declaration' do
+
     { Icss::This::That::TheOther                  => :is_type,
       [ 'int', 'string' ]                         => :union_type,
-      { 'type' => 'record', 'name' => 'bob' }     => :schema,
-      { 'type' => 'array', 'items' => 'string' }  => :schema,
-      { 'type' => 'map',   'values' => 'string' } => :schema,
-      { 'type' => 'array', 'items' => 'string' }  => :schema,
+      { 'type' => 'record', 'name' => 'bob' }     => :named_type,
+      { 'type' => 'map',   'values' => 'string' } => :container_type,
+      { 'type' => 'array', 'items' => 'string' }  => :container_type,
       [ 'boolean', 'double', {'type' => 'array', 'items' => 'bytes'}] => :union_type,
-      { 'type' => 'enum',  'name' => 'Kind', 'symbols' => ['A','B','C']} => :schema,
-      { 'type' => 'fixed', 'name' => 'MD5',  'size' => 16} => :schema,
-      { 'type' => 'map', 'values' => { 'name' => 'Foo', 'type' => 'record', 'fields' => [{'name' => 'label', 'type' => 'string'}]} } => :schema,
+      { 'type' => 'enum',  'name' => 'Kind', 'symbols' => ['A','B','C']} => :named_type,
+      { 'type' => 'fixed', 'name' => 'MD5',  'size' => 16} => :named_type,
+      { 'type' => 'map', 'values' => { 'name' => 'Foo', 'type' => 'record', 'fields' => [{'name' => 'label', 'type' => 'string'}]} } => :container_type,
       { 'type' => 'record','name' => 'Node', 'fields' => [
-          { 'name' => 'label',    'type' => 'string'}, { 'name' => 'children', 'type' => {'type' => 'array', 'items' => 'Node'}}]} => :schema,
+          { 'name' => 'label',    'type' => 'string'}, { 'name' => 'children', 'type' => {'type' => 'array', 'items' => 'Node'}}]} => :named_type,
       'string' => :primitive, :string => :primitive, :date => :simple, 'time' => :simple,
-      'this.that.the_other' => :named_type,
+      'this.that.the_other' => :defined_type,
     }.each do |schema_dec, schema_flavor|
-      Icss::Type::TypeFactory.classify_schema_declaration(schema_dec).should == schema_flavor
+
+      it "returns #{schema_flavor} for #{schema_dec.inspect[0..60]}" do
+        Icss::Type::TypeFactory.classify_schema_declaration(schema_dec).should == schema_flavor
+      end
     end
   end
 

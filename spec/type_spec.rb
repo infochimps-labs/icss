@@ -39,7 +39,7 @@ describe 'instances' do
   context 'reshaping' do
     it '#to_model'
     it '#to_param'
-    it '#to_key' # Returns an Enumerable of all key attributes if any is set, regardless if the object is persisted or not
+    it '#to_key' # Returns an Container of all key attributes if any is set, regardless if the object is persisted or not
   end
 
 end

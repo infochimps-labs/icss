@@ -75,9 +75,9 @@ module Icss
         #     string        string      String      primitive   "foo"
         #     record        object      RecordType  named       {"a": 1}
         #     enum          string      Enum        named       "FOO"
-        #     array         array       Array       enumerable  [1]
-        #     map           object      Hash        enumerable  { "a": 1 }
-        #     fixed         string      String      enumerable  "\u00ff"
+        #     array         array       Array       container  [1]
+        #     map           object      Hash        container  { "a": 1 }
+        #     fixed         string      String      container  "\u00ff"
         #     union         object      XxxFactory  union
         #
         #     date          string      Date        simple      "2011-01-02"
@@ -250,9 +250,8 @@ module Icss
 
         # after_receive blocks for self and all ancestors
         def after_receivers
-          all_f = @after_receivers || []
-          call_ancestor_chain(:after_receivers){|anc_f| all_f = anc_f | all_f }
-          all_f
+          ff = @after_receivers || []
+          ancestor_chain_inject(:after_receivers, ff){|all_f, anc_f| anc_f | all_f }
         end
         
       protected

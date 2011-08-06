@@ -1,7 +1,7 @@
 unless defined?(Boolean) then class Boolean           ; end ; end
 unless defined?(Binary)  then class Binary  < String  ; end ; end
-unless defined?(Binary)  then class Long    < Integer ; end ; end
-unless defined?(Binary)  then class Double  < Float   ; end ; end
+unless defined?(Long)    then class Long    < Integer ; end ; end
+unless defined?(Double)  then class Double  < Float   ; end ; end
 
 module Icss
   module Type
@@ -11,9 +11,9 @@ module Icss
         :null     => NilClass,
         :boolean  => Boolean,
         :int      => Integer,
-        :long     => Integer,
+        :long     => Long,
         :float    => Float,
-        :double   => Float,
+        :double   => Double,
         :bytes    => Binary,
         :string   => String,
       }.freeze
@@ -33,7 +33,7 @@ module Icss
     end
 
     # ::Icss::Type::DERIVED_TYPES = {} unless defined?(::Icss::Type::DERIVED_TYPES)
-    # Icss::Type::VALID_TYPES  = (Icss::Type::PRIMITIVE_TYPES.merge(Icss::Type::NAMED_TYPES.merge(Icss::Type::ENUMERABLE_TYPES))).freeze unless defined?(Icss::Type::VALID_TYPES)
+    # Icss::Type::VALID_TYPES  = (Icss::Type::PRIMITIVE_TYPES.merge(Icss::Type::NAMED_TYPES.merge(Icss::Type::CONTAINER_TYPES))).freeze unless defined?(Icss::Type::VALID_TYPES)
     # Icss::Type::VALID_TYPES.each{|n, t| t.name = n if t.is_a?(Icss::Type) }
   end
 

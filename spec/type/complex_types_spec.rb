@@ -21,10 +21,17 @@ describe 'complex types' do
     end
 
     context Icss::Type::UnionType do
-      it 'receives' do
+      it 'receives simple unions' do
         uu = Icss::Type::UnionType.receive([:int, :string])
         uu.declaration_flavors.should == [:primitive, :primitive]
-        uu.to_schema.should == {}
+        uu.to_schema.should == [:int, :string]
+      end
+
+      it 'receives complex unions' do
+        uu = Icss::Type::UnionType.receive([ 'boolean', 'double',
+            {'type' => 'array', 'items' => 'bytes'}])
+        uu.declaration_flavors.should == [:primitive, :primitive]
+        uu.to_schema.should == [:int, :string]
       end
 
     end

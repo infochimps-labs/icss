@@ -31,12 +31,18 @@ module Icss
       def self.classify_schema_declaration(schema)
         if    schema.is_a?(Class)                   then return :is_type
         elsif schema.is_a?(Array)                   then return :union_type
-        elsif schema.respond_to?(:each_pair)        then return :schema
+        elsif schema.respond_to?(:each_pair)
+          schema.symbolize_keys!
+          type_name = schema[:type].to_sym
+          if    CONTAINER_TYPES.has_key?(type_name) then return :container_type
+          elsif NAMED_TYPES.has_key?(type_name)      then return :named_type
+          else                                            return :whatever
+          end
         elsif schema.respond_to?(:to_sym)
           type_name = schema.to_sym
           if    PRIMITIVE_TYPES.has_key?(type_name) then return :primitive
           elsif SIMPLE_TYPES.has_key?(type_name)    then return :simple
-          else                                           return :named_type ; end
+          else                                           return :defined_type ; end
         else
             return nil
         end

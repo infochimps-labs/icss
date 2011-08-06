@@ -109,12 +109,12 @@ module Icss
       :record  => RecordType,
       :error   => ErrorType
     }.freeze unless defined?(Icss::Type::NAMED_TYPES)
-    Icss::Type::ENUMERABLE_TYPES = {
+    Icss::Type::CONTAINER_TYPES = {
       :array   => ArrayType,
       :map     => MapType,
       :union   => UnionType,
-    }.freeze unless defined?(Icss::Type::ENUMERABLE_TYPES)
-    Icss::Type::VALID_TYPES  = (Icss::Type::PRIMITIVE_TYPES.merge(Icss::Type::NAMED_TYPES.merge(Icss::Type::ENUMERABLE_TYPES))).freeze unless defined?(Icss::Type::VALID_TYPES)
+    }.freeze unless defined?(Icss::Type::CONTAINER_TYPES)
+    Icss::Type::VALID_TYPES  = (Icss::Type::PRIMITIVE_TYPES.merge(Icss::Type::NAMED_TYPES.merge(Icss::Type::CONTAINER_TYPES))).freeze unless defined?(Icss::Type::VALID_TYPES)
     Icss::Type::VALID_TYPES.each{|n, t| t.name = n if t.is_a?(Icss::Type) }
   end
 end

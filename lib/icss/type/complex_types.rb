@@ -33,11 +33,9 @@ module Icss
     end
 
     #
-    # base class for Avro enumerable types (array, map and union)
+    # base class for Avro container types (array, map and union)
     #
-    # (do not confuse with EnumType, which is not an EnumerableType. sigh).
-    #
-    module EnumerableType
+    module ContainerType
       include Type
 
       def to_schema
@@ -57,7 +55,7 @@ module Icss
     #     {"type": "array", "items": "string"}
     #
     module ArrayType
-      include EnumerableType
+      include ContainerType
       extend  RecordType::FieldDecorators
       #
       field :items, TypeFactory, :required => true
@@ -84,7 +82,7 @@ module Icss
     #     {"type": "map", "values": "long"}
     #
     module MapType
-      include EnumerableType
+      include ContainerType
       extend  RecordType::FieldDecorators
       #
       field :values, TypeFactory, :required => true
@@ -111,9 +109,9 @@ module Icss
     # Unions may not immediately contain other unions.
     #
     class UnionType
-      include EnumerableType
+      include ContainerType
       include RecordType
-      attr_accessor :available_types
+      attr_accessor :embedded_types
       attr_accessor :declaration_flavors
 
       def self.receive(*args)
@@ -124,14 +122,14 @@ module Icss
 
       def receive! type_list
         self.declaration_flavors = []
-        self.available_types = type_list.map do |schema|
+        self.embedded_types = type_list.map do |schema|
           type = TypeFactory.receive(schema)
           declaration_flavors << TypeFactory.classify_schema_declaration(schema)
           type
         end
       end
       def to_schema
-        available_types.zip(declaration_flavors).map do |t,fl|
+        embedded_types.zip(declaration_flavors).map do |t,fl|
           [:named_type].include?(fl) ? t.name : t.to_schema
         end
       end
@@ -161,9 +159,8 @@ module Icss
     end
 
 
-    unless defined?(ENUMERABLE_TYPES)
-      Icss::Type::ENUMERABLE_TYPES = {
-        :hash    => Icss::Type::MapType,
+    unless defined?(CONTAINER_TYPES)
+      Icss::Type::CONTAINER_TYPES = {
         :map     => Icss::Type::MapType,
         :array   => Icss::Type::ArrayType,
         :union   => Icss::Type::UnionType,
