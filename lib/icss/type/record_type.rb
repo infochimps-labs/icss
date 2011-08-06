@@ -1,11 +1,10 @@
 module Icss
-  module Type
+  module Meta
 
     module RecordType
       def self.included(base)
-        p base
-        base.extend(Icss::Type::NamedType)
-        base.extend(Icss::Type::RecordType::FieldDecorators)
+        base.extend(Icss::Meta::NamedType)
+        base.extend(Icss::Meta::RecordType::FieldDecorators)
       end
     end
 

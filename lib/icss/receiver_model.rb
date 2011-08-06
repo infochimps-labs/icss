@@ -10,8 +10,8 @@ module Icss
     # put all the things in ClassMethods at class level
     def self.included base
       base.class_eval do
-        include Icss::Type::RecordType
-        include Icss::Type::ReceiverRecord
+        include Icss::Meta::RecordType
+        include Icss::Meta::ReceiverRecord
         include Icss::ReceiverModel::ActsAsHash
         include Icss::ReceiverModel::ActsAsLoadable
         include Icss::ReceiverModel::ActiveModelShim

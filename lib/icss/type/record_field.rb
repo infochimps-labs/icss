@@ -1,9 +1,9 @@
 require 'icss/receiver_model/acts_as_hash'
 module Icss
-  module Type
+  module Meta
     class RecordField
-      include Icss::Type::RecordType
-      include Icss::Type::ReceiverRecord
+      include Icss::Meta::RecordType
+      include Icss::Meta::ReceiverRecord
       include Icss::ReceiverModel::ActsAsHash
       include Gorillib::Hashlike
       include Gorillib::Hashlike::TreeMerge
@@ -35,9 +35,9 @@ module Icss
         case order when 'ascending' then 1 when 'descending' then -1 else 0 ; end
       end
 
-      def record?() type.is_a? Icss::Type::RecordType end
-      def union?()  type.is_a? Icss::Type::UnionType  end
-      def enum?()   type.is_a? Icss::Type::EnumType   end
+      def record?() type.is_a? Icss::Meta::RecordType end
+      def union?()  type.is_a? Icss::UnionType  end
+      def enum?()   type.is_a? Icss::EnumType   end
 
       def as_json()
         { :name     => name,

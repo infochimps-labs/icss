@@ -1,5 +1,5 @@
 module Icss
-  module Type
+  module Meta
     module ReceiverRecord
 
       #
@@ -28,18 +28,6 @@ module Icss
       end
       protected :unset!
 
-      def to_tuple
-        tuple = []
-        self.each_value do |val|
-          if val.respond_to?(:to_tuple)
-            tuple += val.to_tuple
-          else
-            tuple << val
-          end
-        end
-        tuple
-      end
-
       def _receive_attr(attr, val)
         self.send("receive_#{attr}", val)
       end
@@ -52,7 +40,7 @@ module Icss
       end
       protected :run_after_receivers
 
-      module ClassMethods
+      module ReceiverDecorators
 
         #
         # Describes a field in a Record object.
@@ -62,7 +50,7 @@ module Icss
         # @param [Symbol] field_name -- a string providing the name of the field
         #   (required)
         #
-        # @param [Class, Icss::Type] type a schema, or a string or symbol
+        # @param [Class, Icss::Meta] type a schema, or a string or symbol
         #   naming a record definition (required)
         #
         #     avro type     json type   ruby type   kind        example
@@ -119,7 +107,7 @@ module Icss
         #   corresponding access rule.
         #
         # @option field_info [Hash] :validates -- sends the validation on to
-        #   Icss::Type::Validations. Uses syntax parallel to ActiveModel's:
+        #   Icss::Meta::Validations. Uses syntax parallel to ActiveModel's:
         #
         #      :presence     => true
         #      :uniqueness   => true
@@ -192,57 +180,6 @@ module Icss
           end
         end
 
-        # returns a depth-first traversal of the object's fields' keys, as Strings:
-        #
-        #   class Address < Icss::Thing
-        #     field(:housenum, Integer)
-        #     field(:street, String)
-        #   end
-        #   class Person <  Icss::Thing
-        #     field(:full_name, String)
-        #     field(:street_address, Address)
-        #   end
-        #   Person.tuple_keys
-        #   # => ['street_address.housenum', 'street_address.street', 'fullname']
-        def tuple_keys
-          return @tuple_keys if @tuple_keys
-          @tuple_keys = fields.map do |attr, field_info|
-            if field_info[:type].respond_to?(:tuple_keys)
-              field_info[:type].tuple_keys.map{|k| "attr.#{k}" }
-            else
-              attr.to_s
-            end
-          end.flatten
-        end
-
-        # walks through the tuple, destructively consuming each value in a
-        # depth-first walk of the field tree:
-        #
-        #   class Address < Icss::Thing
-        #     field(:housenum, Integer)
-        #     field(:street, String)
-        #   end
-        #   class Person <  Icss::Thing
-        #     field(:full_name, String)
-        #     field(:street_address, Address)
-        #   end
-        #   Person.consume_tuple(1214, 'W 6th St', 'Joe the Chimp')
-        #   # => #<Person street_address=#<Address housenum=1214, street='W 6th St'>, fullname='Joe the Chimp'>
-        #
-        def consume_tuple(tuple)
-          obj = self.new
-          fields.each do |attr, field_info|
-            if field_info[:type].respond_to?(:consume_tuple)
-              val = field_info[:type].consume_tuple(tuple)
-            else
-              val = tuple.shift
-            end
-            # obj.send("receive_#{attr}", val)
-            obj.send("#{attr}=", val)
-          end
-          obj
-        end
-
         # make a block to run after each time  .receive! is invoked
         def after_receive &block
           @after_receivers = (@after_receivers || []) | [block]
@@ -290,7 +227,7 @@ module Icss
 
       RECEIVER_BODIES           = {} unless defined?(RECEIVER_BODIES)
       RECEIVER_BODIES[NilClass] = lambda{|v| raise ArgumentError, "This field must be nil, but [#{v}] was given" unless (v.nil?) ; nil }
-      RECEIVER_BODIES[Boolean]  = lambda{|v| case when v.nil? then nil when v.to_s.strip.blank? then false else v.to_s.strip != "false" end }
+      RECEIVER_BODIES[Icss::BooleanType]  = lambda{|v| case when v.nil? then nil when v.to_s.strip.blank? then false else v.to_s.strip != "false" end }
       RECEIVER_BODIES[Integer]  = lambda{|v| v.blank? ? nil : v.to_i }
       RECEIVER_BODIES[Float]    = lambda{|v| v.blank? ? nil : v.to_f }
       RECEIVER_BODIES[String]   = lambda{|v| v.to_s }
@@ -331,7 +268,7 @@ module Icss
       end
       
       def self.included(base)
-        base.extend(Icss::Type::ReceiverRecord::ClassMethods)
+        base.extend(Icss::Meta::ReceiverRecord::ClassMethods)
       end
     end
     

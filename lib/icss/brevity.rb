@@ -3,7 +3,7 @@
 #
 #     require 'icss/brevity'
 #
-# makes the #inspect method on Icss::Type's be nice and readable,
+# makes the #inspect method on Icss::Meta::Type's be nice and readable,
 # not GIGANTE PIQUANTE OY CABRON
 #
 #
@@ -125,7 +125,7 @@ module Icss
     end
   end
 
-  MapType.class_eval do
+  HashType.class_eval do
     private
     def inspect_hsh
       super.merge( :values  => values.inspect )

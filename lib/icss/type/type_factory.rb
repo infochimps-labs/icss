@@ -1,5 +1,5 @@
 module Icss
-  module Type
+  module Meta
     module TypeFactory
 
       #
@@ -16,33 +16,35 @@ module Icss
       #
       #
       def self.receive schema
-        case classify_schema_declaration(schema)
-        when :is_type    then return schema
-        when :union_type then return receive_union_type(schema)
-        when :schema     then return receive_complex_type(schema)
-        when :primitive  then return Icss::Type::PRIMITIVE_TYPES[schema.to_sym]
-        when :simple     then return Icss::Type::SIMPLE_TYPES[schema.to_sym]
-        when :named_type then return receive_named_type(schema)
+        flavor, klass = classify_schema_declaration(schema)
+        case flavor
+        when :is_type         then return schema
+        when :union_type      then return receive_union_type(schema)
+        when :container_type  then return receive_complex_type(schema, klass)
+        when :named_type      then return receive_complex_type(schema, klass)
+        when :primitive       then return klass
+        when :simple          then return klass
+        when :defined_type    then return receive_defined_type(schema)
         else
-          raise %Q{Type must be either: the handle for a named type; an array (representing a union type); one of #{Icss::Type::TYPE_ALIASES.join(',')}; or a hash of the form {"type": "type_name" ...attributes...}.}
+          raise ArgumentError, %Q{Can not create #{schema.inspect}: should be the handle for a named type; an array (representing a union type); one of #{SIMPLE_TYPES.keys.join(',')}; or a schema of the form {"type": "typename" ...attributes...}.}
         end
       end
 
       def self.classify_schema_declaration(schema)
-        if    schema.is_a?(Class)                   then return :is_type
-        elsif schema.is_a?(Array)                   then return :union_type
+        if    schema.is_a?(Class)                   then return [:is_type,    schema]
+        elsif schema.is_a?(Array)                   then return [:union_type, nil]
         elsif schema.respond_to?(:each_pair)
           schema.symbolize_keys!
-          type_name = schema[:type].to_sym
-          if    CONTAINER_TYPES.has_key?(type_name) then return :container_type
-          elsif NAMED_TYPES.has_key?(type_name)      then return :named_type
-          else                                            return :whatever
+          typename = schema[:type].to_sym
+          if    CONTAINER_TYPES.has_key?(typename)  then return [:container_type, CONTAINER_TYPES[typename]]
+          elsif NAMED_TYPES.has_key?(typename)      then return [:named_type,     NAMED_TYPES[typename]]
+          else raise
           end
         elsif schema.respond_to?(:to_sym)
-          type_name = schema.to_sym
-          if    PRIMITIVE_TYPES.has_key?(type_name) then return :primitive
-          elsif SIMPLE_TYPES.has_key?(type_name)    then return :simple
-          else                                           return :defined_type ; end
+          typename = schema.to_sym
+          if    PRIMITIVE_TYPES.has_key?(typename) then return [:primitive,    PRIMITIVE_TYPES[typename]]
+          elsif SIMPLE_TYPES.has_key?(typename)    then return [:simple,       SIMPLE_TYPES[typename]]
+          else                                           return [:defined_type, typename] ; end
         else
             return nil
         end
@@ -50,20 +52,17 @@ module Icss
 
     protected
 
-      def self.receive_named_type(schema)
-        Icss::Type::NamedType.klassname_for(schema.to_sym).constantize
+      def self.receive_defined_type(schema)
+        Icss::Meta::NamedType.klassname_for(schema.to_sym).constantize
       end
 
       def self.receive_union_type(schema)
-        Icss::Type::UnionType.receive(schema)
+        Icss::Meta::UnionType.receive(schema)
       end
 
-      def self.receive_complex_type(schema)
-        schema = schema.symbolize_keys
-        raise "No type was given in #{schema.inspect}" if schema[:type].blank?
-        type_name = schema[:type].to_sym
-        type = Icss::Type.find(type_name)
-        obj = type.receive(schema)
+      def self.receive_complex_type(schema, klass)
+        schema.symbolize_keys!
+        obj = klass.receive(schema)
       end
 
       # def decorate_with_validators klass

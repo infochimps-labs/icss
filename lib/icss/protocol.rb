@@ -25,7 +25,7 @@ module Icss
   #   may have the same name.
   #
   # The name and namespace qualification rules defined for schema objects apply
-  # to protocols as well: see the documentation for Icss::Type.
+  # to protocols as well: see the documentation for Icss::Meta::Type.
   #
   # For example, one may define a simple HelloWorld protocol with:
   #
@@ -59,7 +59,7 @@ module Icss
     field :namespace,   String
     field :doc,         String
     #
-    field :types,       Array, :of => Icss::Type::TypeFactory, :default => []
+    field :types,       Array, :of => Icss::Meta::TypeFactory, :default => []
     field :messages,    Hash,  :of => Icss::Message,           :default => {}
     #
     # field :data_assets, Array, :of => Icss::DataAsset,   :default => []

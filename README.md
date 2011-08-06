@@ -6,6 +6,16 @@ ___________________________________________________________________________
 <a name="avro" >
 ## Avro Protocol, Message, RecordType and Field
 
+
+### Icss::Meta::{Types}
+
+* base meta-type: Icss::Meta::Type
+* 
+
+
+* primitive types: Icss::{StringType, 
+
+
 ### Namespacing
 
 When 
@@ -13,18 +23,74 @@ When
 * `Icss::Type::Science::Astronomy::UfoSightingType`
 * `Icss::Science::Astronomy::UfoSighting`
 
+
+
+
+All types respond to:
+
+* new
+* receive
+* to_schema
+* typename
+* fullname
+* namespace   (blank for 
+* schema_classifier 
+
+
+and their instances respond to
+
+* receive!
+
+
+* Schema Classifier
+
+* `:defined_type` (string)
+* `:primitive_type`
+  - `null`  -- `Icss::Type::NilClass`
+
+
+    avro        kind        ruby           json      example                schema example
+    ---------   ---------   ------------   -------   ---------              --------------
+    null        primitive   NilClassType   null      nil                    'null'
+    boolean     primitive   BooleanType    boolean   true                   'boolean'
+    int         primitive   IntegerType    integer   1                      'int'
+    long        primitive   LongType       integer   1                      'long'
+    float       primitive   FloatType      number    1.1                    'float'
+    double      primitive   DoubleType     number    1.1                    'double'
+    bytes       primitive   BinaryType     string    "\u00FF"               'bytes'
+    string      primitive   StringType     string    "foo"                  'string'
+                                                     
+    array       container   ArrayType      array     [1,2]                  { 'type': 'array',  'items': 'int' }
+    map         container   HashType       object    { "a": 1 }             { 'type': 'map',    'values': 'int' }
+                                                     
+    record      named       (RecordType)   object    {"a": 1}               { 'type': 'record', 'name': 'bob',    'fields':[...] }
+    enum        named       (EnumType)     string    "heads"                { 'type': 'enum',   'name': 'result', 'symbols': ['heads', 'tails'] }
+    fixed       named       (FixedType)    string    "\xBD\xF3)Q"           { 'type': 'fixed',  'name': 'crc32',  'length': 4 }
+    union       named       (UnionType)    object                           [ 'long', { 'type': 'array', 'items': 'int' } ]
+                                                     
+    date        simple      DateType       string    "2011-01-02"           'date'
+    time        simple      TimeType       string    "2011-01-02T03:04:05Z" 'time'
+    text        simple      TextType       string    "long text"            'text'
+    regexp      simple      RegexpType     string    "^hel*o newman"        'regexp'
+    url         simple      UrlType        string    "http://..."           'url'
+    file_path   simple      FilePathType   string    "/tmp/foo"             'file_path'
+    epoch_time  simple      EpochTimeType  string    1312507492             'epoch_time'
+
+Notes:
+* primitive types are also simple types
+
 ___________________________________________________________________________
 <a name="core" >
 ## Icss::Core -- a library of standard types
 
 **Base Types**:
 
-* Primitive types: `Boolean`, `Time` (Date), `Numeric` (Number), `Float`, `Integer`, `String` 
+* Primitive types: `Boolean`, `Time` (Date), `Numeric` (Number), `Float`, `Integer`, `String`
 * Simple types: `Text`, `Url`
 
 * `Icss::RecordType`
 * `Icss::RecordField`
-* `Icss::Protocol` 
+* `Icss::Protocol`
 * `Icss::Message`
 
 * `Icss::Thing      < Icss::Entity`
@@ -46,7 +112,7 @@ ___________________________________________________________________________
 * `Icss::Core::PostalAddress`
 * `Icss::Core::Thing`
 * `Icss::Core::Rating`
-  
+
 **Icss::Thing** (added by icss):
 
 * `Icss::Core::Region`
@@ -69,18 +135,18 @@ ___________________________________________________________________________
 * Rating: bestRating, worstRating, ratingValue
   - AggregateRating: itemReviewed, ratingCount, reviewCount
 * StructuredValue
-  - ContactPoint 
+  - ContactPoint
     - properties: email, telephone, faxNumber, contactType
-  - PostalAddress 
+  - PostalAddress
     - properties: streetAddress, addressLocality, addressRegion, postalCode, postOfficeBoxNumber, addressCountry
-  - GeoCoordinates 
+  - GeoCoordinates
     - properties:  latitude, longitude, elevation
   - NutritionInformation
     - properties: servingSize, calories, fatContent, saturatedFatContent, unsaturatedFatContent, transFatContent, carbohydrateContent, sugarContent, fiberContent, proteinContent, cholesterolContent, sodiumContent
 * AggregateQuantity
-  - WeatherObservation     
-  - CensusSurvey           
-  - TimeZone               
+  - WeatherObservation
+  - CensusSurvey
+  - TimeZone
 * Relation                 # The type to be used inside the relations property for icss.core.thing
   * FollowsOnTwitter
   * FriendsOnFaceBook
@@ -90,7 +156,7 @@ ___________________________________________________________________________
 
 ### Extra properties of Icss::Thing
 
-#### Relations: 
+#### Relations:
 
     relations: [
       { rel: ["external_link", "reference"] # type of relationship
@@ -112,7 +178,7 @@ Use this to list foreign keys that are worth keeping, but are either not promine
 ### Design principles drawn from Schema.org
 
 * property names are globally unique and single-tree
-  - properties with the same name are always isomorphic. You *must not* use `temperature` in one type to mean "what to set the oven at" and in another to mean "air temperature at start of game". On the other hand, `Organization` and `Place` both have a 
+  - properties with the same name are always isomorphic. You *must not* use `temperature` in one type to mean "what to set the oven at" and in another to mean "air temperature at start of game". On the other hand, `Organization` and `Place` both have a
   - where there is a semantic difference, prefix your field name with a prefix consistent with your type: `
 `Place` has a field `address`; `PostalAddress` has fields `address_region`, `address_locality`, etc.
   - spell things out: `latitude` not `lat`.
@@ -123,17 +189,17 @@ Use this to list foreign keys that are worth keeping, but are either not promine
 * Pragmatism beats purity
   - Schema.org says almost nothing about validation, and *encourages* you to fit round pegs into square holes. A `ScholarlyArticle` does not have attributes for abstract or academic domain. Instead, use `description` and `genre` -- when considering only `ScholarlyArticle`s, it's a harmless misspelling; when considering the great mass of `Article`s as a whole it lets you see how they relate. It also lets you have simple memorable property names, which is a huge win.
   - It's interesting to note that neither Schema.org or Avro have any way to represent complex types *within* their ontology. Overindulging in that kind of omphaloskepsis leads to a deadweight of conceptually beautiful code.
-  
+
 What we added:
 
 * Top level properties on thing: `_type`, `relations`, `aspects`, `extended_properties` and `extended_identifiers`.
 * Many types we'd regard as superfluous ('HealthAndBeautyBusiness') have been consigned to a namespace.
 * It lacks many we'd regard as primary, such as `AggregateQuantity` and `Region`.
 * Properties are underscore cased: `interactionCount` becomes `interaction_count`
-  
+
 What we don't like:
 
-* Union types. We avoided having union types by (in most cases) mandating one; where necessary we specify a single Factory type. 
+* Union types. We avoided having union types by (in most cases) mandating one; where necessary we specify a single Factory type.
 * Multiple inheritance. Yick.
 * Messy cardinality: In several places schema.org says a property is plural but gives it a singular name. We've made the property plural, taking a list of whatevers.
 
@@ -157,14 +223,14 @@ Specifically:
 * `core.thing` and `core.intangible` are *peers* (`core.intangible` is not `is_a: core.thing`), and both `is_a: entity`.
 * `Place`:   `contained_in` is a GeoContainmentHierarchy
 * `Article`: rename to `article_sections` -- *array* of Text
-* `PostalAddress`: 
+* `PostalAddress`:
   - adds `address_house_name`, `address_prenum`, `address_sufnum`, `address_number`, `street_prefix`, `street_basename`, `street_type`, `address_unit`, `address_extended`, `address_subregion`, `address_type`, `address_agent`, `address_mail_class`, `neighborhood_id`, `locality_id`, `subregion_id`, `region_id`, `country_id`, `timezone_id`, `continent_id`, and `hemisphere_id`.
   - the `region_id` *must* be the [ISO 3166-2](http://en.wikipedia.org/wiki/ISO_3166-2) id of the region (level 1 admin) -- so, 'US-TX' not 'TX'.
   - the `country_id` *must* be the [ISO 3166-1 alpha-2](http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) of the country.
 * union type banned: `Event#location`  is a Place (not PostalAddress)
 * union type banned: `Event#attendees` is an array of `Person` (not Organization)
 * `Organization` is a weird mix of properties and needs to be adjusted.
-* `Event` 
+* `Event`
   - if only one date/time (and it is not clearly the end time), use start_date alone.
   - if you *know*, from the domain, that it's appropriate to fill in the duration given start and end (or end given start and duration, or so on), you *should* do so. You must *not* do so generically.
 
@@ -228,7 +294,7 @@ ___________________________________________________________________________
 Huge thanks to Doug Cutting and the rest of the Avro maintainers.
 
 ### Contributing to icss
- 
+
 * Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet
 * Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it
 * Fork the project

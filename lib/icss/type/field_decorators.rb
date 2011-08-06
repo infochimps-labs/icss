@@ -1,5 +1,5 @@
 module Icss
-  module Type
+  module Meta
 
     module RecordType
       module FieldDecorators
@@ -100,14 +100,14 @@ module Icss
         # Consider:
         #
         #   class Base
-        #     extend(Icss::Type::RecordType::FieldDecorators)
+        #     extend(Icss::Meta::RecordType::FieldDecorators)
         #     field :smurfiness, Integer
         #   end
         #   class Poppa < Base
         #     field :height, Integer
         #   end
         #
-        # Poppa.field_names calls Icss::Type::RecordType::FieldDecorators --
+        # Poppa.field_names calls Icss::Meta::RecordType::FieldDecorators --
         # it's the first member of its inheritance chain to define the method.
         # We want it to do so for each ancestor that has added fields.
 
@@ -122,9 +122,9 @@ module Icss
         #   return {} if fields.blank?
         #   ( fields || {} ).map do |fn,fi|
         #     type = fi[:type]
-        #     type_name = Icss::Type::PRIMITIVE_TYPES.key(type)
-        #     p [self, type_name, type]
-        #     x = type_name ? type_name : type.to_schema
+        #     typename = Icss::PRIMITIVE_TYPES.key(type)
+        #     p [self, typename, type]
+        #     x = typename ? typename : type.to_schema
         #     p x
         #     x
         #   end

@@ -7,8 +7,8 @@ module Icss
   #   include Receiver
   #   rcvr_accessor :validates,  Hash
   #
-  #   def self.find type_name
-  #     Icss::Type::VALID_TYPES[type_name.to_sym] || Icss::Type::DERIVED_TYPES[type_name.to_sym] || type_name
+  #   def self.find typename
+  #     Icss::Type::VALID_TYPES[typename.to_sym] || Icss::Type::DERIVED_TYPES[typename.to_sym] || typename
   #   end
   #
   #   def self.primitive? name
@@ -111,7 +111,7 @@ module Icss
     }.freeze unless defined?(Icss::Type::NAMED_TYPES)
     Icss::Type::CONTAINER_TYPES = {
       :array   => ArrayType,
-      :map     => MapType,
+      :map     => HashType,
       :union   => UnionType,
     }.freeze unless defined?(Icss::Type::CONTAINER_TYPES)
     Icss::Type::VALID_TYPES  = (Icss::Type::PRIMITIVE_TYPES.merge(Icss::Type::NAMED_TYPES.merge(Icss::Type::CONTAINER_TYPES))).freeze unless defined?(Icss::Type::VALID_TYPES)

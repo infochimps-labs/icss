@@ -1,5 +1,5 @@
 module Icss
-  module Type
+  module Meta
     #
     # Record, enums and fixed are named types. Each has a fullname that is
     # composed of two parts; a name and a namespace. Equality of names is defined
@@ -19,33 +19,7 @@ module Icss
     # if the definitions are equivalent.
     #
     module NamedType
-      def fullname
-        NamedType.fullname_for(self.name)
-      end
-      def typename
-        @typename  ||= fullname.gsub(/.*[\.]/, "")
-      end
-      def namespace
-        @namespace ||= fullname.gsub(/\.[^\.]+/, "")
-      end
-
-      def self.fullname_for(klass_name)
-        klass_name.to_s.gsub(/^:*Icss::/, '').underscore.gsub(%r{/},".")
-      end
-      def self.klassname_for(fullname)
-        nm = fullname.to_s.
-          gsub(%r{::},'.').gsub(/^:*icss[\.:]+/i, '').
-          split('.').map(&:camelize).join('::')
-        "::Icss::#{nm}"
-      end
-
-       def doc() "" end
-      def doc=(str)
-        singleton_class.class_eval do
-          remove_possible_method(:doc)
-          define_method(:doc){ str }
-        end
-      end
+      include Icss::Meta::Type
 
       def to_schema
         (defined?(super) ? super : {}).merge(
@@ -67,7 +41,8 @@ module Icss
         klass_name     = scope_names.pop
         meta_module    = get_meta_module(scope_names, klass_name)
         klass          = get_type_klass( scope_names, klass_name, superklass)
-        klass.class_eval{ include meta_module }
+        meta_module.class_eval{ extend ::Icss::Meta::NamedType }
+        klass.class_eval{       extend ::Icss::Meta::NamedType ; include meta_module }
         [klass, meta_module]
       end
 

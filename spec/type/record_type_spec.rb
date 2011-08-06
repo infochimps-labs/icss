@@ -8,27 +8,27 @@ require 'icss/type/record_field'
 
 # module Icss::Smurf
 #   class Base
-#     include Icss::Type::RecordType
+#     include Icss::Meta::RecordType
 #     field :smurfiness, Integer
 #   end
 #   class Poppa < Base
 #   end
 #   module Brainy
-#     include Icss::Type::RecordType
+#     include Icss::Meta::RecordType
 #     field :doing_it, Boolean
 #   end
 #   class Smurfette < Poppa
 #     include Brainy
-#     include Icss::Type::RecordType
+#     include Icss::Meta::RecordType
 #     field :blondness, Integer
 #   end
 # end
 #
 #
-# describe Icss::Type::RecordField do
+# describe Icss::Meta::RecordField do
 #   context 'asdf.receive' do
 #     it 'is' do
-#       (Icss::Type::RecordField.public_methods - Class.public_methods).sort.should == [
+#       (Icss::Meta::RecordField.public_methods - Class.public_methods).sort.should == [
 #         :add_receiver, :after_receive, :after_receivers, :consume_tuple,
 #         :doc, :doc=, :field, :field_names, :fields,
 #         :fullname, :namespace,
@@ -38,7 +38,7 @@ require 'icss/type/record_field'
 #     it 'works' do
 #       hsh = { :name => :height, :type => Integer, :doc => 'How High',
 #         :default  => 3, :required => false, :order => 'ascending', }
-#       foo = Icss::Type::RecordField.receive(hsh)
+#       foo = Icss::Meta::RecordField.receive(hsh)
 #       foo.required.should be_false
 #       foo.default.should == 3
 #       foo.to_hash.should == hsh
@@ -48,11 +48,11 @@ require 'icss/type/record_field'
 #   end
 # end
 #
-# describe Icss::Type::RecordType do
+# describe Icss::Meta::RecordType do
 #   let(:new_smurf_klass){ k = Class.new(Icss::Smurf::Poppa)  }
 #   let(:poppa          ){ Icss::Smurf::Poppa.new() }
 #   let(:smurfette      ){ Icss::Smurf::Smurfette.new() }
-#   let(:module_smurf   ){ m = Module.new; m.send(:include, Icss::Type::RecordType) ; m }
+#   let(:module_smurf   ){ m = Module.new; m.send(:include, Icss::Meta::RecordType) ; m }
 #
 #   context 'makes class a NamedType' do
 #     it "with fullname, namespace, typename, and doc" do

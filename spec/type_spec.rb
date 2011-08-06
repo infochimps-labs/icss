@@ -1,105 +1,82 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
-require 'icss'
+require 'icss/type'
 
-module Icss
-  class Entity
-  end
-  class Thing < Icss::Entity
-    include Icss::Type::RecordType
-    field :name,        String, :doc => 'The name of the item.'
-    field :description, String,   :doc => 'A short description of the item.'
-    field :image,       String,    :doc => 'URL of an image of the item.'
-    field :url,         String,    :doc => 'URL of the item.'
-  end
-  module Core
-    class Place < Icss::Thing
-      # extend Icss::Type::RecordType
-      field :address_locality, String
-      field :address_region,   String
+PRIMITIVE_TYPES_TO_TEST = [
+  ::Icss::NilClassType, ::Icss::BooleanType, ::Icss::IntegerType, ::Icss::LongType,
+  ::Icss::FloatType,    ::Icss::DoubleType,  ::Icss::StringType,  ::Icss::BinaryType ]
+
+describe Icss::Meta::Type do
+
+  context '.fullname_for' do
+    it 'converts from avro-style' do
+      Icss::Meta::Type.fullname_for('a.b.c').should                           == 'a.b.c'
+      Icss::Meta::Type.fullname_for('one_to.tha_three.to_tha_fo').should      == 'one_to.tha_three.to_tha_fo'
     end
-    # http://schema.org/Event
-    class Event < Icss::Thing
-      field :start_date,  Time,   :doc => 'The start date and time of the event (in [ISO 8601 date format](http://en.wikipedia.org/wiki/ISO_8601)).'
-      field :attendees,   Array,  :of => Object # Icss::Core::Person
-      field :location,    Icss::Core::Place
-      field :duration,    Object, :doc => 'The duration of the item (movie, audio recording, event, etc.) in [ISO 8601 date format](http://en.wikipedia.org/wiki/ISO_8601)).'
+    it 'converts from ruby-style' do
+      Icss::Meta::Type.fullname_for('A::B::C').should                         == 'a.b.c'
+      Icss::Meta::Type.fullname_for('OneTo::ThaThree::ToThaFo').should        == 'one_to.tha_three.to_tha_fo'
+      Icss::Meta::Type.fullname_for('Icss::OneTo::ThaThree::ToThaFo').should  == 'one_to.tha_three.to_tha_fo'
+    end
+
+    it 'FIXME: Icss::IntegerType etc do not round-trip'
+  end
+
+  context '.klassname_for' do
+    it 'converts from avro-style' do
+      Icss::Meta::Type.klassname_for('a.b.c').should                          == '::Icss::A::B::C'
+      Icss::Meta::Type.klassname_for('one_to.tha_three.to_tha_fo').should     == '::Icss::OneTo::ThaThree::ToThaFo'
+    end
+    it 'converts from ruby-style' do
+      Icss::Meta::Type.klassname_for('A::B::C').should                        == '::Icss::A::B::C'
+      Icss::Meta::Type.klassname_for('OneTo.ThaThree.ToThaFo').should         == '::Icss::OneTo::ThaThree::ToThaFo'
+      Icss::Meta::Type.klassname_for('Icss::OneTo::ThaThree::ToThaFo').should == '::Icss::OneTo::ThaThree::ToThaFo'
     end
   end
-  module Astronomy
-    class UfoSighting < Icss::Core::Event
-      field :ufo_craft_shape, String
+
+end
+
+describe Icss::Meta::PrimitiveType do
+  Icss::PRIMITIVE_TYPES.each do |typename, klass|
+    it "is a factory for #{typename}" do
+      Icss::Meta::PrimitiveType.make(typename).should == klass
+      Icss::Meta::PrimitiveType.make(typename.to_s).should == klass
+      Icss::Meta::SimpleType.make(   typename).should == klass
+    end
+  end
+  it "is not a factory for other metatypes" do
+    [:record, :enum, :fixed, :array, :map, :hash, :union ].each do |typename|
+      lambda{ Icss::Meta::PrimitiveType.make(typename) }.should raise_error(ArgumentError, /No such primitive type/)
     end
   end
 end
 
-describe 'instances' do
-  it '#new_record?'
-  context 'partial response'
-  context 'formatting'
-  context 'reshaping' do
-    it '#to_model'
-    it '#to_param'
-    it '#to_key' # Returns an Container of all key attributes if any is set, regardless if the object is persisted or not
-  end
-
-end
-
-describe 'fields' do
-  context '#name'     do ; end
-  context '#doc'      do ; end
-  context '#type'     do ; end
-  context '#default'  do ; end
-  context '#index'
-  context '#versionating' do
-    # acro versioning
-  end
-  context '#order' do
-    it 'has sort_order'
-    it 'order is an alias for sort_order'
-    it 'is "ascending" by default'
-    it 'sort_order_direction gives -1 / 0 / 1 for descending / ignore / ascending (default)'
-  end
-  context 'sugar' do
-    it '#record?'
-    it '#union?'
-    it '#enum?'
-  end
-  it 'properties can find themselves in registry'
-  it 'warns if you say "description" (should be "doc")'
-  it 'warns if you say :of => FooFactory (should probably be :with if it is a Factory)'
-
-  context '' do
-    # universe, dimension, representation,
-    # measurement_count, maximum_value, minimum_value, total_value, median_value, average_value, stdev_value
+describe 'Icss::PRIMITIVE_TYPES' do
+  it('tests all of them'){ PRIMITIVE_TYPES_TO_TEST.map(&:to_s).sort.should == Icss::PRIMITIVE_TYPES.values.map(&:to_s).sort }
+  PRIMITIVE_TYPES_TO_TEST.each do |type_klass|
+    context type_klass do
+      it 'is a primitive type' do
+        type_klass.should     be_a( Icss::Meta::Type )
+        type_klass.should     be_a( Icss::Meta::PrimitiveType )
+        type_klass.should     be_a( Icss::Meta::SimpleType )
+        type_klass.new.should_not be_a( Icss::Meta::PrimitiveType ) unless [::Icss::NilClassType, ::Icss::BooleanType].include?(type_klass)
+      end
+      it 'is primitive? and simple?, but not record? or union?' do
+        type_klass.should     be_primitive
+        type_klass.should     be_simple
+        type_klass.should_not be_union
+        type_klass.should_not be_record
+      end
+      it 'is named in Icss::PRIMITIVE_TYPES' do
+        typename = Icss::PRIMITIVE_TYPES.key(type_klass)
+        type_klass.typename == typename
+      end
+      it 'has an empty namespace, and the fullname, schema and typename all match' do
+        typename = Icss::PRIMITIVE_TYPES.key(type_klass)
+        type_klass.fullname  == typename
+        type_klass.to_schema == typename
+        type_klass.typename  == typename
+      end
+    end
   end
 end
-
-
-describe 'hooks' do
-  describe 'after_receive'
-  # before/after initialize, validation, save, create, commit, rollback, destroy
-  # #dirty?, #new_record?
-end
-
-# # not yet
-# describe 'associations' do
-#   it '.belongs_to'
-#   it '.has_one'
-#   it '.has_many_through'
-#   it '.has_many'
-# ASSOCIATION_METHODS  = [:includes, :eager_load, :preload]
-# MULTI_VALUE_METHODS  = [:select, :group, :order, :joins, :where, :having]
-# SINGLE_VALUE_METHODS = [:limit, :offset, :lock, :readonly, :create_with, :from]
-# end
-
-
-describe 'aspects' do
-end
-
-describe 'relationships' do
-end
-
-# describe Icss::Entity do
-#
-# end
 

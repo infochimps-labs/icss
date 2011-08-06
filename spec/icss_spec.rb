@@ -26,7 +26,7 @@ describe Icss::Protocol do
     end
 
     it "should add the referenced type to the array of types for this protocol" do
-      puts Icss::Type::DERIVED_TYPES.keys.inspect
+      puts Icss::Meta::DERIVED_TYPES.keys.inspect
       @icss.types.map(&:name).should include 'place'
     end
 

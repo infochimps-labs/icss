@@ -26,7 +26,7 @@ module Icss
     rcvr_accessor :price_per_k_in_cents,  Integer
 
     rcvr_accessor :request,  Array, :of => Icss::RecordField, :default => []
-    rcvr_accessor :response, Icss::TypeFactory
+    rcvr_accessor :response, Icss::Meta::TypeFactory
     rcvr_accessor :errors,   Icss::UnionType, :default => []
     attr_accessor :protocol
     # this is defined in sample_message_call.rb -- since we don't do referenced types yet

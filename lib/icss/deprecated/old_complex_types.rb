@@ -32,7 +32,6 @@ module Icss
         addon = ReferencedType.receive(ref)
         fields.push(addon.fields).flatten!
       end
-      Icss::Type::DERIVED_TYPES[name.to_sym] = self
     end
 
     def to_hash
