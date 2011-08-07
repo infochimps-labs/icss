@@ -1,53 +1,27 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
+
 require 'icss/type'
 require 'icss/type/named_type'
-require 'icss/type/field_decorators'
-require 'icss/type/receiver_decorators'
 require 'icss/type/record_type'
-require 'icss/type/record_field'
 
-# module Icss::Smurf
-#   class Base
-#     include Icss::Meta::RecordType
-#     field :smurfiness, Integer
-#   end
-#   class Poppa < Base
-#   end
-#   module Brainy
-#     include Icss::Meta::RecordType
-#     field :doing_it, Boolean
-#   end
-#   class Smurfette < Poppa
-#     include Brainy
-#     include Icss::Meta::RecordType
-#     field :blondness, Integer
-#   end
-# end
-#
-#
-# describe Icss::Meta::RecordField do
-#   context 'asdf.receive' do
-#     it 'is' do
-#       (Icss::Meta::RecordField.public_methods - Class.public_methods).sort.should == [
-#         :add_receiver, :after_receive, :after_receivers, :consume_tuple,
-#         :doc, :doc=, :field, :field_names, :fields,
-#         :fullname, :namespace,
-#         :rcvr_remaining, :receive, :to_schema, :tuple_keys, :typename
-#       ]
-#     end
-#     it 'works' do
-#       hsh = { :name => :height, :type => Integer, :doc => 'How High',
-#         :default  => 3, :required => false, :order => 'ascending', }
-#       foo = Icss::Meta::RecordField.receive(hsh)
-#       foo.required.should be_false
-#       foo.default.should == 3
-#       foo.to_hash.should == hsh
-#       foo.receive_order('descending')
-#       foo.order.should == 'descending'
-#     end
-#   end
-# end
-#
+module Icss::Smurf
+  class Base
+    include Icss::Meta::RecordType
+    field :smurfiness, Integer
+  end
+  class Poppa < Base
+  end
+  module Brainy
+    include Icss::Meta::RecordType
+    field :doing_it, Icss::BooleanType
+  end
+  class Smurfette < Poppa
+    include Brainy
+    include Icss::Meta::RecordType
+    field :blondness, Integer
+  end
+end
+
 # describe Icss::Meta::RecordType do
 #   let(:new_smurf_klass){ k = Class.new(Icss::Smurf::Poppa)  }
 #   let(:poppa          ){ Icss::Smurf::Poppa.new() }
@@ -92,7 +66,6 @@ require 'icss/type/record_field'
 #       new_smurf_klass.fields[:smurfiness].to_hash.should == {:name => :smurfiness, :type => Integer}
 #       new_smurf_klass.fields[:birthday  ].to_hash.should == {:name => :birthday,   :type => Date}
 #     end
-#
 #     it 'sets accessor visibility' do
 #       new_smurf_klass.field(:field_1, Integer, :reader => :none)
 #       new_smurf_klass.field(:field_2, Integer, :writer => :protected, :accessor => :private)
@@ -100,25 +73,22 @@ require 'icss/type/record_field'
 #       new_smurf.should     respond_to('field_1=')
 #       new_smurf.should_not respond_to('field_1')
 #       lambda{ new_smurf.field_2 = 3 }.should raise_error(NoMethodError, /protected method \`field_2=/)
-#       lambda{ new_smurf.field_2     }.should raise_error(NoMethodError, /private method \`field_2/)
+#       lambda{ new_smurf.field_2     }.should raise_error(NoMethodError,   /private method \`field_2/)
 #     end
-#
 #     it 'adds few methods' do
 #       (Icss::Smurf::Smurfette.public_methods - Class.public_methods).sort.should == [
-#         # :add_receiver, :after_receive, :after_receivers, :consume_tuple,
+#         :add_receiver, :after_receive, :after_receivers,
 #         :doc, :doc=, :field, :field_names, :fields,
 #         :fullname, :namespace,
-#         # :rcvr_remaining, :receive, :tuple_keys,
+#         :rcvr_remaining, :receive,
 #         :to_schema, :typename
 #       ]
 #     end
 #     it 'adds few methods' do
 #       (Icss::Smurf::Smurfette.new.public_methods - Object.public_methods).sort.should == [
-#         # :attr_set?,
-#         :blondness, :blondness=, :doing_it, :doing_it=,
-#         # :receive!, :receive_blondness, :receive_doing_it, :receive_smurfiness,
+#         :blondness, :blondness=, :doing_it, :doing_it=, :metatype,
+#         :receive!, :receive_blondness, :receive_doing_it, :receive_smurfiness,
 #         :smurfiness, :smurfiness=,
-#         # :to_tuple
 #       ]
 #     end
 #   end
@@ -139,7 +109,7 @@ require 'icss/type/record_field'
 #       module_smurf.field(:smurfberries, Integer)
 #       new_smurf_klass.field_names.should    == [:smurfiness, :smurfberries]
 #       #
-#       new_smurf_klass.field(:singing, Boolean)
+#       new_smurf_klass.field(:singing, Icss::BooleanType)
 #       module_smurf.field(:smurfberry_crunch, Integer)
 #       new_smurf_klass.field_names.should    == [:smurfiness, :smurfberries, :smurfberry_crunch, :singing]
 #     end
@@ -156,7 +126,6 @@ require 'icss/type/record_field'
 #       uncle_smurf.fields[:smurfiness].to_hash.should == {:name => :smurfiness, :type => Float, :validates => :numericality}
 #       baby_smurf.fields[:smurfiness ].to_hash.should == {:name => :smurfiness, :type => Float, :validates => :numericality}
 #     end
-#
 #     it 'does not override an existing method' do
 #       new_smurf_klass.class_eval{ def foo() "hello!" end }
 #       new_smurf_klass.field :foo, String

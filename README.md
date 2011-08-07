@@ -93,7 +93,7 @@ New record type:
     making a Meta::record:
                                         class methods                         inst. methods        
     Widget, includes M::Record:
-    - kl.incl M::Record                 
+    - kl.incl M::RecordType                 
     - kl.ext  M::RecordSchema           .field .fields .field_names
     - kl.incl M::Receiver                                                     #receive!
     - kl.ext  M::Receiver::CM           .rcvr .receive .rcvr_remaining, &c            

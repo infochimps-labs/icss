@@ -1,15 +1,14 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
+require 'icss/receiver_model/active_model_shim'
 require 'icss/type'
-# require 'icss/type/named_type'
-# require 'icss/type/record_type'
-require 'icss/type/field_decorators'
-require 'icss/type/receiver_decorators'
-#require 'icss/type/type_factory'
+require 'icss/type/named_type'
+require 'icss/type/record_type'
 require 'icss/type/complex_types'
 
 
-def compare_methods(klass_a, klass_b)
-  puts( "%-31s\tobj   \t%s" %  [klass_a.to_s[0..30], (klass_a.new.public_methods             - Object.new.public_methods).inspect]) if klass_a.respond_to?(:new)
+def compare_methods(klass_a, klass_b, obj=nil)
+  obj_b ||= klass_b.new
+  puts( "%-31s\tobj   \t%s" %  [klass_a.to_s[0..30], (klass_a.new.public_methods             - obj_b.public_methods).inspect]) if klass_a.respond_to?(:new)
   puts( "%-31s\tklass \t%s" %  [klass_a.to_s[0..30], (klass_a.public_methods                 - klass_b.public_methods).inspect])
   puts( "%-31s\tsgtncl\t%s" %  [klass_a.to_s[0..30], (klass_a.singleton_class.public_methods - klass_b.singleton_class.public_methods).inspect])
   puts '---------------'
@@ -48,40 +47,96 @@ def show_method_selfness(klass_a)
   end
 end
 
+module BlankModule
+end
+
+class BlankClass
+end
+
+module Icss::Meta
+  module TypeFactory
+    def self.receive(*args)
+      super(*args)
+    end
+  end
+end
+
+# [Icss::Meta::FooBar, Icss::Meta::RecordType, Icss::Meta::NamedType, Icss::Meta::Type, Object, RSpec::Mocks::Methods, PP::ObjectMixin, RSpec::Core::SharedExampleGroup, RSpec::Core::DSL, Kernel, BasicObject]
+# [Icss::Meta::FooBar, Icss::Meta::RecordType, Icss::Meta::NamedType, Icss::Meta::Type, Object, RSpec::Mocks::Methods, PP::ObjectMixin, RSpec::Core::SharedExampleGroup, RSpec::Core::DSL, Kernel, BasicObject]
+
+# describe 'bootstrapping' do
+#   it 'does' do
+#     p [Icss::Meta::ArrayType::Schema.public_methods   - BlankModule.public_methods]
+#     p [Icss::Meta::ArrayType::Schema.instance_methods - BlankModule.instance_methods]
+#     puts '---------'
+#     p [Icss::Meta::ArrayType.public_methods           - BlankModule.public_methods]
+#     p [Icss::Meta::ArrayType.instance_methods         - BlankModule.instance_methods]
+#     p [Icss::Meta::ArrayType::Schema.fullname,          Icss::Meta::ArrayType::Schema.to_schema]
+#     puts '---------'
+#     p [Icss::Meta::FooBar.public_methods            - BlankClass.public_methods]
+#     p [Icss::Meta::FooBar.instance_methods          - BlankClass.instance_methods]
+#     puts '---------'
+#     p Icss::Meta::FooBar.ancestors
+#     p Icss::Meta::FooBar.singleton_class.ancestors
+#     p [Icss::Meta::FooBar.to_schema]
+#     puts '-----'
+#   end
+# end
+
 describe 'complex types' do
 
   describe Icss::Meta::ArrayType do
-    it 'whatever' do
-      compare_methods(Icss::Meta::ArrayType, Class)
-      compare_methods(Icss::Meta::ArrayType, Array)
+    [
+      {:type => :array, :items => :'this.that.the_other'},
+      {:type => :array, :items => :'int'     },
+      {:type => :array, :items => :'core.place'},
+    ].each do |schema|
+      it 'round-trips the schema' do
+        arr_type = Icss::Meta::ArrayType.receive(schema)
+        arr_type.to_schema.should == schema
+      end
 
-      # k = Icss::Meta::ArrayType.receive({ :type => 'array', :items => 'int' })
-      #
-      # compare_methods(k, Array)
-      #
-      #
-      # p Icss::Meta::ArrayType.to_schema
-      #
-      # p Icss::Meta.class
-      # p Icss::Meta.singleton_class
-
-      # FooType.extend(Icss::Meta::NamedType)
-      #p [FooType.namespace, FooType.typename, FooType - Class]
+      it 'is a descendent of Array' do
+        arr_type = Icss::Meta::ArrayType.receive(schema)
+        arr_type.should       <  Array
+        arr_type.new.should be_a(Array)
+      end
     end
-
-    # context Icss::Meta::UnionType do
-    #   it 'receives simple unions' do
-    #     uu = Icss::Meta::UnionType.receive([:int, :string])
-    #     uu.declaration_flavors.should == [:primitive, :primitive]
-    #     uu.to_schema.should == [:int, :string]
-    #   end
-    #
-    #   it 'receives complex unions' do
-    #     uu = Icss::Meta::UnionType.receive([ 'boolean', 'double',
-    #         {'type' => 'array', 'items' => 'bytes'}])
-    #     uu.declaration_flavors.should == [:primitive, :primitive]
-    #     uu.to_schema.should == [:int, :string]
-    #   end
-    # end
+    #        compare_methods(arr_type, Array)
   end
+
+  describe Icss::Meta::HashType do
+    [
+      {:type => :map, :values => :'this.that.the_other'},
+      {:type => :map, :values => :'int'     },
+      {:type => :map, :values => :'core.place'},
+    ].each do |schema|
+      it 'round-trips the schema' do
+        hsh_type = Icss::Meta::HashType.receive(schema)
+        hsh_type.to_schema.should == schema
+      end
+
+      it 'is a descendent of Hash' do
+        hsh_type = Icss::Meta::HashType.receive(schema)
+        hsh_type.should       <  Hash
+        hsh_type.new.should be_a(Hash)
+        compare_methods(hsh_type, Hash)
+      end
+    end
+  end
+
+  # context Icss::Meta::UnionType do
+  #   it 'receives simple unions' do
+  #     uu = Icss::Meta::UnionType.receive([:int, :string])
+  #     uu.declaration_flavors.should == [:primitive, :primitive]
+  #     uu.to_schema.should == [:int, :string]
+  #   end
+  #
+  #   it 'receives complex unions' do
+  #     uu = Icss::Meta::UnionType.receive([ 'boolean', 'double',
+  #         {'type' => 'array', 'items' => 'bytes'}])
+  #     uu.declaration_flavors.should == [:primitive, :primitive]
+  #     uu.to_schema.should == [:int, :string]
+  #   end
+  # end
 end

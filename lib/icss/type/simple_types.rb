@@ -1,9 +1,9 @@
 module Icss
-  class Text       < ::Icss::StringType  ; extend ::Icss::Meta::SimpleType ; end
-  class FilePath   < ::Icss::StringType  ; extend ::Icss::Meta::SimpleType ; end
-  class Regexp     < ::Icss::StringType  ; extend ::Icss::Meta::SimpleType ; end
-  class Url        < ::Icss::StringType  ; extend ::Icss::Meta::SimpleType ; end
-  class EpochTime  < ::Icss::IntegerType ; extend ::Icss::Meta::SimpleType ; end
+  class Text       < ::Icss::StringType  ; include ::Icss::Meta::SimpleType ; end
+  class FilePath   < ::Icss::StringType  ; include ::Icss::Meta::SimpleType ; end
+  class Regexp     < ::Icss::StringType  ; include ::Icss::Meta::SimpleType ; end
+  class Url        < ::Icss::StringType  ; include ::Icss::Meta::SimpleType ; end
+  class EpochTime  < ::Icss::IntegerType ; include ::Icss::Meta::SimpleType ; end
 
   Icss::SIMPLE_TYPES.merge!({
       :text       => ::Icss::Text,
@@ -23,7 +23,7 @@ module Icss
     def initialize(val=nil)
       self.val = val
     end
-    def self.methods() ::TrueClass.methods | ::Icss::Meta::PrimitiveType.instance_methods ; end
+    def self.methods() ::TrueClass.methods | ::Icss::Meta::PrimitiveType::Schema.instance_methods ; end
     def method_missing(meth, *args)
       val.send(meth, *args)
     end

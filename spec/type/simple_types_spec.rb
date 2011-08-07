@@ -12,8 +12,11 @@ describe 'Icss::SIMPLE_TYPES (non-primitive)' do
   SIMPLE_TYPES_TO_TEST.each do |type_klass|
     context type_klass do
       it 'is a simple type' do
-        type_klass.should     be_a( Icss::Meta::Type )
-        type_klass.should     be_a( Icss::Meta::SimpleType )
+        type_klass.should     be_a( Icss::Meta::Type::Schema )
+        type_klass.should     be_a( Icss::Meta::SimpleType::Schema )
+        type_klass.should       <   Icss::Meta::Type )
+        type_klass.should       <   Icss::Meta::SimpleType )
+        type_klass.new.should_not be_a( Icss::Meta::SimpleType::Schema )
         type_klass.new.should_not be_a( Icss::Meta::SimpleType )
       end
       it 'is primitive? and simple?, but not record? or union?' do

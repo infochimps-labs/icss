@@ -1,5 +1,6 @@
-module Icss
+!module Icss
   module Meta
+
     #
     # Record, enums and fixed are named types. Each has a fullname that is
     # composed of two parts; a name and a namespace. Equality of names is defined
@@ -19,23 +20,28 @@ module Icss
     # if the definitions are equivalent.
     #
     module NamedType
-      include Icss::Meta::Type
 
-      def doc() "" end
-      def doc=(str)
-        singleton_class.class_eval do
-          remove_possible_method(:doc)
-          define_method(:doc){ str }
+      module Schema
+        include Icss::Meta::Type::Schema
+
+        def doc() "" end
+        def doc=(str)
+          singleton_class.class_eval do
+            remove_possible_method(:doc)
+            define_method(:doc){ str }
+          end
+        end
+
+        def to_schema
+          p [:to_schema, self, __FILE__]
+          super.merge(
+            :name      => typename,
+            :namespace => namespace,
+            :doc       => doc,
+            )
         end
       end
-
-      def to_schema
-        (defined?(super) ? super : {}).merge(
-          :name      => typename,
-          :namespace => namespace,
-          :doc       => doc,
-          ).reject{ |k,v| v.nil? }
-      end
+      def self.included(base) base.class_eval{ base.extend(Schema) } ; end
 
       #
       # for type science.astronomy.nuforc.ufo_sighting, we synthesize
@@ -54,19 +60,9 @@ module Icss
         [klass, meta_module]
       end
 
-    protected
-
       #
       # Manufacture of klass and meta_module
       #
-
-      # Turns a dotted namespace.name into camelized rubylike names for a class
-      # @example
-      #   scope_names_for('this.that.the_other')
-      #   # ["This", "That", "TheOther"]
-      def self.scope_names_for(fullname)
-        fullname.split('.').map(&:camelize)
-      end
 
       # Returns the meta-module for the given scope and name, starting with
       # '::Icss::Meta' and creating all necessary parents along the way.
@@ -99,6 +95,16 @@ module Icss
         klass
       end
 
+    protected
+
+      # Turns a dotted namespace.name into camelized rubylike names for a class
+      # @example
+      #   scope_names_for('this.that.the_other')
+      #   # ["This", "That", "TheOther"]
+      def self.scope_names_for(fullname)
+        fullname.split('.').map(&:camelize)
+      end
+
       # Returns a module for the given scope names, rooted always at Object (so
       # implicity with '::').
       # @example
@@ -114,7 +120,7 @@ module Icss
           new_parent
         end
       end
-
     end
+
   end
 end
