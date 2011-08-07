@@ -20,5 +20,16 @@ module Icss
       end
     end
 
+
+      # true if the attr is a receiver variable and it has been set
+      def attr_set?(attr)
+        receiver_attrs.has_key?(attr) && self.instance_variable_defined?("@#{attr}")
+      end
+
+      def unset!(attr)
+        self.send(:remove_instance_variable, "@#{attr}") if self.instance_variable_defined?("@#{attr}")
+      end
+      protected :unset!
+
   end
 end

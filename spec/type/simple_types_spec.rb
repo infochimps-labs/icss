@@ -17,10 +17,10 @@ describe 'Icss::SIMPLE_TYPES (non-primitive)' do
         type_klass.new.should_not be_a( Icss::Meta::SimpleType )
       end
       it 'is primitive? and simple?, but not record? or union?' do
-        type_klass.should_not be_primitive
-        type_klass.should     be_simple
-        type_klass.should_not be_union
-        type_klass.should_not be_record
+        Icss::Meta::Type.primitive?( type_klass).should be_false
+        Icss::Meta::Type.simple?(    type_klass).should be_true
+        Icss::Meta::Type.union?(     type_klass).should be_false
+        Icss::Meta::Type.record?(    type_klass).should be_false
       end
       it 'is named in Icss::SIMPLE_TYPES' do
         typename = Icss::SIMPLE_TYPES.key(type_klass)
@@ -36,10 +36,10 @@ describe 'Icss::SIMPLE_TYPES (non-primitive)' do
   end
 end
 
-describe Icss::Boolean do
-  let(:true_bool ){ Icss::Boolean.new(true)  }
-  let(:false_bool){ Icss::Boolean.new(false) }
-  it("has #class Boolean" ){ (true_bool.class).should == Icss::Boolean ; (false_bool.class).should == Icss::Boolean }
+describe Icss::BooleanType do
+  let(:true_bool ){ Icss::BooleanType.new(true)  }
+  let(:false_bool){ Icss::BooleanType.new(false) }
+  it("has #class BooleanType" ){ (true_bool.class).should == Icss::BooleanType ; (false_bool.class).should == Icss::BooleanType }
   describe 'mimicking true/false' do
     it(":!"     ){ (! true_bool).should    == (! true)     ; (! false_bool).should    == (! false)     }
     it(":nil?"  ){ (true_bool.nil?).should == (true.nil?)  ; (false_bool.nil?).should == (false.nil?)  }

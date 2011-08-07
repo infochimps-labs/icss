@@ -13,16 +13,6 @@ ___________________________________________________________________________
 * 
 
 
-* primitive types: Icss::{StringType, 
-
-
-### Namespacing
-
-When 
-
-* `Icss::Type::Science::Astronomy::UfoSightingType`
-* `Icss::Science::Astronomy::UfoSighting`
-
 
 
 
@@ -33,8 +23,8 @@ All types respond to:
 * to_schema
 * typename
 * fullname
-* namespace   (blank for 
-* schema_classifier 
+* namespace   (blank for
+* schema_classifier
 
 
 and their instances respond to
@@ -48,6 +38,89 @@ and their instances respond to
 * `:primitive_type`
   - `null`  -- `Icss::Type::NilClass`
 
+* primitive types: Icss::{StringType, 
+
+
+including X puts X's instance methods in with my instance methods
+extending X puts X's instance methods in with my OWN      methods
+
+
+    class                   meta type                 | class                                 | class                   | obj
+    String                  Icss::Meta::PrimitiveType | doc  ns/n/fn  type metatype to_schema |                         |
+
+    < Icss::ArrayType       Icss::Meta::ArraySchema   | doc  ns/n/fn  type metatype to_schema | items                   |
+    < Icss::HashType        Icss::Meta::HashSchema    | doc  ns/n/fn  type metatype to_schema | values                  |
+
+    < Icss::EnumType        Icss::Meta::EnumSchema    | doc  ns/n/fn  type metatype to_schema | items                   |
+    < Icss::FixedType       Icss::Meta::FixedSchema   | doc  ns/n/fn  type metatype to_schema | items                   |
+    < Icss::UnionType       Icss::Meta::              | doc  ns/n/fn  type metatype to_schema | items                   |
+    Icss::Entity            Icss::Meta::RecordType    | doc  ns/n/fn  type metatype to_schema | fields field receive    | receive!  [methods from fields]
+    
+    class Icss::Entity
+      include Icss::Meta::ReceiverModel
+    end
+    
+    class Icss::Thing < Icss::Entity
+      field :name, String
+      field :url,  Url,   :validates => { :format => /[a-z][a-z]/ }
+    end
+    class Icss::Place < Icss::Thing
+      field :geo,  GeoCoordinates
+      field :cc,   String, :validates => { :format => /[a-z][a-z]/ }
+    end
+
+                          Thing   M::ThingType  Place  M::PlaceType  M::PlaceSchema    M::ReceiverModel  M::ReceiverModel::Schema  M::Type::RecordType
+    Place.new           | --      #geo, #cc     --     #name, #url   --                #receive!              
+    Place               |                                                                                .field, .fields, .rcvr    .doc/.ns/.n/.fn/.metatype/.to_sch
+    M::PlaceType        |                                                              
+
+    M::Type::RecordType  
+    - receive 
+      - makes klass, meta_klass
+      
+    Meta::ArrayTypeFactory
+    - ArrayOfFooType < ArrayType         if `items` is primitive then `Icss::ArrayOfFooType < Icss::ArrayType` else anon. subclass of `Icss::ArrayType`
+    - kl.incl M::ArrayOfFooType          
+    - kl.ext  M::ArrayOfFooSchema        `.items` (written in by Meta::ArrayTypeFactory)
+    - ArrayType                          `.receive(arr)` (iterates .receive_item() over arr)
+
+
+New record type:
+
+    instance methods:                               #receive!, #_receive_attr, #run_after_receivers
+    class    methods:   .field .fields .field_names .receive .rcvr .rcvr_remaining .after_receive .after_receivers 
+
+    making a Meta::record:
+                                        class methods                         inst. methods        
+    Widget, includes M::Record:
+    - kl.incl M::Record                 
+    - kl.ext  M::RecordSchema           .field .fields .field_names
+    - kl.incl M::Receiver                                                     #receive!
+    - kl.ext  M::Receiver::CM           .rcvr .receive .rcvr_remaining, &c            
+
+    field "foo", Integer              
+    - kl.incl M::WidgetType                                                   #foo, #foo=, #receive_foo?
+    - kl.ext  M::WidgetSchema           modifies field, field_names
+
+    M::Record.receive(:name => 'widget', :type => 'record', :fields => [{ :name => 'foo', :type => 'int' }] )
+
+    Meta::UnionType
+    - klass                              instance of `Icss::Meta::UnionType`
+    - kl.incl M::Type::ArrayOfFooType          
+    - kl.ext  M::Type::ArrayOfFooSchema  `.items`, `.receive(arr)` (iterates .receive_item() over arr)
+    
+    doc/ns/n/fn/metatype/to_sch fields field | receive  | receive! [methods from fields] |    
+
+
+when I call field
+  - adds accessor     instance methods via my metatype
+  - adds rcvr         instance methods via my metatype
+  - adds receive      class    methods via my metatype extender
+  - adds to_schema &c class    methods via my metatype extender
+
+    
+### Namespacing
+
 
     avro        kind        ruby           json      example                schema example
     ---------   ---------   ------------   -------   ---------              --------------
@@ -59,15 +132,15 @@ and their instances respond to
     double      primitive   DoubleType     number    1.1                    'double'
     bytes       primitive   BinaryType     string    "\u00FF"               'bytes'
     string      primitive   StringType     string    "foo"                  'string'
-                                                     
+
     array       container   ArrayType      array     [1,2]                  { 'type': 'array',  'items': 'int' }
     map         container   HashType       object    { "a": 1 }             { 'type': 'map',    'values': 'int' }
-                                                     
+
     record      named       (RecordType)   object    {"a": 1}               { 'type': 'record', 'name': 'bob',    'fields':[...] }
     enum        named       (EnumType)     string    "heads"                { 'type': 'enum',   'name': 'result', 'symbols': ['heads', 'tails'] }
     fixed       named       (FixedType)    string    "\xBD\xF3)Q"           { 'type': 'fixed',  'name': 'crc32',  'length': 4 }
     union       named       (UnionType)    object                           [ 'long', { 'type': 'array', 'items': 'int' } ]
-                                                     
+
     date        simple      DateType       string    "2011-01-02"           'date'
     time        simple      TimeType       string    "2011-01-02T03:04:05Z" 'time'
     text        simple      TextType       string    "long text"            'text'
@@ -78,6 +151,45 @@ and their instances respond to
 
 Notes:
 * primitive types are also simple types
+
+__________________________________________________________________________
+__________________________________________________________________________
+__________________________________________________________________________
+
+Old receiver klass methods:
+
+      :after_receive,      :after_receivers(=?),     :receiver_defaults,
+      :receiver_attrs(=?), :receiver_attr_names(=?), :members, 
+      :rcvr_accessor,      :rcvr, :rcvr_reader,      :rcvr_writer, :rcvr_remaining, 
+      :receiver_body_for,  :type_to_klass,           :consume_tuple,   :tuple_keys,
+
+Old receiver instance methods:
+      
+      :bob, :bob, :receive_bob, 
+      :receive!, :_receive_attr, :receiver_attrs(=?), :receiver_attr_names(=?),  
+      :after_receivers(=?) :run_after_receivers, :impose_defaults!, :replace_options!, :attr_set?, :to_tuple, :unset!
+      
+
+Old ReceiverModel adds to class:
+
+       :__update_callbacks, :define_callbacks, :__create_keyed_callback, :__define_runner, 
+       :_parse_validates_options, :_validate_callbacks, :reset_callbacks, :set_callback, :skip_callback,
+       :validate, :validate_on_XXX, :validates, :validates_XXX_of, :validates_with, :validators, :validators_on :_validators, :_validators, :_validators?, 
+       :model_name, :human_attribute_name, :human_name, :attribute_method?, :i18n_scope, 
+       :inherited, :lookup_ancestors, :descendants, :direct_descendants, 
+       :keys, :receive_from_file, :receive_json, :receive_yaml, 
+
+and to instance
+
+       :callback, :_validate_callbacks, :_validators, :_validators, :_validators?, :run_callbacks, :run_validations!, 
+       :read_attribute_for_validation, :validates_XX_of, :validates_with, :validation_context(=)
+       :errors, :to_model, :valid?, :invalid?, :destroyed?, :new_record?,
+       :members, :values_of, :convert_key, :merge_from_file!
+       (... plus all methods from Enumerable)
+
+__________________________________________________________________________
+__________________________________________________________________________
+__________________________________________________________________________
 
 ___________________________________________________________________________
 <a name="core" >

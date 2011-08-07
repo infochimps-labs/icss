@@ -21,6 +21,14 @@ module Icss
     module NamedType
       include Icss::Meta::Type
 
+      def doc() "" end
+      def doc=(str)
+        singleton_class.class_eval do
+          remove_possible_method(:doc)
+          define_method(:doc){ str }
+        end
+      end
+
       def to_schema
         (defined?(super) ? super : {}).merge(
           :name      => typename,

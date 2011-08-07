@@ -18,11 +18,12 @@ module Icss
     klass.class_eval{ klass.singleton_class.class_eval{ define_method(:fullname){ sym } } }
   end
 
-  class Boolean < BasicObject
+  class BooleanType < BasicObject
     attr_accessor :val
     def initialize(val=nil)
       self.val = val
     end
+    def self.methods() ::TrueClass.methods | ::Icss::Meta::PrimitiveType.instance_methods ; end
     def method_missing(meth, *args)
       val.send(meth, *args)
     end
@@ -30,13 +31,13 @@ module Icss
       super(meth) || val.respond_to?(meth)
     end
     def inspect()
-      "<Boolean #{val.inspect}>"
+      "<BooleanType #{val.inspect}>"
     end
-    def class()   Boolean              ; end
+    def class()   BooleanType          ; end
     def !()           (! val)          ; end
     def ==(other_val) val == other_val ; end
     def !=(other_val) val != other_val ; end
-    def try_dup() Boolean.new(val)     ; end
+    def try_dup() BooleanType.new(val) ; end
   end
 
   # class Duration

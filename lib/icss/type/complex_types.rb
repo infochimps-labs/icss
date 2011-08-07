@@ -19,6 +19,14 @@ module Icss
       #   klass = Icss::Meta::Type.find_in_type_collection(::Icss::CONTAINER_TYPES, :container, typename)
       #   Class.new(klass)
       # end
+
+      def doc() "" end
+      def doc=(str)
+        singleton_class.class_eval do
+          remove_possible_method(:doc)
+          define_method(:doc){ str }
+        end
+      end
     end
 
     #
@@ -32,14 +40,16 @@ module Icss
     #
     #     {"type": "array", "items": "string"}
     #
-    class ArrayType
-      extend  Icss::Meta::ContainerType
-      extend  Icss::Meta::RecordType::FieldDecorators
-      extend  Icss::Meta::ReceiverRecord::ReceiverDecorators
-      #
-      field :type,     String, :required => true
-      field :fullname, String, :required => true
-      field :items,    Array # Icss::Meta::TypeFactory, :required => true
+    module ArrayType
+      class << self
+      extend  RecordType::FieldDecorators
+        include Icss::Meta::ReceiverRecord
+        #
+        field :type,     String, :required => true
+        field :fullname, String, :required => true
+        field :items,    Array # Icss::Meta::TypeFactory, :required => true
+      end
+
       #
       # def namespace()  ''       ; end
       # def typename()   :array   ; end

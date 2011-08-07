@@ -1,8 +1,7 @@
 module Icss
   module Meta
 
-    module RecordType
-      module FieldDecorators
+    module RecordSchema
         #
         # Describes a field in a Record object.
         #
@@ -82,6 +81,8 @@ module Icss
           name = name.to_sym
           add_field_info(name, type, field_info)
           add_field_accessor(name, field_info)
+          add_receiver(field_name, type, field_info)        if self.respond_to?(:add_receiver)
+          add_after_receivers(field_name, type, field_info) if self.respond_to?(:add_after_receivers)
         end
 
         def fields
@@ -112,7 +113,7 @@ module Icss
         # We want it to do so for each ancestor that has added fields.
 
         def to_schema
-          (defined?(super) ? super : {}).merge(
+          super.merge(
             :fields => fields.to_hash,
             # :is_a   => ( is_a   || [] ).map{|k| k.fullname },
             )
@@ -131,6 +132,7 @@ module Icss
         # end
 
       protected
+
         def add_field_info(name, type, field_info)
           @field_names ||= [] ; @fields ||= {}
           @field_names << name unless respond_to?(:field_names) && field_names.include?(name)
@@ -159,7 +161,7 @@ module Icss
             yield(ancestor.send(meth)) if ancestor.respond_to?(meth)
           end
         end
-      end # FieldDecorators
+      end # RecordSchema
     end
   end
 end

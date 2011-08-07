@@ -1,9 +1,17 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 require 'icss/type'
+require 'icss/type/simple_types'
 
 PRIMITIVE_TYPES_TO_TEST = [
   ::Icss::NilClassType, ::Icss::BooleanType, ::Icss::IntegerType, ::Icss::LongType,
   ::Icss::FloatType,    ::Icss::DoubleType,  ::Icss::StringType,  ::Icss::BinaryType ]
+
+PRIMITIVE_TYPE_PARENTS = {
+  ::Icss::NilClassType => [NilClass, nil],    ::Icss::BooleanType => [TrueClass, true],
+  ::Icss::IntegerType  => [Integer, 1],       ::Icss::LongType    => [Integer, 1],
+  ::Icss::FloatType    => [Float, 1.0],       ::Icss::DoubleType  => [Float, 1.0],
+  ::Icss::StringType   => [String, "hello"],  ::Icss::BinaryType  => [String, "hello"],
+}
 
 describe Icss::Meta::Type do
 
@@ -61,10 +69,10 @@ describe 'Icss::PRIMITIVE_TYPES' do
         type_klass.new.should_not be_a( Icss::Meta::PrimitiveType ) unless [::Icss::NilClassType, ::Icss::BooleanType].include?(type_klass)
       end
       it 'is primitive? and simple?, but not record? or union?' do
-        type_klass.should     be_primitive
-        type_klass.should     be_simple
-        type_klass.should_not be_union
-        type_klass.should_not be_record
+        Icss::Meta::Type.primitive?( type_klass).should be_true
+        Icss::Meta::Type.simple?(    type_klass).should be_true
+        Icss::Meta::Type.union?(     type_klass).should be_false
+        Icss::Meta::Type.record?(    type_klass).should be_false
       end
       it 'is named in Icss::PRIMITIVE_TYPES' do
         typename = Icss::PRIMITIVE_TYPES.key(type_klass)
@@ -76,7 +84,13 @@ describe 'Icss::PRIMITIVE_TYPES' do
         type_klass.to_schema == typename
         type_klass.typename  == typename
       end
+      it 'has only a few more methods' do
+        primitive_parent, primitive_instance = PRIMITIVE_TYPE_PARENTS[type_klass]
+        (type_klass.methods.sort  - primitive_parent.methods - [:new]).should == [
+          :doc, :fullname, :namespace, :to_schema, :typename
+        ]
+        (type_klass.new(primitive_instance).methods.sort - primitive_instance.methods).should == []
+      end
     end
   end
 end
-

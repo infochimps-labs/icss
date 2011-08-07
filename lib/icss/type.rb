@@ -14,7 +14,7 @@ module Icss
       end
 
       def fullname
-        ::Icss::Meta.fullname_for(self.name)
+        ::Icss::Meta::Type.fullname_for(self.name)
       end
       def typename
         @typename  ||= fullname.gsub(/.*[\.]/, "")
@@ -23,22 +23,16 @@ module Icss
         @namespace ||= fullname.gsub(/\.[^\.]+/, "")
       end
 
+       def doc() "" ; end
+
       def to_schema
         {}
       end
 
-      def doc() "" end
-      def doc=(str)
-        singleton_class.class_eval do
-          remove_possible_method(:doc)
-          define_method(:doc){ str }
-        end
-      end
-
-      def primitive?() ::Icss::PRIMITIVE_TYPES.has_value?(self) ; end
-      def simple?()    ::Icss::SIMPLE_TYPES.has_value?(self)    ; end
-      def union?()     false     ; end
-      def record?()    false     ; end
+      def self.primitive?(tt) ::Icss::PRIMITIVE_TYPES.has_value?(tt) ; end
+      def self.simple?(tt)    ::Icss::SIMPLE_TYPES.has_value?(tt)    ; end
+      def self.union?(tt)     false     ; end
+      def self.record?(tt)    false     ; end
 
       def self.find_in_type_collection(type_collection, kind, typename)
         type_collection[typename.to_sym] or raise(ArgumentError, "No such #{kind} type #{typename}")
@@ -65,7 +59,7 @@ module Icss
     end
   end
 
-  class NilClassType < ::NilClass          ; extend ::Icss::Meta::PrimitiveType ; def self.new()        nil ; end ; end
+  class NilClassType < ::NilClass          ; extend ::Icss::Meta::PrimitiveType ; def self.new(val=nil) raise(ArgumentError, "#{self} must be initialized with nil") unless val.nil? ; nil ; end ; end
   class BooleanType  < ::BasicObject       ; extend ::Icss::Meta::PrimitiveType ; end
   class IntegerType  < ::Integer           ; extend ::Icss::Meta::PrimitiveType ; def self.new(val=nil) val.nil? ? nil : Integer(val) ; end ; end
   class LongType     < ::Icss::IntegerType ; extend ::Icss::Meta::PrimitiveType ; end

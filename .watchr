@@ -11,6 +11,10 @@ def run_spec(file)
   puts
 end
 
+watch("notes.*/*.rb") do |match|
+  system "bundle exec rspec #{match[0]}"
+end
+
 watch("spec/.*/*_spec\.rb") do |match|
   run_spec match[0]
 end
