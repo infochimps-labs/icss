@@ -11,7 +11,6 @@ module Icss
     def self.included base
       base.class_eval do
         include Icss::Meta::RecordType
-        include Icss::Meta::ReceiverRecord
         include Icss::ReceiverModel::ActsAsHash
         include Icss::ReceiverModel::ActsAsLoadable
         include Icss::ReceiverModel::ActiveModelShim

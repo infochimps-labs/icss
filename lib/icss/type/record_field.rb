@@ -4,11 +4,11 @@ module Icss
       include Icss::Meta::RecordType
       remove_possible_method(:type)
 
-      field :name,      Symbol, :required => true
-      field :type,      Class, :required => true
+      field :name,      Symbol,                  :required => true
+      field :type,      Icss::Meta::TypeFactory, :required => true
       field :doc,       String
       field :default,   Object
-      field :required,  Boolean
+      field :required,  BooleanType
       field :order,     String
       field :validates, Hash
       attr_reader   :parent
@@ -46,7 +46,7 @@ module Icss
     protected
       def expand_type
         case
-        when is_reference? && type.respond_to?(:name) then type.name
+        when is_reference? && type.respond_to?(:fullname) then type.fullname
         when is_reference?                            then '(_unspecified_)'
         when type.is_a?(Array)                        then type.map{|t| t.to_hash }
         when type.respond_to?(:to_hash)               then type.to_hash

@@ -14,10 +14,8 @@ describe 'Icss::SIMPLE_TYPES (non-primitive)' do
       it 'is a simple type' do
         type_klass.should     be_a( Icss::Meta::Type::Schema )
         type_klass.should     be_a( Icss::Meta::SimpleType::Schema )
-        type_klass.should       <   Icss::Meta::Type )
-        type_klass.should       <   Icss::Meta::SimpleType )
-        type_klass.new.should_not be_a( Icss::Meta::SimpleType::Schema )
-        type_klass.new.should_not be_a( Icss::Meta::SimpleType )
+        type_klass.should       <   Icss::Meta::Type
+        type_klass.should       <   Icss::Meta::SimpleType
       end
       it 'is primitive? and simple?, but not record? or union?' do
         Icss::Meta::Type.primitive?( type_klass).should be_false

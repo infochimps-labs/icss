@@ -7,14 +7,6 @@ require 'icss/type/type_factory'
 require 'icss/type/complex_types'
 
 describe Icss::Meta::TypeFactory do
-  module EnumType
-    include Icss::Meta::NamedType
-    extend Icss::Meta::RecordType::FieldDecorators
-    field :symbols, Array, :of => String, :required => true, :default => []
-    def to_schema
-        (defined?(super) ? super : {}).merge({ :symbols   => symbols })
-    end
-  end
 
   it 'whatever' do
     p [EnumType.public_methods - Module.public_methods]
@@ -63,16 +55,16 @@ describe Icss::Meta::TypeFactory do
     Icss::This::That::TheOther                  => [:is_type, Icss::This::That::TheOther, Icss::This::That::TheOther],
     [ 'int', 'string' ]                         => [:union_type, nil],
     { 'type' => 'record', 'name' => 'bob' }     => [:named_type, Icss::Meta::RecordType],
-    { 'type' => 'map',   'values' => 'string' } => [:container_type, Icss::HashType],
-    { 'type' => 'array', 'items' => 'string' }  => [:container_type, Icss::ArrayType],
+    { 'type' => 'map',   'values' => 'string' } => [:container_type, Icss::Meta::HashType],
+    { 'type' => 'array', 'items' => 'string' }  => [:container_type, Icss::Meta::ArrayType],
     [ 'boolean', 'double', {'type' => 'array', 'items' => 'bytes'}] => [:union_type, nil],
-    { 'type' => 'enum',  'name' => 'Kind', 'symbols' => ['A','B','C']} => [:named_type, Icss::EnumType],
-    { 'type' => 'fixed', 'name' => 'MD5',  'size' => 16} => [:named_type, Icss::Meta::FixedType],
-    { 'type' => 'map', 'values' => { 'name' => 'Foo', 'type' => 'record', 'fields' => [{'name' => 'label', 'type' => 'string'}]} } => [:container_type, Icss::HashType],
-    { 'type' => 'record','name' => 'Node', 'fields' => [
-        { 'name' => 'label',    'type' => 'string'}, { 'name' => 'children', 'type' => {'type' => 'array', 'items' => 'Node'}}]} => [:named_type, Icss::Meta::RecordType],
-    'string' => [:primitive, String], :string => [:primitive, String], :date => [:simple, Date], 'time' => [:simple, Time],
-    'this.that.the_other' => [:defined_type, :'this.that.the_other'],
+    { 'type' => 'enum',  'name' => 'Kind', 'symbols' => ['A','B','C']} => [:named_type, Icss::Meta::EnumType],
+    # { 'type' => 'fixed', 'name' => 'MD5',  'size' => 16} => [:named_type, Icss::Meta::FixedType],
+    # { 'type' => 'map', 'values' => { 'name' => 'Foo', 'type' => 'record', 'fields' => [{'name' => 'label', 'type' => 'string'}]} } => [:container_type, Icss::HashType],
+    # { 'type' => 'record','name' => 'Node', 'fields' => [
+    #     { 'name' => 'label',    'type' => 'string'}, { 'name' => 'children', 'type' => {'type' => 'array', 'items' => 'Node'}}]} => [:named_type, Icss::Meta::RecordType],
+    # 'string' => [:primitive, String], :string => [:primitive, String], :date => [:simple, Date], 'time' => [:simple, Time],
+    # 'this.that.the_other' => [:defined_type, :'this.that.the_other'],
   }
 
   context '.classify_schema_declaration' do

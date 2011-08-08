@@ -23,34 +23,45 @@ module Icss
     #
     #     {"type": "array", "items": "string"}
     #
-    module ArrayType
-      module Schema
-        include Icss::Meta::Type::Schema
-        has_field_writers
-        field :type,  String, :validates => { :format => { :with => /^array$/ } }
-        field :items, Icss::Meta::TypeFactory
-        #
-        def to_schema() super.merge({ :type => :array, :items => self.items })  end
-      end
-      def self.included(base) base.extend(Schema) end
+    class ArrayType
+      # module Schema
+      #   include Icss::Meta::RecordType
+      #   include Icss::Meta::Type::Schema
+      #   #
+      #   #
+      # end
+
+      def fullname() 'array' ; end
+
+      include Icss::Meta::Type::Schema
+      include Icss::Meta::RecordType
+      include Icss::ReceiverModel::ActiveModelShim
+      include Schema
+
+      field :type,  String, :validates => { :format => { :with => /^array$/ } }
+      field :items, Object # Icss::Meta::TypeFactory
       #
-      def self.receive(schema)
-        schema.symbolize_keys!
-        type  = schema[:type]
-        warn "Illegal type '#{type}' in #{self} schema: should be 'array'" unless (type && (type.to_sym == :array))
-        items = schema[:items]
-        #
-        if items.respond_to?(:to_sym) then
-          items = items.to_sym
-          type_appendage = Icss::Meta::Type.klassname_for(items).gsub(/^:*Icss:+/, '').gsub(/:+/, '_')
+      # def to_schema() (defined?(super) ? super() : {}).merge({ :type => :array, :items => self.items })  end
+
+      validates :type,  :presence => true, :format => { :with => /^array$/ }
+      validates :items, :presence => true
+      # def self.included(base) base.extend(Schema) end
+      #
+      # def self.receive(schema)
+      #   schema.symbolize_keys!
+      #   klass = make_klass(schema)
+      #   klass.class_eval{ include(::Icss::Meta::ArrayType) }
+      #   Schema.field_names.each{|field| Schema.send_rcvr_val(klass, field, schema[field]) }
+      #   # warn "Illegal type '#{type}' in #{self} schema: should be 'array'" unless (type && (type.to_sym == :array))
+      #   klass
+      # end
+      def self.make_klass(schema)
+        if schema[:items].respond_to?(:to_sym) then
+          type_appendage = Icss::Meta::Type.klassname_for(schema[:items].to_sym).gsub(/^:*Icss:+/, '').gsub(/:+/, '_')
           klass = Icss::Meta::NamedType.get_type_klass([], "ArrayOf#{type_appendage}", Array)
         else
           klass = Class.new(Array)
         end
-        #
-        klass.class_eval{ include(::Icss::Meta::ArrayType) }
-        klass.items = items
-        klass
       end
     end
 
@@ -73,27 +84,27 @@ module Icss
         def to_schema() super.merge({ :type => :map, :values => self.values })  end
         #
         field :type,   String, :validates => { :format => { :with => /^map$/ } }
-        field :values, Icss::Meta::TypeFactory, :required => true
+        field :values, Object # Icss::Meta::TypeFactory, :required => true
       end
       def self.included(base) base.extend(Schema) end
       #
       def self.receive(schema)
         schema.symbolize_keys!
-        type  = schema[:type]
-        warn "Illegal type '#{type}' in #{self} schema: should be 'map'" unless (type && (type.to_sym == :map))
-        values = schema[:values]
-        #
-        if values.respond_to?(:to_sym) then
-          values = values.to_sym
-          type_appendage = Icss::Meta::Type.klassname_for(values).gsub(/^:*Icss:+/, '').gsub(/:+/, '_')
+        klass = make_klass(schema)
+        klass.class_eval{ include(::Icss::Meta::HashType) }
+        klass.receive_type   schema[:type]
+        klass.receive_values schema[:values]
+        # warn "Illegal type '#{type}' in #{self} schema: should be 'map'" unless (type && (type.to_sym == :map))
+        klass
+      end
+      #
+      def self.make_klass(schema)
+        if schema[:values].respond_to?(:to_sym) then
+          type_appendage = Icss::Meta::Type.klassname_for(schema[:values].to_sym).gsub(/^:*Icss:+/, '').gsub(/:+/, '_')
           klass = Icss::Meta::NamedType.get_type_klass([], "HashOf#{type_appendage}", Hash)
         else
           klass = Class.new(Hash)
         end
-        #
-        klass.class_eval{ include(::Icss::Meta::HashType) }
-        klass.values = values
-        klass
       end
       #
       def initialize(*args, &block)
@@ -161,56 +172,78 @@ module Icss
     #   end
     # end
 
-    # #
-    # # Describes an Avro Enum type.
-    # #
-    # # Enums use the type name "enum" and support the following attributes:
-    # #
-    # # name:       a string providing the name of the enum (required).
-    # # namespace:  a string that qualifies the name;
-    # # doc:        a string providing documentation to the user of this schema (optional).
-    # # symbols:    an array, listing symbols, as strings or ruby symbols (required). All
-    # #             symbols in an enum must be unique; duplicates are prohibited.
-    # #
-    # # For example, playing card suits might be defined with:
-    # #
-    # # { "type": "enum",
-    # #   "name": "Suit",
-    # #   "symbols" : ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]
-    # # }
-    # #
-    # class EnumType
+    # module EnumType
     #   include Icss::Meta::NamedType
-    #   extend  RecordType::FieldDecorators
-    #   #
+    #   extend Icss::Meta::RecordType::FieldDecorators
     #   field :symbols, Array, :of => String, :required => true, :default => []
     #   def to_schema
     #     (defined?(super) ? super : {}).merge({ :symbols   => symbols })
     #   end
     # end
+
     #
-    # #
-    # # Describes an Avro Fixed type.
-    # #
-    # # Fixed uses the type name "fixed" and supports the attributes:
-    # #
-    # # * name: a string naming this fixed (required).
-    # # * namespace, a string that qualifies the name;
-    # # * size: an integer, specifying the number of bytes per value (required).
-    # #
-    # #   For example, 16-byte quantity may be declared with:
-    # #
-    # #     {"type": "fixed", "size": 16, "name": "md5"}
-    # #
-    # class FixedType < String
-    #   include Icss::Meta::NamedType
-    #   extend  RecordType::FieldDecorators
-    #   #
-    #   field :size, Integer, :required => true
-    #   def to_schema
-    #     (defined?(super) ? super : {}).merge( :size => size )
-    #   end
-    # end
+    # Describes an Avro Enum type.
+    #
+    # Enums use the type name "enum" and support the following attributes:
+    #
+    # name:       a string providing the name of the enum (required).
+    # namespace:  a string that qualifies the name;
+    # doc:        a string providing documentation to the user of this schema (optional).
+    # symbols:    an array, listing symbols, as strings or ruby symbols (required). All
+    #             symbols in an enum must be unique; duplicates are prohibited.
+    #
+    # For example, playing card suits might be defined with:
+    #
+    # { "type": "enum",
+    #   "name": "Suit",
+    #   "symbols" : ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]
+    # }
+    #
+    class EnumType
+      module Schema
+        include Icss::Meta::Type::Schema
+        include Icss::Meta::NamedType::Schema
+        has_field_writers
+        field :type,  String, :validates => { :format => { :with => /^array$/ } }
+        field :symbols, Array, :of => Symbol, :required => true, :default => []
+        #
+        def to_schema() super.merge({ :type => :array, :symbols   => symbols }) ; end
+      end
+      def self.included(base) base.extend(Schema) end
+      #
+      def self.receive(schema)
+        schema.symbolize_keys!
+        klass = Icss::Meta::NamedType.get_type_klass([], type[:name], Icss::SymbolType)
+        klass.class_eval{ include(::Icss::Meta::EnumType) }
+        klass.receive_type    schema[:type]
+        klass.receive_symbols schema[:symbols]
+        # warn "Illegal type '#{type}' in #{self} schema: should be 'enum'" unless (type && (type.to_sym == :enum))
+        klass
+      end
+    end
+
+    #
+    # Describes an Avro Fixed type.
+    #
+    # Fixed uses the type name "fixed" and supports the attributes:
+    #
+    # * name: a string naming this fixed (required).
+    # * namespace, a string that qualifies the name;
+    # * size: an integer, specifying the number of bytes per value (required).
+    #
+    #   For example, 16-byte quantity may be declared with:
+    #
+    #     {"type": "fixed", "size": 16, "name": "md5"}
+    #
+    class FixedType < String
+      # include Icss::Meta::NamedType
+      # extend  RecordType::FieldDecorators
+      # #
+      # field :size, Integer, :required => true
+      # def to_schema
+      #   (defined?(super) ? super : {}).merge( :size => size )
+      # end
+    end
 
     # unless defined?(NAMED_TYPES)
     #   ::Icss::NAMED_TYPES      = {

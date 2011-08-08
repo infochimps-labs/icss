@@ -26,16 +26,16 @@ module Icss
           ::Icss::Meta::Type.fullname_for(self.name)
         end
         def typename
-          @typename  ||= fullname.gsub(/.*[\.]/, "")
+          @typename  ||= fullname.to_s.gsub(/.*[\.]/, "")
         end
         def namespace
-          @namespace ||= fullname.gsub(/\.[^\.]+\z/so, "")
+          @namespace ||= fullname.to_s.gsub(/\.[^\.]+\z/so, "")
         end
 
         def doc() "" ; end
 
         def to_schema
-          p [:to_schema, self, __FILE__]
+          # p [:to_schema, self, __FILE__]
           { :type => 'MISSING_SCHEMA' }
         end
         def self.included(base) base.class_eval{ def self.has_field_writers() extend(Icss::Meta::RecordType::Schema) ; end } end
@@ -72,36 +72,36 @@ module Icss
     end
   end
 
-  class NilClassType < ::NilClass          ; include ::Icss::Meta::PrimitiveType ; def self.new(val=nil) raise(ArgumentError, "#{self} must be initialized with nil") unless val.nil? ; nil ; end ; end
-  class BooleanType  < ::BasicObject       ; include ::Icss::Meta::PrimitiveType ; end
-  class IntegerType  < ::Integer           ; include ::Icss::Meta::PrimitiveType ; def self.new(val=nil) val.nil? ? nil : Integer(val) ; end ; end
-  class LongType     < ::Icss::IntegerType ; include ::Icss::Meta::PrimitiveType ; end
-  class FloatType    < ::Float             ; include ::Icss::Meta::PrimitiveType ; def self.new(val=nil) val.nil? ? nil : Float(val)   ; end ; end
-  class DoubleType   < ::Icss::FloatType   ; include ::Icss::Meta::PrimitiveType ; end
-  class StringType   < ::String            ; include ::Icss::Meta::PrimitiveType ; end
-  class BinaryType   < ::Icss::StringType  ; include ::Icss::Meta::PrimitiveType ; end
 
-  class SymbolType   < ::Symbol            ; include ::Icss::Meta::SimpleType    ; def self.new(val=nil) val.nil? ? nil : val.to_sym ; end ; end
-  class TimeType     < ::Time              ; include ::Icss::Meta::SimpleType    ; end
-  class DateType     < ::Date              ; include ::Icss::Meta::SimpleType    ; end
+  class ::NilClass                ; include ::Icss::Meta::PrimitiveType ; def self.receive(val=nil) raise(ArgumentError, "#{self} must be initialized with nil") unless val.nil? ; nil ; end ; end
+  class ::Boolean < ::BasicObject ; include ::Icss::Meta::PrimitiveType ; def self.receive(val=nil) case when v.nil? then nil when v.to_s.strip.blank? then false else v.to_s.strip != "false" end ; end
+  class ::Integer                 ; include ::Icss::Meta::PrimitiveType ; def self.receive(val=nil) val.nil? ? nil : Integer(val) ; end ; end
+  class ::Float                   ; include ::Icss::Meta::PrimitiveType ; def self.receive(val=nil) val.nil? ? nil : Float(val)   ; end ; end
+  class ::String                  ; include ::Icss::Meta::PrimitiveType ; def self.receive(val=nil)                  String(val)  ; end ; end
+  class ::Symbol                  ; include ::Icss::Meta::SimpleType    ; def self.receive(val=nil) val.nil? ? nil : val.to_sym ; end ; end
+  class ::Time                    ; include ::Icss::Meta::SimpleType    ; def self.receive(val=nil) val.nil? ? nil : Time.parse(v.to_s).utc rescue nil ; end ; end
+  class ::Date                    ; include ::Icss::Meta::SimpleType    ; def self.receive(val=nil) val.nil? ? nil : Date.parse(v.to_s).utc rescue nil ; end ; end
+  class ::Long    < ::Integer     ; include ::Icss::Meta::PrimitiveType ; end
+  class ::Double  < ::Float       ; include ::Icss::Meta::PrimitiveType ; end
+  class ::Binary  < ::String      ; include ::Icss::Meta::PrimitiveType ; end
 
   unless defined?(::Icss::PRIMITIVE_TYPES)
     ::Icss::PRIMITIVE_TYPES = {
-      :null     => ::Icss::NilClassType,
-      :boolean  => ::Icss::BooleanType,
-      :int      => ::Icss::IntegerType,
-      :long     => ::Icss::LongType,
-      :float    => ::Icss::FloatType,
-      :double   => ::Icss::DoubleType,
-      :string   => ::Icss::StringType,
-      :bytes    => ::Icss::BinaryType,
+      :null     => ::NilClass,
+      :boolean  => ::Boolean,
+      :int      => ::Integer,
+      :long     => ::Long,
+      :float    => ::Float,
+      :double   => ::Double,
+      :string   => ::String,
+      :bytes    => ::Binary,
     }.freeze
   end
   unless defined?(::Icss::SIMPLE_TYPES)
     ::Icss::SIMPLE_TYPES = ::Icss::PRIMITIVE_TYPES.merge({
-        :symbol => ::Icss::SymbolType,
-        :time   => ::Icss::TimeType,
-        :date   => ::Icss::DateType,
+        :symbol => ::Symbol,
+        :time   => ::Time,
+        :date   => ::Date,
       })
   end
 

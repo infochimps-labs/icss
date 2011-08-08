@@ -107,9 +107,9 @@ module Icss
         #
         def field(field_name, type, schema={})
           field_name = field_name.to_sym
-          add_schema(field_name, type, schema)
+          add_field_schema(field_name, type, schema)
           add_field_accessor(field_name, schema)
-          add_receiver(field_name, type, schema)
+          rcvr(field_name, type, schema)
           add_after_receivers(field_name, type, schema)
         end
 
@@ -123,6 +123,10 @@ module Icss
           all_f = @field_names || []
           call_ancestor_chain(:field_names){|anc_f| all_f = anc_f | all_f }
           all_f
+        end
+
+        def send_rcvr_val(obj, attr, val)
+          obj.send("receive_#{attr}", val)
         end
 
         # So you're asking yourself "Self, why didn't he just call .super?
@@ -188,7 +192,7 @@ module Icss
         # @option [Object]  :default  - After any receive! operation, attribute is set to this value unless attr_set? is true
         # @option [Class]   :of       - For collections (Array, Hash, etc), the type of the collection's items
         #
-        def add_receiver(field_name, type, schema={})
+        def rcvr(field_name, type, schema={})
           return if schema[:receiver] == :none
           body = ::Icss::Meta::RecordType.receiver_body_for(type, schema)
           define_method("receive_#{field_name}") do |*args|
@@ -232,7 +236,7 @@ module Icss
 
       protected
 
-        def add_schema(name, type, schema)
+        def add_field_schema(name, type, schema)
           @field_names ||= [] ; @fields ||= {}
           @field_names << name unless respond_to?(:field_names) && field_names.include?(name)
           @fields[name] = schema.merge({ :name => name, :type => type })
@@ -297,7 +301,7 @@ module Icss
 
       RECEIVER_BODIES           = {} unless defined?(RECEIVER_BODIES)
       RECEIVER_BODIES[NilClass] = lambda{|v| raise ArgumentError, "This field must be nil, but [#{v}] was given" unless (v.nil?) ; nil }
-      RECEIVER_BODIES[Icss::BooleanType]  = lambda{|v| case when v.nil? then nil when v.to_s.strip.blank? then false else v.to_s.strip != "false" end }
+      RECEIVER_BODIES[Boolean]  = lambda{|v| case when v.nil? then nil when v.to_s.strip.blank? then false else v.to_s.strip != "false" end }
       RECEIVER_BODIES[Integer]  = lambda{|v| v.blank? ? nil : v.to_i }
       RECEIVER_BODIES[Float]    = lambda{|v| v.blank? ? nil : v.to_f }
       RECEIVER_BODIES[String]   = lambda{|v| v.to_s }
@@ -309,7 +313,7 @@ module Icss
       RECEIVER_BODIES[Object]   = lambda{|v| v } # accept and love the object just as it is
       #
       RECEIVER_BODIES[Array]    = lambda{|v| case when v.nil? then nil when v.blank? then [] else Array(v) end }
-      RECEIVER_BODIES[Hash]     = lambda{|v| case when v.nil? then nil when v.blank? then {} else v end }
+      RECEIVER_BODIES[Hash]     = lambda{|v| case when v.nil? then nil when v.blank? then {} else v        end }
       #
       # Give each base class a receive method
       RECEIVER_BODIES.each do |k,b|

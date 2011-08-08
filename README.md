@@ -6,40 +6,132 @@ ___________________________________________________________________________
 <a name="avro" >
 ## Avro Protocol, Message, RecordType and Field
 
-
 ### Icss::Meta::{Types}
 
 * base meta-type: Icss::Meta::Type
 * 
 
+### Model vs Schema
+
+**Schema**:
+* manufactures klass
+* 
+
+**Model**:
+* manufactures instances
+* 
+
+**Instance**:
+* represents a record
+* has `#valid?`
 
 
 
+* - class:  ArrayOfInt   
+  - schema: ArraySchema  makes new class, 
+  
+* - class:  Integer
+  - schema: IntegerSchema
+  
+* - class:  Place
+  - schema: RecordSchema  
 
-All types respond to:
+* saying 'field foo' implies
+- self method field
+- self method fields & field_names
+- self method receive
+- self method validates
+- instance method foo, foo=, receive_foo
+- instance method receive!
+- instance method valid?
 
-* new
-* receive
-* to_schema
-* typename
-* fullname
-* namespace   (blank for
-* schema_classifier
+#### array
+
+* klass = class ArrayOfInt < Array ; end
+  - has `Array` as an (eventual) ancestor, instances are `is_a?(Array)`
+  - `.receive` makes new array, populates it with type given by `.metatype.items`
+  - `.metatype`
+* metatype
+  - `.items`
+  - `.to_schema`, `.valid_schema?`
+* factory
+  - `.receive_schema` makes a new klass and metatype
+  
+#### enum
+
+* klass = class MyHappyEnum < EnumBase < Symbol ; end
+  - named type
+  - has `Symbol` as an (eventual) ancestor, instances are `is_a?(Symbol)`
+  - `.receive` makes new MyHappyEnum if value is within `.metatype.symbols`
+  - `.metatype`
+* metatype
+  - `.symbols`, `fullname`, `namespace`, `typename`
+  - `.to_schema`, `.valid_schema?`
+* factory
+  - `.receive_schema` makes a new klass and metatype
+  
+-  < EnumBase then
+  - class methods `.symbols`, `.fullname`, `.namespace`, `.typename`, `.to_schema`, `.valid_schema?`
 
 
-and their instances respond to
 
-* receive!
+    avro        kind        ruby           json      example                schema example
+    ---------   ---------   ------------   -------   ---------              --------------
+    null        primitive   NilClass       null      nil                    'null'
+    boolean     primitive   Boolean        boolean   true                   'boolean'
+    int         primitive   Integer        integer   1                      'int'
+    long        primitive   Long           integer   1                      'long'
+    float       primitive   Float          number    1.1                    'float'
+    double      primitive   Double         number    1.1                    'double'
+    bytes       primitive   Binary         string    "\u00FF"               'bytes'
+    string      primitive   String         string    "foo"                  'string'
+
+    date        simple      Date           string    "2011-01-02"           'date'
+    time        simple      Time           string    "2011-01-02T03:04:05Z" 'time'
+    text        simple      Text           string    "long text"            'text'
+    regexp      simple      Regexp         string    "^hel*o newman"        'regexp'
+    url         simple      Url            string    "http://..."           'url'
+    file_path   simple      FilePath       string    "/tmp/foo"             'file_path'
+    epoch_time  simple      EpochTime      string    1312507492             'epoch_time'
+
+    array       container   ArrayOfXXX     array     [1,2]                  { 'type': 'array',  'items': 'int' }
+    map         container   HashOfXXX      object    { "a": 1 }             { 'type': 'map',    'values': 'int' }
+    enum        named       (EnumType)     string    "heads"                { 'type': 'enum',   'name': 'result', 'symbols': ['heads', 'tails'] }
+    fixed       named       (FixedType)    string    "\xBD\xF3)Q"           { 'type': 'fixed',  'name': 'crc32',  'length': 4 }
+    record      rec/named   (RecordType)   object    {"a": 1}               { 'type': 'record', 'name': 'bob',    'fields':[...] }
+    error       rec/named   (ErrorType)    object    {"err":"db on fire"}   { 'type': 'record', 'name': 'database_on_fire, 'fields':[...] }
+
+    union       union       <UnionType>    object                           [ 'long', { 'type': 'array', 'items': 'int' } ]
+
+#### Primitives (int, float, string, ...)
+
+* extend PrimitiveSchema
+* extend SimpleSchema
+  - `receive` is just new -- appropriate methods made for Integer, Float, and NilClass
+  - `to_schema` 
+
+#### Simples (date, symbol, ...)
+
+These are *not* present in the Avro spec.
+
+* extend SimpleSchema
+  - `receive`
+  - `to_schema`, `metatype`
+
+#### Container Schema (Array, Map)
+
+`ArraySchema` is a class whose instances validate 
+- after_receiver hook creates the corresponding class
+
+#### Named Schema (Enum, Fixed)
 
 
-* Schema Classifier
+#### Named 
 
-* `:defined_type` (string)
-* `:primitive_type`
-  - `null`  -- `Icss::Type::NilClass`
 
-* primitive types: Icss::{StringType, 
+#### Union Type
 
+  
 
 including X puts X's instance methods in with my instance methods
 extending X puts X's instance methods in with my OWN      methods
@@ -83,7 +175,6 @@ extending X puts X's instance methods in with my OWN      methods
     - kl.incl M::ArrayOfFooType          
     - kl.ext  M::ArrayOfFooSchema        `.items` (written in by Meta::ArrayTypeFactory)
     - ArrayType                          `.receive(arr)` (iterates .receive_item() over arr)
-
 
 New record type:
 

@@ -33,7 +33,7 @@
         end
 
         def to_schema
-          p [:to_schema, self, __FILE__]
+          # p [:to_schema, self, __FILE__]
           super.merge(
             :name      => typename,
             :namespace => namespace,
