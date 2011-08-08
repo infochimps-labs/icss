@@ -1,11 +1,19 @@
 module Icss
-  class Text       < ::Icss::StringType  ; include ::Icss::Meta::SimpleType ; end
-  class FilePath   < ::Icss::StringType  ; include ::Icss::Meta::SimpleType ; end
-  class Regexp     < ::Icss::StringType  ; include ::Icss::Meta::SimpleType ; end
-  class Url        < ::Icss::StringType  ; include ::Icss::Meta::SimpleType ; end
-  class EpochTime  < ::Icss::IntegerType ; include ::Icss::Meta::SimpleType ; end
+  module Meta
+    module ::Icss::Meta::TextSchema       ; def to_schema() :text       ; end ; end
+    module ::Icss::Meta::FilePathSchema   ; def to_schema() :file_path  ; end ; end
+    module ::Icss::Meta::RegexpSchema     ; def to_schema() :regexp     ; end ; end
+    module ::Icss::Meta::UrlSchema        ; def to_schema() :url        ; end ; end
+    module ::Icss::Meta::EpochTimeSchema  ; def to_schema() :epoch_time ; end ; end
+  end
 
-  Icss::SIMPLE_TYPES.merge!({
+  class Text       < ::String  ; self.extend ::Icss::Meta::TextSchema      ; end
+  class FilePath   < ::String  ; self.extend ::Icss::Meta::FilePathSchema  ; end
+  class Regexp     < ::String  ; self.extend ::Icss::Meta::RegexpSchema    ; end
+  class Url        < ::String  ; self.extend ::Icss::Meta::UrlSchema       ; end
+  class EpochTime  < ::Integer ; self.extend ::Icss::Meta::EpochTimeSchema ; end
+
+  ::Icss::SIMPLE_TYPES.merge!({
       :text       => ::Icss::Text,
       :file_path  => ::Icss::FilePath,
       :regexp     => ::Icss::Regexp,
@@ -13,60 +21,12 @@ module Icss
       :epoch_time => ::Icss::EpochTime,
     })
 
-  # Make fullname() return the symbol key given above
-  ::Icss::SIMPLE_TYPES.each do |sym, klass|
-    klass.class_eval{ klass.singleton_class.class_eval{ define_method(:fullname){ sym } } }
-  end
 
-  class BooleanType < BasicObject
-    attr_accessor :val
-    def initialize(val=nil)
-      self.val = val
-    end
-    def self.methods() ::TrueClass.methods | ::Icss::Meta::PrimitiveType::Schema.instance_methods ; end
-    def method_missing(meth, *args)
-      val.send(meth, *args)
-    end
-    def respond_to?(meth)
-      super(meth) || val.respond_to?(meth)
-    end
-    def inspect()
-      "<BooleanType #{val.inspect}>"
-    end
-    def class()   BooleanType          ; end
-    def !()           (! val)          ; end
-    def ==(other_val) val == other_val ; end
-    def !=(other_val) val != other_val ; end
-    def try_dup() BooleanType.new(val) ; end
-  end
-
-  # class Duration
-  #   def initialize(t1_t2)
-  #     receive_times(t1_t2)
-  #   end
+  # Datamapper also defines:
   #
-  #   def receive_times(t1_t2)
-  #     self.t1, self.t2 = t1_t2
-  #   end
+  #   Apikey BCryptHash URI UUID Slug CommaSeparatedList Csv IpAddress Json Yaml Enum Flag Discriminator
   #
-  #   def receive!(t1_t2)
-  #     receive_times(t1_t2)
-  #     super({})
-  #   end
-  # end
-
-  # class Apikey             < ::Icss::StringType ; end
-  # class BCryptHash         < ::Icss::StringType ; end
-  # class URI                < ::Icss::StringType ; end
-  # class UUID               < ::Icss::StringType ; end
-  # class Slug               < ::Icss::StringType ; end
-  # class CommaSeparatedList < ::Icss::StringType ; end
-  # class Csv                < ::Icss::StringType ; end
-  # class IpAddress          < ::Icss::StringType ; end
-  # class Json               < ::Icss::StringType ; end
-  # class Yaml               < ::Icss::StringType ; end
-  # class Enum ; end
-  # class Flag ; end
-  # class Discriminator ; end
+  # maybe someday we will too...
 
 end
+

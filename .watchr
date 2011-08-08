@@ -1,5 +1,14 @@
 # -*- ruby -*-
 
+
+# def run_spec(pattern, subdir = '')
+#   subdir << '/' unless subdir == '' || subdir =~ %r{./$}
+#   if !(files = Dir["spec/#{subdir}**/*#{pattern}*_spec.rb"]).empty?
+#     rspec(files)
+#   end
+# end
+
+
 def run_spec(file)
   unless File.exist?(file)
     puts "#{file} does not exist"
@@ -15,7 +24,7 @@ watch("notes.*/*.rb") do |match|
   system "bundle exec rspec #{match[0]}"
 end
 
-watch("spec/.*/*_spec\.rb") do |match|
+watch("spec/.*/.*_spec\.rb") do |match|
   run_spec match[0]
 end
 

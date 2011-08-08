@@ -10,7 +10,8 @@ require 'gorillib/metaprogramming/class_attribute'
 #
 require 'gorillib/hashlike'
 
-require 'time' # ain't that always the way
+require 'time' # yeah don't we always
+require 'date' # alone on a saturday night
 
 # require 'icss/message'
 # require 'icss/message/sample_message_call'

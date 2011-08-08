@@ -1,21 +1,29 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
+require 'time'
+require 'date'
 require 'icss/type'
+require 'icss/type/primitive_types'
 require 'icss/type/simple_types'
 
-SIMPLE_TYPES_TO_TEST = [
-  ::Icss::SymbolType, ::Icss::DateType, ::Icss::TimeType, ::Icss::Text,
-  ::Icss::FilePath, ::Icss::Regexp, ::Icss::Url, ::Icss::EpochTime,
-]
+SIMPLE_TYPES_TO_TEST = {
+  ::Symbol         => [Symbol,    :bob],  ::Date            => [Date, Date.today],
+  ::Time           => [Time,  Time.now],  ::Icss::Text      => [String, "blabla"],
+  ::Icss::FilePath => [String,  "/tmp"],  ::Icss::Regexp    => [String,  "hel*o"],
+  ::Icss::Url      => [String,"bit.ly"],  ::Icss::EpochTime => [Integer, Time.now.to_i],
+}
 
 describe 'Icss::SIMPLE_TYPES (non-primitive)' do
-  it('tests all of them'){ SIMPLE_TYPES_TO_TEST.map(&:to_s).sort.should == (::Icss::SIMPLE_TYPES.values - Icss::PRIMITIVE_TYPES.values).map(&:to_s).sort }
-  SIMPLE_TYPES_TO_TEST.each do |type_klass|
+  it('tests all of them'){ SIMPLE_TYPES_TO_TEST.keys.map(&:to_s).sort.should == (::Icss::SIMPLE_TYPES.values - Icss::PRIMITIVE_TYPES.values).map(&:to_s).sort }
+  SIMPLE_TYPES_TO_TEST.each do |type_klass, (parent_base_class, parent_instance)|
     context type_klass do
-      it 'is a simple type' do
-        type_klass.should     be_a( Icss::Meta::Type::Schema )
-        type_klass.should     be_a( Icss::Meta::SimpleType::Schema )
-        type_klass.should       <   Icss::Meta::Type
-        type_klass.should       <   Icss::Meta::SimpleType
+      it 'is named in Icss::SIMPLE_TYPES' do
+        typename = Icss::SIMPLE_TYPES.key(type_klass)
+        type_klass.to_schema == typename
+      end
+      it 'returns its avro name as its schema' do
+        schema = type_klass.to_schema
+        schema.should be_a(Symbol)
+        Icss::SIMPLE_TYPES[schema].should == type_klass
       end
       it 'is primitive? and simple?, but not record? or union?' do
         Icss::Meta::Type.primitive?( type_klass).should be_false
@@ -23,48 +31,17 @@ describe 'Icss::SIMPLE_TYPES (non-primitive)' do
         Icss::Meta::Type.union?(     type_klass).should be_false
         Icss::Meta::Type.record?(    type_klass).should be_false
       end
-      it 'is named in Icss::SIMPLE_TYPES' do
-        typename = Icss::SIMPLE_TYPES.key(type_klass)
-        type_klass.typename == typename
-      end
-      it 'has an empty namespace, and the fullname, schema and typename all match' do
-        typename = Icss::SIMPLE_TYPES.key(type_klass)
-        type_klass.fullname  == typename
-        type_klass.to_schema == typename
-        type_klass.typename  == typename
-      end
-    end
-  end
-end
 
-describe Icss::BooleanType do
-  let(:true_bool ){ Icss::BooleanType.new(true)  }
-  let(:false_bool){ Icss::BooleanType.new(false) }
-  it("has #class BooleanType" ){ (true_bool.class).should == Icss::BooleanType ; (false_bool.class).should == Icss::BooleanType }
-  describe 'mimicking true/false' do
-    it(":!"     ){ (! true_bool).should    == (! true)     ; (! false_bool).should    == (! false)     }
-    it(":nil?"  ){ (true_bool.nil?).should == (true.nil?)  ; (false_bool.nil?).should == (false.nil?)  }
-    it(":to_s"  ){ (true_bool.to_s).should == (true.to_s)  ; (false_bool.to_s).should == (false.to_s)  }
-    { :!=           => [true, false, nil],
-      :!~           => [true, false, nil],
-      :&            => [true, false, nil],
-      :<=>          => [true, false, nil],
-      :==           => [true, false, nil],
-      :===          => [true, false, nil],
-      :=~           => [true, false, nil],
-      :^            => [true, false, nil],
-      :eql?         => [true, false, nil],
-      :|            => [true, false, nil],
-      :instance_of? => [TrueClass, FalseClass, Object],
-      :is_a?        => [TrueClass, FalseClass, Object],
-      :kind_of?     => [TrueClass, FalseClass, Object],
-    }.each do |meth, meth_args|
-      it meth do
-        meth_args.each do |meth_arg|
-          true_bool.send( meth, meth_arg).should equal(true.send( meth, meth_arg))
-          false_bool.send(meth, meth_arg).should equal(false.send(meth, meth_arg))
-        end
+      it 'descends from a base type' do
+        type_klass.should be <= parent_base_class
+        type_klass.receive(parent_instance).should be_a(parent_base_class)
       end
+
+      it 'has .receive' do
+        obj = type_klass.receive(parent_instance)
+        obj.should be_a(type_klass) unless (type_klass == Icss::EpochTime)
+      end
+
     end
   end
 end
