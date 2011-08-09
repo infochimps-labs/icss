@@ -90,7 +90,7 @@ module Icss
     end
   end
 
-  NamedType.class_eval do
+  NamedSchema.class_eval do
     private
     def inspect_hsh
       super.merge( :namespace => @namespace )

@@ -1,111 +1,107 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 require 'icss/type'
 require 'icss/receiver_model/active_model_shim'
-require 'icss/type/named_type'
+require 'icss/type/primitive_types'
+require 'icss/type/simple_types'
+require 'icss/type/named_schema'
+require 'icss/type/has_fields'
+require 'icss/type/named_schema'
 require 'icss/type/record_type'
-require 'icss/type/type_factory'
 require 'icss/type/complex_types'
+require 'icss/type/type_factory'
 
-def compare_methods(klass_a, klass_b, obj_b=nil)
-  obj_b ||= klass_b.new
-  puts( "%-31s\tobj   \t%s"  % [klass_a.to_s[0..30], (klass_a.new.public_methods             - obj_b.public_methods    ).reject{|m| m.to_s[0..0] == '_' }.inspect]) if klass_a.respond_to?(:new)
-  puts( "%-31s\tslfinst\t%s" % [klass_a.to_s[0..30], (klass_a.instance_methods               - klass_b.instance_methods).reject{|m| m.to_s[0..0] == '_' }.inspect])
-  puts( "%-31s\tself \t%s"  % [klass_a.to_s[0..30], (klass_a.public_methods                 - klass_b.public_methods  ).reject{|m| m.to_s[0..0] == '_' }.inspect])
-  puts( "%-31s\tsgtncl\t%s"  % [klass_a.to_s[0..30], (klass_a.singleton_class.public_methods - klass_b.singleton_class.public_methods).reject{|m| m.to_s[0..0] == '_' }.inspect])
-  puts '---------------'
-end
-
-def show_anc_chain(klass_a)
-  puts ['klass ', klass_a.ancestors                .reject{|kl| kl.name =~ /^(RSpec|PP::ObjectMixin)/ }].join("\t")
-  puts ['sgtncl', klass_a.singleton_class.ancestors.reject{|kl| kl.name =~ /^(RSpec|PP::ObjectMixin)/ }].join("\t")
-end
-
-class BlankClass
-  include Icss::ReceiverModel::ActiveModelShim
-end
-
-
-class FooFactoryClass
-  include Icss::ReceiverModel::ActiveModelShim
-  include Icss::Meta::RecordType
-
-  field :syms, String, :validates => { :presence => true, :format => { :with => /^\w+$/ } }
-  validates :syms, :presence => true, :format => { :with => /^\w+$/ }
-
-  #
-  # modify object in place with new typecast values.
-  #
-  def self.inscribe_schema(mod, hsh={})
-    fields.each do |attr, schema|
-      if    hsh.has_key?(attr.to_sym) then val = hsh[attr.to_sym]
-      elsif hsh.has_key?(attr.to_s)   then val = hsh[attr.to_s]
-      else  next ; end
-      mod.class_eval{ define_method(attr){ val } }
+module Icss
+  module This
+    module That
+      class TheOther
+        extend Icss::Meta::NamedSchema
+        def self.receive(*args) self.new() end
+      end
     end
-    mod
   end
-
-end
-
-# module FooFactorySchema
-#   include Icss::Meta::RecordType
-#
-#   field :syms, String, :validates => { :presence => true, :format => { :with => /^\w+$/ } }
-#
-# end
-
-module FooType
-end
-
-class MyHappyEnum
-  extend FooType
+  Blinken = 7
+  class Entity
+    extend Icss::Meta::NamedSchema
+    def self.receive(*args) self.new() end
+  end
+  module Core
+    class Thing < Entity
+    end
+  end
 end
 
 describe 'complex types' do
-
-  describe 'whatever' do
-    compare_methods(FooFactoryClass, BlankClass, BlankClass.new)
-
-    compare_methods(FooType, BlankClass, BlankClass.new)
-
-    schema_hsh = { :syms => 'hello' }
-
-    foo_type_instance = FooFactoryClass.new
-    foo_type_instance.extend FooType
-    p [ foo_type_instance, foo_type_instance.valid?, foo_type_instance.errors ]
-
-    FooFactoryClass.inscribe_schema(FooType, schema_hsh)
-    foo_factory_instance = FooFactoryClass.new
-
-    p foo_factory_instance.syms
-    foo_factory_instance.extend(FooType)
-    p foo_factory_instance.syms
-    p [ foo_factory_instance, foo_factory_instance.valid?, foo_factory_instance.errors ]
-    p [ foo_type_instance, foo_type_instance.valid?, foo_type_instance.errors ]
+  before do
+    [ "Icss::ArrayOfInt",            "Icss::ArrayOfCore_Thing",           "Icss::ArrayOfThis_That_TheOther",
+      "Icss::Meta::ArrayOfIntType", "Icss::Meta::ArrayOfCore_ThingType", "Icss::Meta::ArrayOfThis_That_TheOtherType",
+    ].each do |const_name|
+      scopes = const_name.split(/::/); cc = scopes.pop ; mod = scopes.join('::').constantize;
+      mod.send(:remove_const, cc) if mod.const_defined?(cc)
+    end
   end
 
-  # describe Icss::Meta::ArrayType do
-  #   [
-  #     {:type => :array, :items => :'this.that.the_other'},
-  #     {:type => :array, :items => :'int'     },
-  #     {:type => :array, :items => :'core.place'},
-  #   ].each do |schema|
-  #     it 'round-trips the schema' do
-  #       arr_type = Icss::Meta::ArrayType.receive(schema)
-  #       arr_type.to_schema.should == schema
-  #     end
-  #
-  #     it 'is a descendent of Array' do
-  #       arr_type = Icss::Meta::ArrayType.receive(schema)
-  #       p [arr_type]
-  #       p [arr_type.valid?, arr_type.errors]
-  #       arr_type.should       <  Array
-  #       arr_type.new.should be_a(Array)
-  #       # compare_methods(arr_type, BlankClass.new, BlankClass.new)
-  #     end
-  #   end
-  #   #        compare_methods(arr_type, Array)
-  # end
+  describe Icss::Meta::ArraySchema::Writer do
+    [
+      [{:type => :array, :items => :'this.that.the_other'}, Icss::This::That::TheOther, ],
+      [{:type => :array, :items => :'int'     },            Integer, ],
+      [{:type => :array, :items => :'core.thing'},          Icss::Core::Thing, ],
+    ].each do |schema, expected_item_factory|
+      describe "With #{schema}" do
+        before do
+          @arr_klass = Icss::Meta::ArraySchema::Writer.receive_schema(schema)
+          @arr_schema_writer = @arr_klass._schema
+        end
+
+        it 'round-trips the schema' do
+          @arr_klass.to_schema.should == schema
+        end
+
+        it 'is a descendent of Array and its metatype' do
+          @arr_klass.should < Array
+          @arr_klass.should be_a Icss::Meta::ArraySchema
+        end
+
+        it 'has items and an item_factory' do
+          @arr_klass.should respond_to(:items)
+          @arr_klass.items.should == schema[:items]
+          @arr_klass.item_factory.should == expected_item_factory
+        end
+
+        it 'has schema_writer' do
+          @arr_schema_writer.type.should  == :array
+          @arr_schema_writer.items.should == schema[:items]
+          @arr_schema_writer.should be_valid
+          @arr_schema_writer.type = :YO_ADRIAN
+          @arr_schema_writer.should_not be_valid
+        end
+      end
+    end
+
+    context '.receive' do
+      it 'generates an instance of the type' do
+        Icss::Meta::ArraySchema::Writer.receive_schema({:type => :array, :items => :'int' })
+        inst = Icss::ArrayOfInt.receive([1, 2.0, nil, "4.5", "8", "fnord"])
+        inst.should be_a(Array)
+        inst.should be_a(Icss::ArrayOfInt)
+      end
+      it 'with nil or "" gives nil; with [] gives []' do
+        Icss::Meta::ArraySchema::Writer.receive_schema({:type => :array, :items => :'int' })
+        inst = Icss::ArrayOfInt.receive(nil)
+        inst.should be_nil
+        inst = Icss::ArrayOfInt.receive('')
+        inst.should be_nil
+        inst = Icss::ArrayOfInt.receive([])
+        inst.should == []
+        inst.should be_a(Icss::ArrayOfInt)
+      end
+      it 'applies the item_factory' do
+        Icss::Meta::ArraySchema::Writer.receive_schema({:type => :array, :items => :'int' })
+        inst = Icss::ArrayOfInt.receive([1, 2.0, nil, "4.5", "8", "fnord"])
+        inst.should eql([1, 2, nil, 4, 8, 0])  # (1 == 1.0) is true but 1.eql?(1.0) is false
+      end
+    end
+
+  end
 
   # describe Icss::Meta::HashType do
   #   [
@@ -143,3 +139,38 @@ describe 'complex types' do
   # end
 end
 
+
+    # it 'each core class .receive method' do
+    #   Symbol.receive('hi').should == :hi
+    #   Integer.receive(3.4).should == 3
+    #   Float.receive("4.5").should == 4.5
+    #   String.receive(4.5).should == "4.5"
+    #   Time.receive('1985-11-05T04:03:02Z').should == Time.parse('1985-11-05T04:03:02Z')
+    #   Date.receive('1985-11-05T04:03:02Z').should == Date.parse('1985-11-05')
+    #   Boolean.receive("false").should == false
+    #   NilClass.receive(nil).should == nil
+    # end
+
+    # describe 'type coercion' do
+    #   [
+    #
+    #     [Array,  ['this', 'that', 'thother'], ['this', 'that', 'thother'] ],
+    #     [Array,  ['this,that,thother'],       ['this,that,thother'] ],
+    #     [Array,   'this,that,thother',        ['this,that,thother'] ],
+    #     [Array,  'alone', ['alone'] ],
+    #     [Array,  '',      []        ],
+    #     [Array,  nil,     nil       ],
+    #     [Hash,   {:hi => 1}, {:hi => 1}], [Hash,   nil,     nil],    [Hash,   "",      {}], [Hash,   [],      {}], [Hash,   {},      {}],
+    #     [Object,  {:foo => [1]}, {:foo => [1]} ], [Object, nil, nil], [Object, 1, 1],
+    #   ].each do |type, orig, desired|
+    #     it_correctly_converts type, orig, desired
+    #   end
+
+      # describe 'controversially' do
+      #   [
+      #     [Hash,  ['does no type checking'],      ['does no type checking'] ],
+      #     [Hash,   'does no type checking',        'does no type checking'  ],
+      #   ].each do |type, orig, desired|
+      #     it_correctly_converts type, orig, desired
+      #   end
+      # end

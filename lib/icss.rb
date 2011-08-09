@@ -21,7 +21,7 @@ require 'date' # alone on a saturday night
 # require 'icss/protocol/code_asset'
 
 require 'icss/type'
-require 'icss/type/named_type'
+require 'icss/type/named_schema'
 require 'icss/type/record_type'
 require 'icss/type/type_factory'
 require 'icss/type/record_field'

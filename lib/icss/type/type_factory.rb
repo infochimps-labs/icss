@@ -44,7 +44,7 @@ module Icss
           typename = schema.to_sym
           if    PRIMITIVE_TYPES.has_key?(typename) then return [:primitive,    PRIMITIVE_TYPES[typename]]
           elsif SIMPLE_TYPES.has_key?(typename)    then return [:simple,       SIMPLE_TYPES[typename]]
-          else                                           return [:defined_type, typename] ; end
+          else                                          return [:defined_type, typename] ; end
         else
             return nil
         end
@@ -52,8 +52,12 @@ module Icss
 
     protected
 
+      def self.find_in_type_collection(type_collection, kind, typename)
+        type_collection[typename.to_sym] or raise(ArgumentError, "No such #{kind} type #{typename}")
+      end
+
       def self.receive_defined_type(schema)
-        Icss::Meta::NamedType.klassname_for(schema.to_sym).constantize
+        Icss::Meta::Type.klassname_for(schema.to_sym).constantize
       end
 
       def self.receive_union_type(schema)
@@ -64,16 +68,6 @@ module Icss
         schema.symbolize_keys!
         obj = klass.receive(schema)
       end
-
-      # def decorate_with_validators klass
-      #   fields.each do |field|
-      #     puts field.to_hash
-      #     if field.validates
-      #       puts field.validates
-      #       klass.validates(field.name.to_sym, field.validates)
-      #     end
-      #   end
-      # end
 
     end
   end

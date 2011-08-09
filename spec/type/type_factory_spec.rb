@@ -1,21 +1,11 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 require 'icss/type'
-require 'icss/type/named_type'
-require 'icss/type/record_type'
-require 'icss/type/field_decorators'
+require 'icss/type/primitive_types'
+require 'icss/type/simple_types'
+# require 'icss/type/has_fields'
 require 'icss/type/type_factory'
-require 'icss/type/complex_types'
 
 describe Icss::Meta::TypeFactory do
-
-  it 'whatever' do
-    p [EnumType.public_methods - Module.public_methods]
-    p [EnumType.public_methods - Class.public_methods]
-
-    p EnumType.to_schema
-    # FooType.extend(Icss::Meta::NamedType)
-    #p [FooType.namespace, FooType.typename, FooType.public_methods - Class.public_methods]
-  end
 
   module Icss
     module This
@@ -40,25 +30,24 @@ describe Icss::Meta::TypeFactory do
         Icss::Meta::TypeFactory.receive(al).should == kl
       end
     end
-    it 'on a named type' do
-      p [ Icss::This::That::TheOther.ancestors, (Icss::This::That::TheOther < Icss::Meta::RecordType) ]
-      Icss::Meta::TypeFactory.receive('this.that.the_other'     ).should == Icss::This::That::TheOther
-      Icss::Meta::TypeFactory.receive(Icss::This::That::TheOther).should == Icss::This::That::TheOther
-    end
-    it 'on a union type (array)' do
-      uu = Icss::Meta::TypeFactory.receive([ 'this.that.the_other', Integer ])
-      uu.should be_a(Icss::UnionType)
-    end
+    # it 'on a named type' do
+    #   Icss::Meta::TypeFactory.receive('this.that.the_other'     ).should == Icss::This::That::TheOther
+    #   Icss::Meta::TypeFactory.receive(Icss::This::That::TheOther).should == Icss::This::That::TheOther
+    # end
+    # it 'on a union type (array)' do
+    #   uu = Icss::Meta::TypeFactory.receive([ 'this.that.the_other', Integer ])
+    #   uu.should be_a(Icss::UnionType)
+    # end
   end
 
   TEST_SCHEMA = {
     Icss::This::That::TheOther                  => [:is_type, Icss::This::That::TheOther, Icss::This::That::TheOther],
-    [ 'int', 'string' ]                         => [:union_type, nil],
-    { 'type' => 'record', 'name' => 'bob' }     => [:named_type, Icss::Meta::RecordType],
-    { 'type' => 'map',   'values' => 'string' } => [:container_type, Icss::Meta::HashType],
-    { 'type' => 'array', 'items' => 'string' }  => [:container_type, Icss::Meta::ArrayType],
-    [ 'boolean', 'double', {'type' => 'array', 'items' => 'bytes'}] => [:union_type, nil],
-    { 'type' => 'enum',  'name' => 'Kind', 'symbols' => ['A','B','C']} => [:named_type, Icss::Meta::EnumType],
+    # [ 'int', 'string' ]                         => [:union_type, nil],
+    # { 'type' => 'record', 'name' => 'bob' }     => [:named_type, Icss::Meta::RecordType],
+    # { 'type' => 'map',   'values' => 'string' } => [:container_type, Icss::Meta::HashType],
+    # { 'type' => 'array', 'items' => 'string' }  => [:container_type, Icss::Meta::ArrayType],
+    # [ 'boolean', 'double', {'type' => 'array', 'items' => 'bytes'}] => [:union_type, nil],
+    # { 'type' => 'enum',  'name' => 'Kind', 'symbols' => ['A','B','C']} => [:named_type, Icss::Meta::EnumType],
     # { 'type' => 'fixed', 'name' => 'MD5',  'size' => 16} => [:named_type, Icss::Meta::FixedType],
     # { 'type' => 'map', 'values' => { 'name' => 'Foo', 'type' => 'record', 'fields' => [{'name' => 'label', 'type' => 'string'}]} } => [:container_type, Icss::HashType],
     # { 'type' => 'record','name' => 'Node', 'fields' => [
@@ -84,6 +73,9 @@ describe Icss::Meta::TypeFactory do
     end
   end
 
+end
+
+
   # context '.ensure_module_scope' do
   #   it 'adds a new child when parents exist' do
   #     Icss::This::That.should_not be_const_defined(:AlsoThis)
@@ -102,8 +94,6 @@ describe Icss::Meta::TypeFactory do
   #     Icss.send(:remove_const, :Winken)
   #   end
   # end
-
-end
 
 # describe Icss::Meta do
 #   before do
@@ -137,8 +127,8 @@ end
 #   #   [:name, :doc, :fields, :is_a, ]
 #   # end
 #   #
-#   # it "is an Icss::Meta::NamedType, an Icss::Meta::Type, and an Icss::Base" do
-#   #   Icss::Meta::RecordType.should < Icss::Meta::NamedType
+#   # it "is an Icss::Meta::NamedSchema, an Icss::Meta::Type, and an Icss::Base" do
+#   #   Icss::Meta::RecordType.should < Icss::Meta::NamedSchema
 #   #   Icss::Meta::RecordType.should < Icss::Meta::Type
 #   #   Icss::Meta::RecordType.should < Icss::Base
 #   # end

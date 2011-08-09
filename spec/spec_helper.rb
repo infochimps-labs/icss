@@ -1,4 +1,3 @@
-require 'rubygems'
 require 'spork'
 require 'rspec'
 
@@ -19,10 +18,10 @@ Spork.prefork do # Must restart for changes to config / code from libraries load
   require 'gorillib/hash/keys'
   require 'gorillib/hash/tree_merge'
   require 'gorillib/metaprogramming/class_attribute'
-  #
   require 'gorillib/hashlike'
 
-  require 'time' # ain't that always the way
+  # note: please do NOT include library methods here.
+  # They should be painfully explicity included in your specs.
 
   # Configure rspec
   RSpec.configure do |config|

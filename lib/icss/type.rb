@@ -2,6 +2,9 @@ module Icss
   module Meta
 
     module Type
+      #:nodoc:
+      NORMAL_NAMED_CONSTANT_RE = /\A[\w\:\.]+\z/
+
       # Turns a type name into its dotted (avro-style) name, regardless of its
       # current form.
       #
@@ -11,6 +14,7 @@ module Icss
       #    Icss::Meta::Type.fullname_for('this.that.the_other')        # 'this.that.the_other'
       #
       def self.fullname_for(klass_name)
+        return nil unless klass_name.present? && (klass_name.to_s =~ NORMAL_NAMED_CONSTANT_RE)
         klass_name.to_s.gsub(/^:*Icss::/, '').underscore.gsub(%r{/},".")
       end
 
@@ -24,6 +28,7 @@ module Icss
       #    Icss::Meta::Type.fullname_for("Icss::This::That::TheOther") # "Icss::This::That::TheOther"
       #
       def self.klassname_for(fullname)
+        return nil unless fullname.present? && (fullname.to_s =~ NORMAL_NAMED_CONSTANT_RE)
         nm = fullname.to_s.gsub(/^:*Icss:+/, '').
           gsub(%r{::},'.').
           split('.').map(&:camelize).join('::')
