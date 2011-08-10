@@ -129,16 +129,16 @@ module Icss
     #   "symbols" : ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]
     # }
     #
-    class EnumSchema
+    module EnumSchema
       def receive(raw)
-        return nil if raw.nil? || (raw == "")
-        obj = self.new
-        raw.each{|rk,rv| obj[rk] = value_factory.receive(rv) }
+        return nil if raw.blank?
+        obj = raw.to_sym
+        unless self.symbols.include?(obj) then raise ArgumentError, "Cannot receive #{raw}: must be one of #{symbols[0..2].join(',')}#{symbols.length > 3 ? ",..." : ""}" ; end
         obj
       end
 
       def to_schema()
-        (defined?(super) ? super() : {}).merge({ :type => self.type, :values => self.values })
+        { :type => self.type, :name => self.fullname, :symbols => self.symbols }
       end
 
       class Writer
@@ -148,16 +148,20 @@ module Icss
         #
         field :type,         Symbol, :validates => { :format => { :with => /^enum$/ } }
         field :name,         Symbol, :validates => { :format => { :with => /^enum$/ } }
-        field :symbols,      Array,  :items => Symbol, :required => true, :default => []
-        validates :type,    :presence => true, :format => { :with => /^map$/ }
+        field :symbols,      Array,  :items => Symbol, :required => true # , :default => []
+        validates :type,    :presence => true, :format => { :with => /^enum$/ }
         validates :name,    :presence => true
         validates :symbols, :presence => true
 
         # retrieve the
         def self.receive_schema(schema)
+
+          # schema[:symbols].map!(&:to_sym)
+
           schema_obj = self.receive(schema)
-          type_klass = Icss::Meta::NamedSchema.get_type_klass( name_for_klass(schema),  Hash )
-          type_klass.class_eval{ extend(::Icss::Meta::HashSchema) }
+          type_klass = Icss::Meta::NamedSchema.get_type_klass( schema[:name], Symbol )
+          type_klass.class_eval{ extend(::Icss::Meta::EnumSchema) }
+          type_klass.class_eval{ extend(::Icss::Meta::NamedSchema) }
           inscribe_schema(schema_obj, type_klass.singleton_class)
           type_klass
         end
@@ -227,20 +231,20 @@ module Icss
 
     unless defined?(CONTAINER_TYPES)
       ::Icss::CONTAINER_TYPES = {
-        :map     => Icss::HashSchema::Writer,
-        :Hash    => Icss::ArraySchema::Writer,
-        :array   => Icss::ArraySchema::Writer,
-        :Array   => Icss::ArraySchema::Writer,
+        :map     => Icss::Meta::HashSchema::Writer,
+        :Hash    => Icss::Meta::ArraySchema::Writer,
+        :array   => Icss::Meta::ArraySchema::Writer,
+        :Array   => Icss::Meta::ArraySchema::Writer,
         # :union   => Icss::UnionType,
       }.freeze
     end
 
     unless defined?(NAMED_TYPES)
       ::Icss::NAMED_TYPES      = {
-        # :fixed   => Icss::FixedType,
-        :enum    => Icss::EnumSchema,
-        # :record  => Icss::RecordType,
-        # :error   => Icss::ErrorType
+        # :fixed   => Icss::Meta::FixedType,
+        :enum    => Icss::Meta::EnumSchema,
+        # :record  => Icss::Meta::RecordType,
+        # :error   => Icss::Meta::ErrorType
       }.freeze
     end
 

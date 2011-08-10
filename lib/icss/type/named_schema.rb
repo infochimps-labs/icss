@@ -41,10 +41,9 @@ module Icss
       def to_schema
         # p [:to_schema, self, __FILE__]
         (defined?(super) ? super() : {}).merge(
-          :name      => typename,
-          :namespace => namespace,
+          :name      => fullname,
           :doc       => doc,
-          )
+          ).compact_blank
       end
 
       def inscribe_schema(schema_obj, klass)

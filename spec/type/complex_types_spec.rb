@@ -7,8 +7,8 @@ require 'icss/type/named_schema'
 require 'icss/type/has_fields'
 require 'icss/type/named_schema'
 require 'icss/type/record_type'
-# require 'icss/type/complex_types'
 require 'icss/type/type_factory'
+require 'icss/type/complex_types'
 
 module Icss
   module This
@@ -22,120 +22,6 @@ module Icss
   end
   module Core
     class Thing < Entity
-    end
-  end
-end
-
-module Icss
-  module Meta
-
-    # -------------------------------------------------------------------------
-    #
-    # Container Types (array, map and union)
-    #
-
-    #
-    # ArraySchema describes an Avro Array type.
-    #
-    # Arrays use the type name "array" and support a single attribute:
-    #
-    # * items: the schema of the array's items.
-    #
-    # @example, an array of strings is declared with:
-    #
-    #     {"type": "array", "items": "string"}
-    #
-    module ArraySchema
-      def receive(raw)
-        return nil if raw.nil? || (raw == "")
-        self.new( raw.map{|raw_item| item_factory.receive(raw_item) } )
-      end
-
-      def to_schema()
-        (defined?(super) ? super() : {}).merge({ :type => self.type, :items => self.items })
-      end
-
-      class Writer
-        extend Icss::Meta::NamedSchema
-        include Icss::Meta::RecordType
-        include Icss::ReceiverModel::ActiveModelShim
-        #
-        field :type,         Symbol, :validates => { :format => { :with => /^array$/ } }
-        field :items,        Object
-        field :item_factory, Icss::Meta::TypeFactory
-        after_receive{|hsh| self.receive_item_factory(self.items) }
-        #
-        validates :type,  :presence => true, :format => { :with => /^array$/ }
-        validates :items, :presence => true
-
-        def self.name_for_klass(schema)
-          return unless schema[:items].respond_to?(:to_sym)
-          slug = Icss::Meta::Type.klassname_for(schema[:items].to_sym).gsub(/^:*Icss:+/, '').gsub(/:+/, '_')
-          "ArrayOf#{slug}"
-        end
-
-        # retrieve the
-        def self.receive_schema(schema)
-          schema_obj = self.receive(schema)
-          type_klass = Icss::Meta::NamedSchema.get_type_klass( name_for_klass(schema),  Array)
-          type_klass.class_eval{ extend(::Icss::Meta::ArraySchema) }
-          inscribe_schema(schema_obj, type_klass.singleton_class)
-          type_klass
-        end
-      end
-    end
-
-    #
-    # Describes an Avro Enum type.
-    #
-    # Enums use the type name "enum" and support the following attributes:
-    #
-    # name:       a string providing the name of the enum (required).
-    # namespace:  a string that qualifies the name;
-    # doc:        a string providing documentation to the user of this schema (optional).
-    # symbols:    an array, listing symbols, as strings or ruby symbols (required). All
-    #             symbols in an enum must be unique; duplicates are prohibited.
-    #
-    # For example, playing card suits might be defined with:
-    #
-    # { "type": "enum",
-    #   "name": "Suit",
-    #   "symbols" : ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]
-    # }
-    #
-    class EnumSchema
-      def receive(raw)
-        return nil if raw.nil? || (raw == "")
-        obj = self.new
-        raw.each{|rk,rv| obj[rk] = value_factory.receive(rv) }
-        obj
-      end
-
-      def to_schema()
-        (defined?(super) ? super() : {}).merge({ :type => self.type, :values => self.values })
-      end
-
-      class Writer
-        extend Icss::Meta::NamedSchema
-        include Icss::Meta::RecordType
-        include Icss::ReceiverModel::ActiveModelShim
-        #
-        field :type,         Symbol, :validates => { :format => { :with => /^enum$/ } }
-        field :name,         Symbol, :validates => { :format => { :with => /^enum$/ } }
-        field :symbols,      Object # :array,  :items => Symbol, :required => true, :default => []
-        validates :type,    :presence => true, :format => { :with => /^map$/ }
-        validates :name,    :presence => true
-        validates :symbols, :presence => true
-
-        # retrieve the
-        def self.receive_schema(schema)
-          schema_obj = self.receive(schema)
-          type_klass = Icss::Meta::NamedSchema.get_type_klass( name_for_klass(schema),  Hash )
-          type_klass.class_eval{ extend(::Icss::Meta::HashSchema) }
-          inscribe_schema(schema_obj, type_klass.singleton_class)
-          type_klass
-        end
-      end
     end
   end
 end
@@ -277,6 +163,7 @@ describe 'complex types' do
   #   end
   # end
 
+
   describe Icss::Meta::EnumSchema::Writer do
     [
       {:type => :enum, :name => 'games.coin_outcomes', :symbols => %w[heads tails sideways]},
@@ -290,23 +177,23 @@ describe 'complex types' do
         end
 
         it 'round-trips the schema' do
-          @arr_klass.to_schema.should == schema
+          expected_schema = schema.dup
+          expected_schema[:symbols] = expected_schema[:symbols].map(&:to_sym)
+          @arr_klass.to_schema.should == expected_schema
         end
 
         it 'is a descendent of Enum and of its metatype' do
-          @arr_klass.should < Enum
+          @arr_klass.should < Symbol
           @arr_klass.should be_a Icss::Meta::EnumSchema
         end
 
-        it 'has values and an value_factory' do
-          @arr_klass.should respond_to(:values)
-          @arr_klass.values.should == schema[:values]
-          @arr_klass.value_factory.should == expected_value_factory
+        it 'has symbols' do
+          @arr_klass.should respond_to(:symbols)
+          @arr_schema_writer.symbols.should == schema[:symbols].map(&:to_sym)
         end
 
         it 'has schema_writer' do
-          @arr_schema_writer.type.should  == :map
-          @arr_schema_writer.values.should == schema[:values]
+          @arr_schema_writer.type.should  == :enum
           @arr_schema_writer.should be_valid
           @arr_schema_writer.type = :YO_ADRIAN
           @arr_schema_writer.should_not be_valid
@@ -315,24 +202,6 @@ describe 'complex types' do
     end
 
     context '.receive' do
-      it 'generates an instance of the type' do
-        Icss::Meta::EnumSchema::Writer.receive_schema({:type => :map, :values => :'int' })
-        inst = Icss::EnumOfInt.receive([1, 2.0, nil, "4.5", "8", "fnord"])
-        inst.should be_a(Enum)
-        inst.should be_a(Icss::EnumOfInt)
-      end
-      it 'with nil or "" gives nil; with [] gives []' do
-        Icss::Meta::EnumSchema::Writer.receive_schema({:type => :map, :values => :'int' })
-        inst = Icss::EnumOfInt.receive(nil)
-        inst.should be_nil
-        inst = Icss::EnumOfInt.receive('')
-        inst.should be_nil
-        inst = Icss::EnumOfInt.receive([])
-        inst.should == {}
-        inst = Icss::EnumOfInt.receive({})
-        inst.should == {}
-        inst.should be_a(Icss::EnumOfInt)
-      end
       it 'applies the value_factory' do
         Icss::Meta::EnumSchema::Writer.receive_schema({:type => :enum, :name => 'games.coin_outcomes', :symbols => %w[heads tails sideways]})
         inst = Icss::Games::CoinOutcomes.receive('heads')
@@ -341,16 +210,16 @@ describe 'complex types' do
         inst.should == :heads    ; inst.should be_a(Symbol)
         inst = Icss::Games::CoinOutcomes.receive('sideways')
         inst.should == :sideways ; inst.should be_a(Symbol)
-        inst = Icss::Games::CoinOutcomes.receive('ace_of_spades')
       end
       it 'raises an error on non-included value' do
         Icss::Meta::EnumSchema::Writer.receive_schema({:type => :enum, :name => 'games.coin_outcomes', :symbols => %w[heads tails sideways]})
-        lambda{ Icss::Games::CoinOutcomes.receive('ace_of_spades') }.should raise_error(ArgumentError, /enum cannot receive ace_of_spades: must be one of \[heads,tails,sideways\]/)
+        lambda{ Icss::Games::CoinOutcomes.receive('ace_of_spades') }.should raise_error(ArgumentError, /Cannot receive ace_of_spades: must be one of heads,tails,sideways/)
+        Icss::Meta::EnumSchema::Writer.receive_schema({:type => :enum, :name => 'herb.caen', :symbols => %w[parseley sage rosemary thyme]})
+        lambda{ Icss::Herb::Caen.receive('weed') }.should raise_error(ArgumentError, /Cannot receive weed: must be one of parseley,sage,rosemary,.../)
       end
       it 'raises an error on non-symbolizable value' do
         Icss::Meta::EnumSchema::Writer.receive_schema({:type => :enum, :name => 'games.coin_outcomes', :symbols => %w[heads tails sideways]})
-        lambda{ Icss::Games::CoinOutcomes.receive(77) }.should raise_error(ArgumentError, /enum cannot receive ace_of_spades: must be one of \[heads,tails,sideways\]/)
-        lambda{ Icss::Games::CoinOutcomes.receive([]) }.should raise_error(ArgumentError, /enum cannot receive ace_of_spades: must be one of \[heads,tails,sideways\]/)
+        lambda{ Icss::Games::CoinOutcomes.receive(77) }.should raise_error(NoMethodError, /undefined method .to_sym/)
       end
       it 'returns nil on nil/empty string value' do
         Icss::Meta::EnumSchema::Writer.receive_schema({:type => :enum, :name => 'games.coin_outcomes', :symbols => %w[heads tails sideways]})

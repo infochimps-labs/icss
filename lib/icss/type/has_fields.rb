@@ -197,6 +197,9 @@ module Icss
         # they have an :of => SomeType option.
         p [__FILE__, type, schema, type.respond_to?(:receive)]
         case
+        when type == Array
+          receiver_type = Icss::Meta::ArraySchema::Writer.receive_schema(schema)
+          lambda{|val|  receiver_type.receive(val) }
         # when schema[:of] && (type == Array)
         #   receiver_type = schema[:of]
         #   lambda{|v|  v.nil? ? nil : v.map{|el| receiver_type.receive(el) } }
