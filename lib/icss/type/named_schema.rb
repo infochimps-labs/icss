@@ -47,7 +47,6 @@ module Icss
           )
       end
 
-
       def inscribe_schema(schema_obj, klass)
         klass.class_eval{ define_method(:_schema){ schema_obj } }
         field_names.each do |attr|

@@ -14,15 +14,11 @@ module Icss
   module This
     module That
       class TheOther
-        extend Icss::Meta::NamedSchema
-        def self.receive(*args) self.new() end
       end
     end
   end
   Blinken = 7
   class Entity
-    extend Icss::Meta::NamedSchema
-    def self.receive(*args) self.new() end
   end
   module Core
     class Thing < Entity
@@ -32,10 +28,9 @@ end
 
 describe 'complex types' do
   before do
-    [ "Icss::ArrayOfInt",            "Icss::ArrayOfCore_Thing",           "Icss::ArrayOfThis_That_TheOther",
-      "Icss::Meta::ArrayOfIntType", "Icss::Meta::ArrayOfCore_ThingType", "Icss::Meta::ArrayOfThis_That_TheOtherType",
-    ].each do |const_name|
-      scopes = const_name.split(/::/); cc = scopes.pop ; mod = scopes.join('::').constantize;
+    [ Icss.constants, Icss::Meta.constants ].flatten.each do |const|
+      next unless (const.to_s =~ /(Array|Hash)Of\w+/)
+      scopes = const.to_s.split(/::/); cc = scopes.pop ; mod = scopes.join('::').constantize;
       mod.send(:remove_const, cc) if mod.const_defined?(cc)
     end
   end
@@ -92,6 +87,8 @@ describe 'complex types' do
         inst.should be_nil
         inst = Icss::ArrayOfInt.receive([])
         inst.should == []
+        inst = Icss::ArrayOfInt.receive({})
+        inst.should == []
         inst.should be_a(Icss::ArrayOfInt)
       end
       it 'applies the item_factory' do
@@ -100,28 +97,71 @@ describe 'complex types' do
         inst.should eql([1, 2, nil, 4, 8, 0])  # (1 == 1.0) is true but 1.eql?(1.0) is false
       end
     end
-
   end
 
-  # describe Icss::Meta::HashType do
-  #   [
-  #     {:type => :map, :values => :'this.that.the_other'},
-  #     {:type => :map, :values => :'int'     },
-  #     {:type => :map, :values => :'core.place'},
-  #   ].each do |schema|
-  #     it 'round-trips the schema' do
-  #       hsh_type = Icss::Meta::HashType.receive(schema)
-  #       hsh_type.to_schema.should == schema
-  #       compare_methods(hsh_type, Hash, Hash.new)
-  #     end
-  #
-  #     it 'is a descendent of Hash' do
-  #       hsh_type = Icss::Meta::HashType.receive(schema)
-  #       hsh_type.should       <  Hash
-  #       hsh_type.new.should be_a(Hash)
-  #     end
-  #   end
-  # end
+  describe Icss::Meta::HashSchema::Writer do
+    [
+      [{:type => :map, :values => :'this.that.the_other'}, Icss::This::That::TheOther, ],
+      [{:type => :map, :values => :'int'     },            Integer,           ],
+      [{:type => :map, :values => :'core.thing'},          Icss::Core::Thing, ],
+    ].each do |schema, expected_value_factory|
+      describe "With #{schema}" do
+        before do
+          @arr_klass = Icss::Meta::HashSchema::Writer.receive_schema(schema)
+          @arr_schema_writer = @arr_klass._schema
+        end
+
+        it 'round-trips the schema' do
+          @arr_klass.to_schema.should == schema
+        end
+
+        it 'is a descendent of Hash and of its metatype' do
+          @arr_klass.should < Hash
+          @arr_klass.should be_a Icss::Meta::HashSchema
+        end
+
+        it 'has values and an value_factory' do
+          @arr_klass.should respond_to(:values)
+          @arr_klass.values.should == schema[:values]
+          @arr_klass.value_factory.should == expected_value_factory
+        end
+
+        it 'has schema_writer' do
+          @arr_schema_writer.type.should  == :map
+          @arr_schema_writer.values.should == schema[:values]
+          @arr_schema_writer.should be_valid
+          @arr_schema_writer.type = :YO_ADRIAN
+          @arr_schema_writer.should_not be_valid
+        end
+      end
+    end
+
+    context '.receive' do
+      it 'generates an instance of the type' do
+        Icss::Meta::HashSchema::Writer.receive_schema({:type => :map, :values => :'int' })
+        inst = Icss::HashOfInt.receive([1, 2.0, nil, "4.5", "8", "fnord"])
+        inst.should be_a(Hash)
+        inst.should be_a(Icss::HashOfInt)
+      end
+      it 'with nil or "" gives nil; with [] gives []' do
+        Icss::Meta::HashSchema::Writer.receive_schema({:type => :map, :values => :'int' })
+        inst = Icss::HashOfInt.receive(nil)
+        inst.should be_nil
+        inst = Icss::HashOfInt.receive('')
+        inst.should be_nil
+        inst = Icss::HashOfInt.receive([])
+        inst.should == {}
+        inst = Icss::HashOfInt.receive({})
+        inst.should == {}
+        inst.should be_a(Icss::HashOfInt)
+      end
+      it 'applies the value_factory' do
+        Icss::Meta::HashSchema::Writer.receive_schema({:type => :map, :values => :'int' })
+        inst = Icss::HashOfInt.receive({ :a => 1, 'b' => 2.0, :c => nil, 'd' => "4.5", :e => "8", 99 => "fnord"})
+        inst.should eql({ :a => 1, 'b' => 2, :c => nil, 'd' => 4, :e => 8, 99 => 0})
+      end
+    end
+  end
 
   # context Icss::Meta::UnionType do
   #   it 'receives simple unions' do

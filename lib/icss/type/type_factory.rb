@@ -1,4 +1,11 @@
 module Icss
+
+  class Dummy
+    def self.receive(obj)
+      obj
+    end
+  end
+
   module Meta
     module TypeFactory
 
@@ -18,6 +25,7 @@ module Icss
       def self.receive schema
         flavor, klass = classify_schema_declaration(schema)
         case flavor
+        when :dummy        then return schema
         when :is_type         then return schema
         when :union_type      then return receive_union_type(schema)
         when :container_type  then return receive_complex_type(schema, klass)
@@ -31,7 +39,8 @@ module Icss
       end
 
       def self.classify_schema_declaration(schema)
-        if    schema.is_a?(Class)                   then return [:is_type,    schema]
+        if    [Object,Icss::Dummy].include?(schema) then return [:dummy,   Icss::Dummy]
+        elsif schema.is_a?(Class)                   then return [:is_type,    schema]
         elsif schema.is_a?(Array)                   then return [:union_type, nil]
         elsif schema.respond_to?(:each_pair)
           schema.symbolize_keys!

@@ -28,6 +28,10 @@ watch("spec/.*/.*_spec\.rb") do |match|
   run_spec match[0]
 end
 
+watch("spec/.*_spec\.rb") do |match|
+  run_spec match[0]
+end
+
 watch("lib/icss/(.*/)?(.*)\.rb") do |match|
   run_spec %{spec/#{match[1]}#{match[2]}_spec.rb}
 end
