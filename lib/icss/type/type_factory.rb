@@ -40,6 +40,11 @@ module Icss
 
       def self.classify_schema_declaration(schema)
         if    [Object,Icss::Dummy].include?(schema) then return [:dummy,   Icss::Dummy]
+        elsif schema.respond_to?(:to_sym)
+          typename = schema.to_sym
+          if    PRIMITIVE_TYPES.has_key?(typename) then return [:primitive,    PRIMITIVE_TYPES[typename]]
+          elsif SIMPLE_TYPES.has_key?(typename)    then return [:simple,       SIMPLE_TYPES[typename]]
+          else                                          return [:defined_type, typename] ; end
         elsif schema.is_a?(Class)                   then return [:is_type,    schema]
         elsif schema.is_a?(Array)                   then return [:union_type, nil]
         elsif schema.respond_to?(:each_pair)
@@ -49,11 +54,6 @@ module Icss
           elsif NAMED_TYPES.has_key?(typename)      then return [:named_type,     NAMED_TYPES[typename]]
           else raise
           end
-        elsif schema.respond_to?(:to_sym)
-          typename = schema.to_sym
-          if    PRIMITIVE_TYPES.has_key?(typename) then return [:primitive,    PRIMITIVE_TYPES[typename]]
-          elsif SIMPLE_TYPES.has_key?(typename)    then return [:simple,       SIMPLE_TYPES[typename]]
-          else                                          return [:defined_type, typename] ; end
         else
             return nil
         end

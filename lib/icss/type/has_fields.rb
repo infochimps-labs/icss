@@ -195,13 +195,14 @@ module Icss
       def self.receiver_body_for type, schema
         # Note that Array and Hash only need (and only get) special treatment when
         # they have an :of => SomeType option.
+        p [__FILE__, type, schema, type.respond_to?(:receive)]
         case
-        when schema[:of] && (type == Array)
-          receiver_type = schema[:of]
-          lambda{|v|  v.nil? ? nil : v.map{|el| receiver_type.receive(el) } }
-        when schema[:of] && (type == Hash)
-          receiver_type = schema[:of]
-          lambda{|v| v.nil? ? nil : v.inject({}){|h, (el,val)| h[el] = receiver_type.receive(val); h } }
+        # when schema[:of] && (type == Array)
+        #   receiver_type = schema[:of]
+        #   lambda{|v|  v.nil? ? nil : v.map{|el| receiver_type.receive(el) } }
+        # when schema[:of] && (type == Hash)
+        #   receiver_type = schema[:of]
+        #   lambda{|v| v.nil? ? nil : v.inject({}){|h, (el,val)| h[el] = receiver_type.receive(val); h } }
         when type == Object
           lambda{|v| v }
         when type.respond_to?(:receive)

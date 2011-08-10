@@ -47,7 +47,7 @@ describe Icss::Meta::TypeFactory do
     # { 'type' => 'map',   'values' => 'string' } => [:container_type, Icss::Meta::HashType],
     # { 'type' => 'array', 'items' => 'string' }  => [:container_type, Icss::Meta::ArrayType],
     # [ 'boolean', 'double', {'type' => 'array', 'items' => 'bytes'}] => [:union_type, nil],
-    # { 'type' => 'enum',  'name' => 'Kind', 'symbols' => ['A','B','C']} => [:named_type, Icss::Meta::EnumType],
+    # { 'type' => 'enum',  'name' => 'Kind', 'symbols' => ['A','B','C']} => [:named_type, Icss::Meta::EnumSchema],
     # { 'type' => 'fixed', 'name' => 'MD5',  'size' => 16} => [:named_type, Icss::Meta::FixedType],
     # { 'type' => 'map', 'values' => { 'name' => 'Foo', 'type' => 'record', 'fields' => [{'name' => 'label', 'type' => 'string'}]} } => [:container_type, Icss::HashType],
     # { 'type' => 'record','name' => 'Node', 'fields' => [

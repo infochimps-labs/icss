@@ -15,11 +15,11 @@ module Icss
         raise ArgumentError, "Can't receive (it isn't hashlike): {#{hsh.inspect}}" unless hsh.respond_to?(:[]) && hsh.respond_to?(:has_key?)
         self.class.fields.each do |attr, field_schema|
           rcv_method = "receive_#{attr}"
-          next if
+          next unless self.respond_to?(rcv_method)
           if    hsh.has_key?(attr.to_sym) then val = hsh[attr.to_sym]
           elsif hsh.has_key?(attr.to_s)   then val = hsh[attr.to_s]
           else  next ; end
-          self.send("receive_#{attr}", val)
+          self.send(rcv_method, val)
         end
         self.class.after_receivers.each do |after_receiver|
           self.instance_exec(hsh, &after_receiver)

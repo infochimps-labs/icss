@@ -1,12 +1,6 @@
 module Icss
   module Meta
 
-    module TypeFactory
-      def self.receive(*args)
-        super(*args)
-      end
-    end
-
     # -------------------------------------------------------------------------
     #
     # Container Types (array, map and union)
@@ -135,7 +129,7 @@ module Icss
     #   "symbols" : ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]
     # }
     #
-    class EnumType
+    class EnumSchema
       def receive(raw)
         return nil if raw.nil? || (raw == "")
         obj = self.new
@@ -230,25 +224,25 @@ module Icss
     #   end
     # end
     #
-    # unless defined?(CONTAINER_TYPES)
-    #   ::Icss::CONTAINER_TYPES = {
-    #     :map     => Icss::HashType,
-    #     :array   => Icss::ArraySchema,
-    #     :union   => Icss::UnionType,
-    #   }.freeze
-    # end
 
-    #   module ::Icss::Meta::DurationSchema   ; def to_schema() :duration   ; end ; end
-    # class Duration   < ::Object  ; self.extend ::Icss::Meta::DurationSchema  ; end
+    unless defined?(CONTAINER_TYPES)
+      ::Icss::CONTAINER_TYPES = {
+        :map     => Icss::HashSchema::Writer,
+        :Hash    => Icss::ArraySchema::Writer,
+        :array   => Icss::ArraySchema::Writer,
+        :Array   => Icss::ArraySchema::Writer,
+        # :union   => Icss::UnionType,
+      }.freeze
+    end
 
-    # unless defined?(NAMED_TYPES)
-    #   ::Icss::NAMED_TYPES      = {
-    #     :fixed   => Icss::FixedType,
-    #     :enum    => Icss::EnumType,
-    #     :record  => Icss::RecordType,
-    #     :error   => Icss::ErrorType
-    #   }.freeze
-    # end
+    unless defined?(NAMED_TYPES)
+      ::Icss::NAMED_TYPES      = {
+        # :fixed   => Icss::FixedType,
+        :enum    => Icss::EnumSchema,
+        # :record  => Icss::RecordType,
+        # :error   => Icss::ErrorType
+      }.freeze
+    end
+
   end
-
 end
