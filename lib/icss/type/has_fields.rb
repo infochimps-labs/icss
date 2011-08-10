@@ -1,3 +1,5 @@
+require 'icss/type/type_factory'
+
 module Icss
   module Meta
     module HasFields
@@ -145,7 +147,8 @@ module Icss
       # @return [Object] a new instance
       def receive *args
         hsh = args.pop
-        raise ArgumentError, "Can't receive (it isn't hashlike): {#{hsh.inspect}} -- the hsh should be the *last* arg" unless hsh.respond_to?(:[]) && hsh.respond_to?(:has_key?)
+        # p ['receive', __FILE__, hsh, self, args]
+        raise ArgumentError, "Can't receive (it isn't hashlike): '#{hsh.inspect}' -- the hsh should be the *last* arg" unless hsh.respond_to?(:[]) && hsh.respond_to?(:has_key?)
         obj = self.new(*args)
         obj.receive!(hsh)
       end
@@ -185,7 +188,8 @@ module Icss
       def rcvr_remaining(field_name, schema={})
         field(field_name, Hash, schema)
         after_receive do |hsh|
-          remaining_vals_hsh = hsh.reject{|k,v| (receiver_attrs.include?(k)) || (k.to_s =~ /^_/) }
+          hsh.symbolize_keys!
+          remaining_vals_hsh = hsh.reject{|k,v| (self.class.fields.include?(k)) || (k.to_s =~ /^_/) }
           self.send("receive_#{field_name}", remaining_vals_hsh)
         end
       end
@@ -193,22 +197,18 @@ module Icss
     protected
 
       def self.receiver_body_for type, schema
-        # Note that Array and Hash only need (and only get) special treatment when
-        # they have an :of => SomeType option.
-        p [__FILE__, type, schema, type.respond_to?(:receive)]
+        print [__FILE__, __LINE__, type, schema].map(&:inspect).join("\t")
+        klass = Icss::Meta::TypeFactory.receive(schema.merge( :type => type ))
+        puts  ["===>", type, schema, klass].map(&:inspect).join("\t")
+        return lambda{|v| v.blank? ? nil : klass.receive(v) }
+
         case
         when type == Array
           receiver_type = Icss::Meta::ArraySchema::Writer.receive_schema(schema)
           lambda{|val|  receiver_type.receive(val) }
         when type == Hash
           receiver_type = Icss::Meta::HashSchema::Writer.receive_schema(schema)
-          lambda{|val|  receiver_type.receive(val) }
-        # when schema[:of] && (type == Array)
-        #   receiver_type = schema[:of]
-        #   lambda{|v|  v.nil? ? nil : v.map{|el| receiver_type.receive(el) } }
-        # when schema[:of] && (type == Hash)
-        #   receiver_type = schema[:of]
-        #   lambda{|v| v.nil? ? nil : v.inject({}){|h, (el,val)| h[el] = receiver_type.receive(val); h } }
+          lambda{|val| receiver_type.receive(val) }
         when type == Object
           lambda{|v| v }
         when type.respond_to?(:receive)

@@ -39,26 +39,12 @@ class ::Symbol                  ; self.extend ::Icss::Meta::SymbolSchema   ; end
 class ::Time                    ; self.extend ::Icss::Meta::TimeSchema     ; end
 class ::Date                    ; self.extend ::Icss::Meta::DateSchema     ; end
 
-unless defined?(::Icss::PRIMITIVE_TYPES)
-  ::Icss::PRIMITIVE_TYPES = {
-    :null     => ::NilClass,
-    :boolean  => ::Boolean,
-    :int      => ::Integer,
-    :long     => ::Long,
-    :float    => ::Float,
-    :double   => ::Double,
-    :string   => ::String,
-    :bytes    => ::Binary,
-  }.freeze
-end
-
-unless defined?(::Icss::SIMPLE_TYPES)
-  ::Icss::SIMPLE_TYPES = ::Icss::PRIMITIVE_TYPES.merge({
-      :symbol => ::Symbol,
-      :time   => ::Time,
-      :date   => ::Date,
-    })
-end
+::Icss::SIMPLE_TYPES.merge!(::Icss::PRIMITIVE_TYPES)
+::Icss::SIMPLE_TYPES.merge!({
+    :symbol => ::Symbol,
+    :time   => ::Time,
+    :date   => ::Date,
+  })
 
 class Boolean < BasicObject
   attr_accessor :val

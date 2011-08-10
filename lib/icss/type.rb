@@ -1,4 +1,54 @@
 module Icss
+
+  # full definitions in type/primitive_types.rb
+  class ::Boolean < ::BasicObject ; end
+  class ::Long    < ::Integer     ; end
+  class ::Double  < ::Float       ; end
+  class ::Binary  < ::String      ; end
+
+  # full definitions in type/record_type.rb and type/complex_types.rb
+  module Meta
+    module RecordType  ; class Schema ; class Writer ; end ; end ; end
+    module ErrorType   ; class Schema ; class Writer ; end ; end ; end
+    module HashSchema  ; class Writer ; end ; end
+    module ArraySchema ; class Writer ; end ; end
+    module FixedSchema ; class Writer ; end ; end
+    module EnumSchema  ; class Writer ; end ; end
+    module UnionSchema ; class Writer ; end ; end
+  end
+
+  ::Icss::SIMPLE_TYPES    = {} unless defined?( ::Icss::SIMPLE_TYPES  )
+  ::Icss::COMPLEX_TYPES   = {} unless defined?( ::Icss::COMPLEX_TYPES )
+  ::Icss::RECORD_TYPES    = {} unless defined?( ::Icss::RECORD_TYPES  )
+  ::Icss::UNION_TYPES     = {} unless defined?( ::Icss::UNION_TYPES   )
+  ::Icss::FACTORY_TYPES   = {} unless defined?( ::Icss::FACTORY_TYPES )
+
+  unless defined?(::Icss::PRIMITIVE_TYPES)
+    ::Icss::PRIMITIVE_TYPES = {
+      :null     => ::NilClass,
+      :boolean  => ::Boolean,
+      :int      => ::Integer,
+      :long     => ::Long,
+      :float    => ::Float,
+      :double   => ::Double,
+      :string   => ::String,
+      :bytes    => ::Binary,
+    }.freeze
+  end
+  ::Icss::COMPLEX_TYPES.merge!({
+      :record  => Icss::Meta::RecordType::Schema::Writer,
+      :error   => Icss::Meta::ErrorType::Schema::Writer,
+      :map     => Icss::Meta::HashSchema::Writer,
+      Hash     => Icss::Meta::HashSchema::Writer,
+      :array   => Icss::Meta::ArraySchema::Writer,
+      Array    => Icss::Meta::ArraySchema::Writer,
+      :fixed   => Icss::Meta::FixedSchema::Writer,
+      :enum    => Icss::Meta::EnumSchema::Writer,
+    })
+  ::Icss::UNION_TYPES.merge!({
+      :union   => Icss::Meta::UnionSchema::Writer,
+    })
+
   module Meta
 
     module Type

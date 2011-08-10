@@ -15,7 +15,6 @@ module Icss
       ruby_klass_scope_names[0..-2].inject(Object) do |parent_module, module_name|
         new_parent   = "::#{parent_module}::#{module_name}".constantize rescue nil
         new_parent ||= parent_module.const_set(module_name.to_sym, Module.new)
-        # p [parent_module, new_parent, module_name]
         new_parent
       end
     end

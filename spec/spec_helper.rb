@@ -9,6 +9,8 @@ Spork.prefork do # Must restart for changes to config / code from libraries load
   $LOAD_PATH.unshift(ENV.root_path('lib'))
   Dir[ENV.root_path('spec/support/matchers/*.rb')].each {|f| require f}
 
+  require 'awesome_print'
+
   require 'gorillib/object/blank'
   require 'gorillib/string/inflections'
   require 'gorillib/string/constantize'

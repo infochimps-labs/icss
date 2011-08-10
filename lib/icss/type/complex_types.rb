@@ -20,7 +20,7 @@ module Icss
     module ArraySchema
       def receive(raw)
         return nil if raw.nil? || (raw == "")
-        self.new( raw.map{|raw_item| item_factory.receive(raw_item) } )
+        self.new( raw.map{|raw_item| p [__FILE__, self, raw, item_factory] ; item_factory.receive(raw_item) } )
       end
 
       def to_schema()
@@ -32,6 +32,7 @@ module Icss
         include Icss::Meta::RecordType
         include Icss::ReceiverModel::ActiveModelShim
         #
+        field :name,         String
         field :type,         Symbol, :validates => { :format => { :with => /^array$/ } }
         field :items,        Object
         field :item_factory, Icss::Meta::TypeFactory
@@ -41,8 +42,10 @@ module Icss
         validates :items, :presence => true
 
         def self.name_for_klass(schema)
-          return unless schema[:items].respond_to?(:to_sym)
-          slug = Icss::Meta::Type.klassname_for(schema[:items].to_sym).gsub(/^:*Icss:+/, '').gsub(/:+/, '_')
+          return schema[:name] if schema.has_key?(:name)
+          return unless schema[:items].is_a?(Module) || schema[:items].respond_to?(:to_sym)
+          items_type_name = schema[:items].to_s.to_sym
+          slug = Icss::Meta::Type.klassname_for(items_type_name).gsub(/^:*Icss:+/, '').gsub(/:+/, '_')
           "ArrayOf#{slug}"
         end
 
@@ -56,6 +59,13 @@ module Icss
         end
       end
     end
+
+
+    # ___________________________________________________________________________
+    #
+    # TODO: make hash have a :pivot_key_field that drops the key in as an
+    # attribute on each value
+    #
 
     #
     # HashType describes an Avro Map type (which corresponds to a Ruby
@@ -86,11 +96,11 @@ module Icss
         include Icss::Meta::RecordType
         include Icss::ReceiverModel::ActiveModelShim
         #
-        field :type,         Symbol, :validates => { :format => { :with => /^map$/ } }
+        field :type,          Symbol, :validates => { :format => { :with => /^map$/ } }
         field :values,        Object
         field :value_factory, Icss::Meta::TypeFactory
         after_receive{|hsh| self.receive_value_factory(self.values) }
-        #
+
         validates :type,  :presence => true, :format => { :with => /^map$/ }
         validates :values, :presence => true
 
@@ -109,7 +119,7 @@ module Icss
           type_klass
         end
       end
-    end
+    end # HashSchema
 
     #
     # Describes an Avro Enum type.
@@ -148,16 +158,13 @@ module Icss
         #
         field :type,         Symbol, :validates => { :format => { :with => /^enum$/ } }
         field :name,         Symbol, :validates => { :format => { :with => /^enum$/ } }
-        field :symbols,      Array,  :items => Symbol, :required => true # , :default => []
+        field :symbols,      :array,  :items => Symbol, :required => true # , :default => []
         validates :type,    :presence => true, :format => { :with => /^enum$/ }
         validates :name,    :presence => true
         validates :symbols, :presence => true
 
         # retrieve the
         def self.receive_schema(schema)
-
-          # schema[:symbols].map!(&:to_sym)
-
           schema_obj = self.receive(schema)
           type_klass = Icss::Meta::NamedSchema.get_type_klass( schema[:name], Symbol )
           type_klass.class_eval{ extend(::Icss::Meta::EnumSchema) }
@@ -166,7 +173,7 @@ module Icss
           type_klass
         end
       end
-    end
+    end # EnumSchema
 
     #
     # Describes an Avro Fixed type.
@@ -223,30 +230,11 @@ module Icss
     #   end
     #   def to_schema
     #     embedded_types.zip(declaration_flavors).map do |t,fl|
-    #       [:named_type].include?(fl) ? t.name : t.to_schema
+    #       [:complex_type].include?(fl) ? t.name : t.to_schema
     #     end
     #   end
     # end
     #
-
-    unless defined?(CONTAINER_TYPES)
-      ::Icss::CONTAINER_TYPES = {
-        :map     => Icss::Meta::HashSchema::Writer,
-        :Hash    => Icss::Meta::ArraySchema::Writer,
-        :array   => Icss::Meta::ArraySchema::Writer,
-        :Array   => Icss::Meta::ArraySchema::Writer,
-        # :union   => Icss::UnionType,
-      }.freeze
-    end
-
-    unless defined?(NAMED_TYPES)
-      ::Icss::NAMED_TYPES      = {
-        # :fixed   => Icss::Meta::FixedType,
-        :enum    => Icss::Meta::EnumSchema,
-        # :record  => Icss::Meta::RecordType,
-        # :error   => Icss::Meta::ErrorType
-      }.freeze
-    end
-
   end
+
 end

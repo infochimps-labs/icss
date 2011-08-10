@@ -39,7 +39,6 @@ module Icss
       end
       #
       def to_schema
-        # p [:to_schema, self, __FILE__]
         (defined?(super) ? super() : {}).merge(
           :name      => fullname,
           :doc       => doc,
@@ -68,7 +67,7 @@ module Icss
       # If no superklass is given, Icss::Entity is used.
       def self.make(fullname, superklass)
         meta_module = get_meta_module(fullname)
-        klass       = get_type_klass( fullname, superklass)
+        klass       = get_type_klass(fullname, superklass)
         klass.class_eval{ include(meta_module) }
         [klass, meta_module]
       end

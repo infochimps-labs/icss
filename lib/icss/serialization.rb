@@ -24,3 +24,19 @@ module Icss
     end
   end
 end
+
+
+module Icss::ReceiverModel
+  def as_json(*args)
+    to_hash.compact_blank
+  end
+  def to_json(*args)
+    JSON.pretty_generate( as_json.to_json(*args) )
+  end
+end
+
+class Time
+  def to_json
+    self.iso8601
+  end
+end

@@ -1,7 +1,8 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 require 'icss/type'
+require 'icss/type/primitive_types'
+require 'icss/type/simple_types'
 require 'icss/type/named_schema'
-require 'icss/entity'
 
 describe Icss::Meta::NamedSchema do
 
@@ -17,9 +18,9 @@ describe Icss::Meta::NamedSchema do
 
   context '.make' do
     it 'succeeds when the class already exists' do
-      klass, meta_module = Icss::Meta::NamedSchema.make('this.that.the_other', Array)
+      mock_class = mock("does not use superklass")
+      klass, meta_module = Icss::Meta::NamedSchema.make('this.that.the_other', mock_class)
       klass.should be_a(Class)
-      klass.should be < Class
       klass.name.should == 'Icss::This::That::TheOther'
       meta_module.should be_a(Module)
       meta_module.name.should == 'Icss::Meta::This::That::TheOtherType'
@@ -32,7 +33,7 @@ describe Icss::Meta::NamedSchema do
       Icss::Meta::YourMom::Wears::CombatBootsType.class.should == Module
       Icss::Meta::YourMom::Wears.class.should                  == Module
       Icss::YourMom::Wears::CombatBoots.class.should           == Class
-      Icss::YourMom::Wears.class.should                        == Modules
+      Icss::YourMom::Wears.class.should                        == Module
       Icss::Meta.send(:remove_const, :YourMom)
       Icss.send(:remove_const, :YourMom)
     end

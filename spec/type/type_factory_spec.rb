@@ -1,9 +1,17 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 require 'icss/type'
+require 'icss/receiver_model/active_model_shim'
 require 'icss/type/primitive_types'
 require 'icss/type/simple_types'
-# require 'icss/type/has_fields'
+require 'icss/type/named_schema'
+require 'icss/type/has_fields'
+require 'icss/type/named_schema'
+require 'icss/type/record_type'
 require 'icss/type/type_factory'
+require 'icss/type/complex_types'
+
+require 'awesome_print'
+
 
 describe Icss::Meta::TypeFactory do
 
@@ -17,58 +25,79 @@ describe Icss::Meta::TypeFactory do
     Blinken = 7
   end
 
-  context '.receive' do
-    it 'on a primitive type' do
-      Icss::PRIMITIVE_TYPES.each do |al, kl|
-        Icss::Meta::TypeFactory.receive(al).should == kl
-      end
-      Icss::Meta::TypeFactory.receive('string').should == String
-      Icss::Meta::TypeFactory.receive('int'   ).should == Integer
-    end
-    it 'on a simple type' do
-      Icss::SIMPLE_TYPES.each do |al, kl|
-        Icss::Meta::TypeFactory.receive(al).should == kl
-      end
-    end
-    # it 'on a named type' do
-    #   Icss::Meta::TypeFactory.receive('this.that.the_other'     ).should == Icss::This::That::TheOther
-    #   Icss::Meta::TypeFactory.receive(Icss::This::That::TheOther).should == Icss::This::That::TheOther
-    # end
-    # it 'on a union type (array)' do
-    #   uu = Icss::Meta::TypeFactory.receive([ 'this.that.the_other', Integer ])
-    #   uu.should be_a(Icss::UnionType)
-    # end
-  end
+  # context '.receive' do
+  #   it 'on a primitive type' do
+  #     Icss::PRIMITIVE_TYPES.each do |al, kl|
+  #       Icss::Meta::TypeFactory.receive(al).should == kl
+  #     end
+  #     Icss::Meta::TypeFactory.receive('string').should == String
+  #     Icss::Meta::TypeFactory.receive('int'   ).should == Integer
+  #   end
+  #   it 'on a simple type' do
+  #     Icss::SIMPLE_TYPES.each do |al, kl|
+  #       Icss::Meta::TypeFactory.receive(al).should == kl
+  #     end
+  #   end
+  #   # it 'on a named type' do
+  #   #   Icss::Meta::TypeFactory.receive('this.that.the_other'     ).should == Icss::This::That::TheOther
+  #   #   Icss::Meta::TypeFactory.receive(Icss::This::That::TheOther).should == Icss::This::That::TheOther
+  #   # end
+  #   # it 'on a union type (array)' do
+  #   #   uu = Icss::Meta::TypeFactory.receive([ 'this.that.the_other', Integer ])
+  #   #   uu.should be_a(Icss::UnionType)
+  #   # end
+  # end
 
   TEST_SCHEMA = {
-    Icss::This::That::TheOther                  => [:is_type, Icss::This::That::TheOther, Icss::This::That::TheOther],
-    # [ 'int', 'string' ]                         => [:union_type, nil],
-    # { 'type' => 'record', 'name' => 'bob' }     => [:named_type, Icss::Meta::RecordType],
-    # { 'type' => 'map',   'values' => 'string' } => [:container_type, Icss::Meta::HashType],
-    # { 'type' => 'array', 'items' => 'string' }  => [:container_type, Icss::Meta::ArrayType],
-    # [ 'boolean', 'double', {'type' => 'array', 'items' => 'bytes'}] => [:union_type, nil],
-    # { 'type' => 'enum',  'name' => 'Kind', 'symbols' => ['A','B','C']} => [:named_type, Icss::Meta::EnumSchema],
-    # { 'type' => 'fixed', 'name' => 'MD5',  'size' => 16} => [:named_type, Icss::Meta::FixedType],
-    # { 'type' => 'map', 'values' => { 'name' => 'Foo', 'type' => 'record', 'fields' => [{'name' => 'label', 'type' => 'string'}]} } => [:container_type, Icss::HashType],
-    # { 'type' => 'record','name' => 'Node', 'fields' => [
-    #     { 'name' => 'label',    'type' => 'string'}, { 'name' => 'children', 'type' => {'type' => 'array', 'items' => 'Node'}}]} => [:named_type, Icss::Meta::RecordType],
-    # 'string' => [:primitive, String], :string => [:primitive, String], :date => [:simple, Date], 'time' => [:simple, Time],
-    # 'this.that.the_other' => [:defined_type, :'this.that.the_other'],
+    :primitive => {
+      'int'                      => Integer,
+      'string'                   => String,
+      :string                    => String,
+    },
+    :simple => {
+      :date                      => Date,
+      'time'                     => Time,
+    },
+    :is_type => {
+      Icss::This::That::TheOther => Icss::This::That::TheOther,
+    },
+    :defined_type => {
+      'this.that.the_other'      => :'this.that.the_other',
+    },
+    :complex_type => {
+      # Complex Container Types: map, array, enum, fixed
+      { 'type' => 'map',     'values' => 'string' } => 'Icss::Meta::HashSchema::Writer',
+      { 'type' => 'array',   'items' => 'string'  } => 'Icss::Meta::ArraySchema::Writer',
+      { 'type' => 'enum',    'name'  => 'Kind', 'symbols' => ['A','B','C']} => Icss::Meta::EnumSchema::Writer,
+      # { 'type' => 'fixed', 'name' => 'MD5',  'size' => 16} => Icss::Meta::FixedType,
+      { 'type' => 'record', 'name'  => 'bob'      } => Icss::Meta::RecordType,
+      # { 'type' => 'record','name' => 'Node', 'fields' => [
+      # { 'name' => 'label',    'type' => 'string'}, { 'name' => 'children', 'type' => {'type' => 'array', 'items' => 'Node'}}]} => Icss::Meta::RecordType,
+      # { 'type' => 'map', 'values' => { 'name' => 'Foo', 'type' => 'record', 'fields' => [{'name' => 'label', 'type' => 'string'}]} } => Icss::HashType,
+    },
+    :union_type => {
+      # [ 'boolean', 'double', {'type' => 'array', 'items' => 'bytes'}] => nil,
+      # [ 'int', 'string' ]            => nil,
+    },
   }
-
   context '.classify_schema_declaration' do
-    TEST_SCHEMA.each do |schema_dec, schema_result|
-      expected_schema_flavor, expected_schema_klass = schema_result[0..1]
+    TEST_SCHEMA.each do |schema_dec, (expected_schema_flavor, expected_schema_klass)|
       it "returns #{expected_schema_flavor} for #{schema_dec.inspect[0..60]}" do
-        Icss::Meta::TypeFactory.classify_schema_declaration(schema_dec).should == [expected_schema_flavor, expected_schema_klass]
+        # ap [schema_dec, expected_schema_flavor, expected_schema_klass]
+
+        schema_flavor, schema_klass = Icss::Meta::TypeFactory.classify_schema_declaration(schema_dec)
+        ap [__FILE__, 'WHAT WHAT', schema_flavor, schema_klass]
+        schema_flavor.should        == expected_schema_flavor
+        schema_klass.to_s.should    == expected_schema_klass.to_s
       end
     end
   end
 
   context '.receive' do
-    TEST_SCHEMA.each do |schema_dec, schema_flavor|
+    TEST_SCHEMA.each do |schema_dec, (expected_schema_flavor, expected_schema_klass)|
       it "successfully for #{schema_dec.inspect[0..60]}" do
-        Icss::Meta::TypeFactory.receive(schema_dec)
+        klass = Icss::Meta::TypeFactory.receive(schema_dec)
+        ap [__FILE__, 'YAY YAY', klass, schema_dec]
       end
     end
   end

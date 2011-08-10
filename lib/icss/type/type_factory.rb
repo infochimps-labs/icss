@@ -1,13 +1,28 @@
 module Icss
 
-  class Dummy
+  class IdenticalFactory
     def self.receive(obj)
       obj
     end
   end
+  class HashlikeFactory < IdenticalFactory
+  end
+  class ArrayFactory < IdenticalFactory
+  end
 
   module Meta
     module TypeFactory
+
+
+      ::Icss::FACTORY_TYPES.merge!({
+        Icss::Meta::TypeFactory => Icss::Meta::TypeFactory,
+        Object => Icss::IdenticalFactory,
+        Hash   => Icss::HashlikeFactory,
+        Array  => Icss::ArrayFactory,
+        Icss::IdenticalFactory => Icss::IdenticalFactory,
+        Icss::HashlikeFactory  => Icss::HashlikeFactory,
+        Icss::ArrayFactory     => Icss::ArrayFactory,
+      })
 
       #
       # Avro Schema Declaration
@@ -24,14 +39,15 @@ module Icss
       #
       def self.receive schema
         flavor, klass = classify_schema_declaration(schema)
+        # ap [__FILE__, 'tf', flavor, schema, klass]
         case flavor
-        when :dummy        then return schema
-        when :is_type         then return schema
-        when :union_type      then return receive_union_type(schema)
-        when :container_type  then return receive_complex_type(schema, klass)
-        when :named_type      then return receive_complex_type(schema, klass)
         when :primitive       then return klass
         when :simple          then return klass
+        when :is_type         then return klass
+        when :factory         then return klass
+        when :complex_type    then return receive_complex_type(schema, klass)
+        when :union_type      then return receive_union_type(schema)
+        when :record_type     then return receive_union_type(schema)
         when :defined_type    then return receive_defined_type(schema)
         else
           raise ArgumentError, %Q{Can not create #{schema.inspect}: should be the handle for a named type; an array (representing a union type); one of #{SIMPLE_TYPES.keys.join(',')}; or a schema of the form {"type": "typename" ...attributes...}.}
@@ -39,23 +55,30 @@ module Icss
       end
 
       def self.classify_schema_declaration(schema)
-        if    [Object,Icss::Dummy].include?(schema) then return [:dummy,   Icss::Dummy]
-        elsif schema.respond_to?(:to_sym)
-          typename = schema.to_sym
-          if    PRIMITIVE_TYPES.has_key?(typename) then return [:primitive,    PRIMITIVE_TYPES[typename]]
-          elsif SIMPLE_TYPES.has_key?(typename)    then return [:simple,       SIMPLE_TYPES[typename]]
-          else                                          return [:defined_type, typename] ; end
-        elsif schema.is_a?(Class)                   then return [:is_type,    schema]
-        elsif schema.is_a?(Array)                   then return [:union_type, nil]
-        elsif schema.respond_to?(:each_pair)
+
+        if schema.respond_to?(:each_pair)
           schema.symbolize_keys!
-          typename = schema[:type].to_sym
-          if    CONTAINER_TYPES.has_key?(typename)  then return [:container_type, CONTAINER_TYPES[typename]]
-          elsif NAMED_TYPES.has_key?(typename)      then return [:named_type,     NAMED_TYPES[typename]]
-          else raise
-          end
+          type = schema[:type]
         else
-            return nil
+          type = schema
+        end
+        type = type.to_sym if type.respond_to?(:to_sym)
+
+        # pp [__FILE__, 'classify_schema_declaration', schema, type, ::Icss::COMPLEX_TYPES]
+
+        if    schema.is_a?(Array)                   then return [:union_type, nil]
+        elsif type.respond_to?(:each_pair)        then
+          p ['recursing!', type, schema];
+          return Icss::Meta::TypeFactory.receive(type)
+        elsif ::Icss::FACTORY_TYPES.include?(type)   then return [:factory,    FACTORY_TYPES[type]]
+        elsif ::Icss::PRIMITIVE_TYPES.has_key?(type) then return [:primitive,  PRIMITIVE_TYPES[type]]
+        elsif ::Icss::SIMPLE_TYPES.has_key?(type)    then return [:simple,     SIMPLE_TYPES[type]]
+        elsif ::Icss::COMPLEX_TYPES.has_key?(type)   then return [:complex_type, COMPLEX_TYPES[type]]
+        elsif ::Icss::RECORD_TYPES.has_key?(type)    then return [:record_type, RECORD_TYPES[type]]
+        elsif ::Icss::UNION_TYPES.has_key?(type)     then return [:union_type, UNION_TYPES[type]]
+        elsif type.is_a?(Module)                     then return [:is_type,    type]
+        else
+          return [:defined_type, type]
         end
       end
 
@@ -73,9 +96,9 @@ module Icss
         Icss::Meta::UnionType.receive(schema)
       end
 
-      def self.receive_complex_type(schema, klass)
-        schema.symbolize_keys!
-        obj = klass.receive(schema)
+      def self.receive_complex_type(schema, schema_writer)
+        klass = schema_writer.receive_schema(schema)
+        klass
       end
 
     end

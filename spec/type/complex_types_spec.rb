@@ -10,6 +10,8 @@ require 'icss/type/record_type'
 require 'icss/type/type_factory'
 require 'icss/type/complex_types'
 
+require 'awesome_print'
+
 module Icss
   module This
     module That
@@ -46,22 +48,18 @@ describe 'complex types' do
           @arr_klass = Icss::Meta::ArraySchema::Writer.receive_schema(schema)
           @arr_schema_writer = @arr_klass._schema
         end
-
         it 'round-trips the schema' do
           @arr_klass.to_schema.should == schema
         end
-
         it 'is a descendent of Array and its metatype' do
           @arr_klass.should < Array
           @arr_klass.should be_a Icss::Meta::ArraySchema
         end
-
         it 'has items and an item_factory' do
           @arr_klass.should respond_to(:items)
           @arr_klass.items.should == schema[:items]
           @arr_klass.item_factory.should == expected_item_factory
         end
-
         it 'has schema_writer' do
           @arr_schema_writer.type.should  == :array
           @arr_schema_writer.items.should == schema[:items]
@@ -99,69 +97,65 @@ describe 'complex types' do
     end
   end
 
-  # describe Icss::Meta::HashSchema::Writer do
-  #   [
-  #     [{:type => :map, :values => :'this.that.the_other'}, Icss::This::That::TheOther, ],
-  #     [{:type => :map, :values => :'int'     },            Integer,           ],
-  #     [{:type => :map, :values => :'core.thing'},          Icss::Core::Thing, ],
-  #   ].each do |schema, expected_value_factory|
-  #     describe "With #{schema}" do
-  #       before do
-  #         @arr_klass = Icss::Meta::HashSchema::Writer.receive_schema(schema)
-  #         @arr_schema_writer = @arr_klass._schema
-  #       end
-  #
-  #       it 'round-trips the schema' do
-  #         @arr_klass.to_schema.should == schema
-  #       end
-  #
-  #       it 'is a descendent of Hash and of its metatype' do
-  #         @arr_klass.should < Hash
-  #         @arr_klass.should be_a Icss::Meta::HashSchema
-  #       end
-  #
-  #       it 'has values and an value_factory' do
-  #         @arr_klass.should respond_to(:values)
-  #         @arr_klass.values.should == schema[:values]
-  #         @arr_klass.value_factory.should == expected_value_factory
-  #       end
-  #
-  #       it 'has schema_writer' do
-  #         @arr_schema_writer.type.should  == :map
-  #         @arr_schema_writer.values.should == schema[:values]
-  #         @arr_schema_writer.should be_valid
-  #         @arr_schema_writer.type = :YO_ADRIAN
-  #         @arr_schema_writer.should_not be_valid
-  #       end
-  #     end
-  #   end
-  #
-  #   context '.receive' do
-  #     it 'generates an instance of the type' do
-  #       Icss::Meta::HashSchema::Writer.receive_schema({:type => :map, :values => :'int' })
-  #       inst = Icss::HashOfInt.receive([1, 2.0, nil, "4.5", "8", "fnord"])
-  #       inst.should be_a(Hash)
-  #       inst.should be_a(Icss::HashOfInt)
-  #     end
-  #     it 'with nil or "" gives nil; with [] gives []' do
-  #       Icss::Meta::HashSchema::Writer.receive_schema({:type => :map, :values => :'int' })
-  #       inst = Icss::HashOfInt.receive(nil)
-  #       inst.should be_nil
-  #       inst = Icss::HashOfInt.receive('')
-  #       inst.should be_nil
-  #       inst = Icss::HashOfInt.receive([])
-  #       inst.should == {}
-  #       inst = Icss::HashOfInt.receive({})
-  #       inst.should == {}
-  #       inst.should be_a(Icss::HashOfInt)
-  #     end
-  #     it 'applies the value_factory' do
-  #       Icss::Meta::HashSchema::Writer.receive_schema({:type => :map, :values => :'int' })
-  #       inst = Icss::HashOfInt.receive({ :a => 1, 'b' => 2.0, :c => nil, 'd' => "4.5", :e => "8", 99 => "fnord"})
-  #       inst.should eql({ :a => 1, 'b' => 2, :c => nil, 'd' => 4, :e => 8, 99 => 0})
-  #     end
-  #   end
-  # end
+  describe Icss::Meta::HashSchema::Writer do
+    [
+      [{:type => :map, :values => :'this.that.the_other'}, Icss::This::That::TheOther, ],
+      [{:type => :map, :values => :'int'     },            Integer,           ],
+      [{:type => :map, :values => :'core.thing'},          Icss::Core::Thing, ],
+    ].each do |schema, expected_value_factory|
+      describe "With #{schema}" do
+        before do
+          @arr_klass = Icss::Meta::HashSchema::Writer.receive_schema(schema)
+          @arr_schema_writer = @arr_klass._schema
+        end
+        it 'round-trips the schema' do
+          @arr_klass.to_schema.should == schema
+        end
+        it 'is a descendent of Hash and of its metatype' do
+          @arr_klass.should < Hash
+          @arr_klass.should be_a Icss::Meta::HashSchema
+        end
+        it 'has values and an value_factory' do
+          @arr_klass.should respond_to(:values)
+          @arr_klass.values.should == schema[:values]
+          @arr_klass.value_factory.should == expected_value_factory
+        end
+        it 'has schema_writer' do
+          @arr_schema_writer.type.should  == :map
+          @arr_schema_writer.values.should == schema[:values]
+          @arr_schema_writer.should be_valid
+          @arr_schema_writer.type = :YO_ADRIAN
+          @arr_schema_writer.should_not be_valid
+        end
+      end
+    end
+
+    context '.receive' do
+      it 'generates an instance of the type' do
+        Icss::Meta::HashSchema::Writer.receive_schema({:type => :map, :values => :'int' })
+        inst = Icss::HashOfInt.receive([1, 2.0, nil, "4.5", "8", "fnord"])
+        inst.should be_a(Hash)
+        inst.should be_a(Icss::HashOfInt)
+      end
+      it 'with nil or "" gives nil; with [] gives []' do
+        Icss::Meta::HashSchema::Writer.receive_schema({:type => :map, :values => :'int' })
+        inst = Icss::HashOfInt.receive(nil)
+        inst.should be_nil
+        inst = Icss::HashOfInt.receive('')
+        inst.should be_nil
+        inst = Icss::HashOfInt.receive([])
+        inst.should == {}
+        inst = Icss::HashOfInt.receive({})
+        inst.should == {}
+        inst.should be_a(Icss::HashOfInt)
+      end
+      it 'applies the value_factory' do
+        Icss::Meta::HashSchema::Writer.receive_schema({:type => :map, :values => :'int' })
+        inst = Icss::HashOfInt.receive({ :a => 1, 'b' => 2.0, :c => nil, 'd' => "4.5", :e => "8", 99 => "fnord"})
+        inst.should eql({ :a => 1, 'b' => 2, :c => nil, 'd' => 4, :e => 8, 99 => 0})
+      end
+    end
+  end
 
 
   describe Icss::Meta::EnumSchema::Writer do
@@ -175,23 +169,19 @@ describe 'complex types' do
           @arr_klass = Icss::Meta::EnumSchema::Writer.receive_schema(schema)
           @arr_schema_writer = @arr_klass._schema
         end
-
         it 'round-trips the schema' do
           expected_schema = schema.dup
           expected_schema[:symbols] = expected_schema[:symbols].map(&:to_sym)
           @arr_klass.to_schema.should == expected_schema
         end
-
         it 'is a descendent of Enum and of its metatype' do
           @arr_klass.should < Symbol
           @arr_klass.should be_a Icss::Meta::EnumSchema
         end
-
         it 'has symbols' do
           @arr_klass.should respond_to(:symbols)
           @arr_schema_writer.symbols.should == schema[:symbols].map(&:to_sym)
         end
-
         it 'has schema_writer' do
           @arr_schema_writer.type.should  == :enum
           @arr_schema_writer.should be_valid
