@@ -74,7 +74,8 @@ module Icss
       #
       def []=(key, val)
         key = convert_key(key)
-        self.send("#{key}=", val)
+        self.send("#{key}=", val) if respond_to?("#{key}=")
+        val
       end
 
       # Hashlike#delete
