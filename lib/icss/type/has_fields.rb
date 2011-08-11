@@ -175,7 +175,6 @@ module Icss
         end
       end
 
-
       #
       # Defines a receiver for attributes sent to receive! that are
       # * not defined as receivers

@@ -39,7 +39,9 @@ module Icss
         end
 
         class Writer < ::Icss::Meta::NamedSchema::Writer
-          field :fields, Array
+          field :fields,           Array
+          field :is_a,             :array, :items => Icss::Meta::TypeFactory
+          field :_domain_id_field, Icss::Meta::TypeFactory
 
           def self.inscribe_schema(schema_obj, type_schema)
             type_schema.singleton_class.class_eval{ define_method(:_schema){ schema_obj } }
@@ -55,7 +57,10 @@ module Icss
           def self.receive_schema(schema)
             schema_obj = self.receive(schema)
             schema_obj.fullname ||= get_klass_name(schema)
-            type_klass = Icss::Meta::NamedSchema.get_type_klass(schema_obj.fullname, Object)
+            ap [__FILE__, schema_obj.is_a, schema_obj, self.fields]
+            superklass = schema_obj.is_a.first || Object
+            warn "No multiple inheritance yet" if schema_obj.is_a.length > 1
+            type_klass = Icss::Meta::NamedSchema.get_type_klass(schema_obj.fullname, superklass)
             type_klass.class_eval{ include(::Icss::Meta::RecordType) }
             #
             inscribe_schema(schema_obj, type_klass)

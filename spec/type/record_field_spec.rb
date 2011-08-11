@@ -10,6 +10,19 @@ require 'icss/type/type_factory'
 require 'icss/type/complex_types'
 require 'icss/type/record_field'
 
+
+module Icss
+  module This
+    module That
+      class TheOther
+        def bob
+          'hi bob'
+        end
+      end
+    end
+  end
+end
+
 describe Icss::Meta::RecordField do
   context 'attributes' do
     it 'accepts name, type, doc, default, required and order' do
@@ -31,6 +44,7 @@ describe Icss::Meta::RecordType do
       @klass = Icss::Meta::TypeFactory.receive({
           'type'   => 'record',
           'name'   => 'lab_experiment',
+          'is_a'   => ['this.that.the_other'],
           'fields' => [
             { 'name' => 'temperature', 'type' => 'float' },
             { 'name' => 'day_of_week', 'type' => 'enum', 'symbols' => [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday] },
@@ -49,10 +63,16 @@ describe Icss::Meta::RecordType do
         :_schema, :receive_fields,
       ].sort
       (@obj.public_methods - Object.new.public_methods).sort.should == [
+        :bob,
         :day_of_week, :day_of_week=, :receive_day_of_week,
         :receive_temperature, :temperature, :temperature=,
         :receive!,
       ].sort
+    end
+
+    it 'inherits with is_a' do
+      @klass.should < Icss::This::That::TheOther
+      @obj.bob.should == 'hi bob'
     end
 
     # it 'handles array of record of ...' do

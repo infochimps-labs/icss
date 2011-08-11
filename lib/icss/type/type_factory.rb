@@ -45,9 +45,13 @@ module Icss
         when :simple          then return klass
         when :is_type         then return klass
         when :factory         then return klass
-        when :complex_type    then return receive_complex_type(schema, klass)
+        when :complex_type    then
+          ret = receive_complex_type(schema, klass)
+          return ret
         when :record_type     then return receive_record_type(schema)
-        when :union_type      then return receive_union_type(schema)
+        when :union_type
+        ap ["UNION TYPE", schema, flavor, klass, Icss::UNION_TYPES]
+          return receive_union_type(schema)
         when :defined_type    then return receive_defined_type(schema)
         else
           raise ArgumentError, %Q{Can not create #{schema.inspect}: should be the handle for a named type; an array (representing a union type); one of #{SIMPLE_TYPES.keys.join(',')}; or a schema of the form {"type": "typename" ...attributes...}.}
@@ -75,7 +79,8 @@ module Icss
         elsif ::Icss::SIMPLE_TYPES.has_key?(type)    then return [:simple,       SIMPLE_TYPES[type]]
         elsif ::Icss::COMPLEX_TYPES.has_key?(type)   then return [:complex_type, COMPLEX_TYPES[type]]
         elsif ::Icss::RECORD_TYPES.has_key?(type)    then return [:record_type,  RECORD_TYPES[type]]
-        elsif ::Icss::UNION_TYPES.has_key?(type)     then return [:union_type,   UNION_TYPES[type]]
+        elsif ::Icss::UNION_TYPES.has_key?(type)     then
+          return [:union_type,   UNION_TYPES[type]]
         elsif type.is_a?(Module)                     then return [:is_type,      type]
         else
           return [:defined_type, type]
