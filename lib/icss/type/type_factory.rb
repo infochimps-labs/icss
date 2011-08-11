@@ -50,9 +50,9 @@ module Icss
           return ret
         when :record_type     then return receive_record_type(schema)
         when :union_type
-        ap ["UNION TYPE", schema, flavor, klass, Icss::UNION_TYPES]
+          ap ["UNION TYPE", schema, flavor, klass, Icss::UNION_TYPES]
           return receive_union_type(schema)
-        when :defined_type    then return receive_defined_type(schema)
+        when :defined_type    then return receive_defined_type(klass)
         else
           raise ArgumentError, %Q{Can not create #{schema.inspect}: should be the handle for a named type; an array (representing a union type); one of #{SIMPLE_TYPES.keys.join(',')}; or a schema of the form {"type": "typename" ...attributes...}.}
         end
@@ -81,8 +81,10 @@ module Icss
         elsif ::Icss::RECORD_TYPES.has_key?(type)    then return [:record_type,  RECORD_TYPES[type]]
         elsif ::Icss::UNION_TYPES.has_key?(type)     then
           return [:union_type,   UNION_TYPES[type]]
-        elsif type.is_a?(Module)                     then return [:is_type,      type]
+        elsif type.is_a?(Module)                     then
+          return [:is_type,      type]
         else
+          ap ["DEFINES WTC", schema, type]
           return [:defined_type, type]
         end
       end
@@ -94,6 +96,7 @@ module Icss
       end
 
       def self.receive_defined_type(schema)
+        ap ["FAILED TO FIND TYPE?", schema]
         Icss::Meta::Type.klassname_for(schema.to_sym).constantize
       end
 

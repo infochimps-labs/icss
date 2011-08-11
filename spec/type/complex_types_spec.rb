@@ -1,5 +1,6 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 require 'icss/type'
+require 'icss/entity'
 require 'icss/receiver_model/active_model_shim'
 require 'icss/type/primitive_types'
 require 'icss/type/simple_types'
