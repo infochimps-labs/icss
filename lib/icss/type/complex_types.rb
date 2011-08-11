@@ -7,10 +7,12 @@ module Icss
         include Icss::Meta::RecordType
         include Icss::ReceiverModel::ActiveModelShim
         #
-        field :type,         Symbol, :required => true
-        field :name,         Symbol
-        validates :type,    :presence => true
-        validates :name,    :presence => true
+        field     :type,     Symbol, :required => true
+        field     :fullname, Symbol
+        validates :type,     :presence => true
+        validates :fullname, :presence => true
+
+        alias_method :receive_name, :receive_fullname
 
         def self.get_klass_name(schema)
           schema[:name]
@@ -21,8 +23,8 @@ module Icss
         #
         def self.receive_schema(schema, superklass, metatype)
           schema_obj = self.receive(schema)
-          schema_obj.name ||= get_klass_name(schema)
-          type_klass = Icss::Meta::NamedSchema.get_type_klass(schema_obj.name, superklass)
+          schema_obj.fullname ||= get_klass_name(schema)
+          type_klass = Icss::Meta::NamedSchema.get_type_klass(schema_obj.fullname, superklass)
           type_klass.class_eval{ extend(::Icss::Meta::NamedSchema) }
           type_klass.class_eval{ extend(metatype) }
           inscribe_schema(schema_obj, type_klass.singleton_class)
@@ -62,7 +64,6 @@ module Icss
         validates :items,        :presence => true
         field     :item_factory, Icss::Meta::TypeFactory
         after_receive{|hsh| self.receive_item_factory(self.items) }
-
 
         def self.get_klass_name(schema)
           return if super(schema)

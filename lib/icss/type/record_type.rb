@@ -5,9 +5,6 @@ module Icss
       module Schema
         include Icss::Meta::HasFields
         include Icss::Meta::NamedSchema
-
-        class Writer < ::Icss::Meta::NamedSchema::Writer
-        end
       end
       def self.included(base) base.extend(Icss::Meta::RecordType::Schema) ; end
 

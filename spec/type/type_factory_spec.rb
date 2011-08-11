@@ -10,9 +10,6 @@ require 'icss/type/record_type'
 require 'icss/type/type_factory'
 require 'icss/type/complex_types'
 
-require 'awesome_print'
-
-
 describe Icss::Meta::TypeFactory do
 
   module Icss
@@ -66,13 +63,18 @@ describe Icss::Meta::TypeFactory do
     },
     :complex_type => {
       # Complex Container Types: map, array, enum, fixed
-      { 'type' => 'array',   'items' => 'string'  }                         => [Icss::Meta::ArraySchema::Writer, 'Icss::ArrayOfString'],
-      { 'type' => 'map',     'values' => 'string' }                         => [Icss::Meta::HashSchema::Writer, 'Icss::HashOfString'],
-      { 'type' => 'enum',    'name'  => 'Kind', 'symbols' => ['A','B','C']} => [Icss::Meta::EnumSchema::Writer, 'Icss::Kind'],
-      # { 'type' => 'fixed', 'name' => 'MD5',  'size' => 16} => Icss::Meta::FixedType,
-      # { 'type' => 'record', 'name'  => 'bob'      } => Icss::Meta::RecordType,
+      { 'type' => 'array',  'items' => 'string'  }                         => [Icss::Meta::ArraySchema::Writer, 'Icss::ArrayOfString'],
+      { 'type' => 'map',    'values' => 'string' }                         => [Icss::Meta::HashSchema::Writer, 'Icss::HashOfString'],
+
+      { 'type' => 'map',    'values' =>
+        {'type' => 'array', 'items' => 'int' } }                           => [Icss::Meta::HashSchema::Writer, false],
+
+      { 'type' => 'enum',   'name'  => 'Kind', 'symbols' => ['A','B','C']} => [Icss::Meta::EnumSchema::Writer, 'Icss::Kind'],
+      { 'type' => 'fixed',  'name' => 'MD5',  'size' => 16}                => [Icss::Meta::FixedSchema::Writer, 'Icss::Md5'],
+      { 'type' => 'record', 'name'  => 'bob'      }                        => [Icss::Meta::RecordType::Schema::Writer, 'Icss::Bob'],
       # { 'type' => 'record','name' => 'Node', 'fields' => [
-      # { 'name' => 'label',    'type' => 'string'}, { 'name' => 'children', 'type' => {'type' => 'array', 'items' => 'Node'}}]} => Icss::Meta::RecordType,
+      #     { 'name' => 'label',    'type' => 'string'},
+      #     { 'name' => 'children', 'type' => {'type' => 'array', 'items' => 'Node'}}]} => Icss::Meta::RecordType,
       # { 'type' => 'map', 'values' => { 'name' => 'Foo', 'type' => 'record', 'fields' => [{'name' => 'label', 'type' => 'string'}]} } => Icss::HashType,
     },
     :union_type => {
@@ -81,92 +83,60 @@ describe Icss::Meta::TypeFactory do
     },
   }
 
-  context 'test schema:' do
-    TEST_SCHEMA_FLAVORS.each do |expected_schema_flavor, test_schemata|
-      test_schemata.each do |schema_dec, (expected_schema_klass, expected_type_klass)|
-        expected_type_klass ||= expected_schema_klass
-
-        it "classifies schema as #{expected_schema_flavor} for #{schema_dec.inspect[0..60]}" do
-          schema_flavor, schema_klass = Icss::Meta::TypeFactory.classify_schema_declaration(schema_dec)
-          schema_flavor.should        == expected_schema_flavor
-          schema_klass.to_s.should    == expected_schema_klass.to_s
-        end
-
-        it "creates type as expected_schema_klass for #{schema_dec.inspect[0..60]}" do
-          klass = Icss::Meta::TypeFactory.receive(schema_dec)
-          klass.to_s.should == expected_type_klass.to_s
-        end
-      end
-    end
-  end
-end
-
-
-  # context '.ensure_module_scope' do
-  #   it 'adds a new child when parents exist' do
-  #     Icss::This::That.should_not be_const_defined(:AlsoThis)
-  #     new_module = Icss::Meta::TypeFactory.get_module_scope(%w[Icss This That AlsoThis])
-  #     new_module.name.should == 'Icss::This::That::AlsoThis'
-  #     Icss::This::That::AlsoThis.class.should == Module
-  #     Icss::This::That.send(:remove_const, :AlsoThis)
-  #   end
-  #   it 'adds parents as necessary' do
-  #     Icss.should_not be_const_defined(:Winken)
-  #     new_module = Icss::Meta::TypeFactory.get_module_scope(%w[Icss Winken Blinken Nod])
-  #     new_module.name.should == 'Icss::Winken::Blinken::Nod'
-  #     Icss::Winken::Blinken::Nod.class.should == Module
-  #     Icss::Winken::Blinken.class.should      == Module
-  #     Icss::Winken.class.should               == Module
-  #     Icss.send(:remove_const, :Winken)
+  # context 'test schema:' do
+  #   TEST_SCHEMA_FLAVORS.each do |expected_schema_flavor, test_schemata|
+  #     test_schemata.each do |schema_dec, (expected_schema_klass, expected_type_klass)|
+  #       expected_type_klass ||= expected_schema_klass
+  #
+  #       it "classifies schema as #{expected_schema_flavor} for #{schema_dec.inspect[0..60]}" do
+  #         schema_flavor, schema_klass = Icss::Meta::TypeFactory.classify_schema_declaration(schema_dec)
+  #         schema_flavor.should        == expected_schema_flavor
+  #         schema_klass.to_s.should    == expected_schema_klass.to_s
+  #       end
+  #
+  #       it "creates type as expected_schema_klass for #{schema_dec.inspect[0..60]}" do
+  #         klass = Icss::Meta::TypeFactory.receive(schema_dec)
+  #         klass.to_s.should == expected_type_klass.to_s  unless (not expected_type_klass)
+  #       end
+  #     end
   #   end
   # end
 
-# describe Icss::Meta do
-#   before do
-#     @test_protocol_hsh = YAML.load(File.open(File.expand_path(File.dirname(__FILE__) + '/../test_icss.yaml')))
-#     @simple_record_hsh = @test_protocol_hsh['types'].first
-#   end
-#
-#   it 'loads from a hash' do
-#     Icss::Meta::BaseType.receive!(@simple_record_hsh)
-#     p [Icss::Meta::BaseType, Icss::Meta::BaseType.fields]
-#     Icss::Meta::BaseType.fields.length.should == 3
-#     ref_field = Icss::Meta::BaseType.fields.first
-#     ref_field.name.should == 'my_happy_string'
-#     ref_field.doc.should  =~ /field 1/
-#     ref_field.type.name.should == :string
-#   end
-#
-#   it 'makes a meta type' do
-#     k = Icss::Meta::TypeFactory.make('icss.simple_type')
-#     meta_type = Icss::RecordType.receive(@simple_record_hsh)
-#     p meta_type
-#     k.class_eval{ include Receiver }
-#     meta_type.decorate_with_receivers(k)
-#     meta_type.decorate_with_conveniences(k)
-#     meta_type.decorate_with_validators(k)
-#     p [k.fields, k.receiver_attr_names]
-#   end
-#
-#
-#   # it "has the *class* attributes of an avro record type" do
-#   #   [:name, :doc, :fields, :is_a, ]
-#   # end
-#   #
-#   # it "is an Icss::Meta::NamedSchema, an Icss::Meta::Type, and an Icss::Base" do
-#   #   Icss::Meta::RecordType.should < Icss::Meta::NamedSchema
-#   #   Icss::Meta::RecordType.should < Icss::Meta::Type
-#   #   Icss::Meta::RecordType.should < Icss::Base
-#   # end
-#
-# end
+  context 'nested schema' do
 
-# context 'is_a (inheritance)' do
-#     it 'knows its direct Icss superclass'
-#     it 'knows its Icss mixin classes'
-#   end
-#
-#   context 'synthesizing' do
-#     it 'has a Meta model to '
-#   end
+    # it 'handles map of array of ...' do
+    #   klass = Icss::Meta::TypeFactory.receive({
+    #       'type' => 'map',    'values' => { 'type' => 'array', 'items' => 'int' } })
+    #   # #<HashSchema::Writer @type=:map, @value_factory=Icss::ArrayOfInt, @name=nil>
+    #   ap klass
+    #   ap klass._schema
+    #   klass.type.should == :map
+    #   klass.value_factory.to_s.should == 'Icss::ArrayOfInt'
+    #   klass.value_factory.type.should == :array
+    #   klass.value_factory.item_factory.should == Integer
+    #
+    #   obj = klass.receive({ :tuesday => [ "1", 2, 3.4, nil ], :wednesday => nil, :thursday => [], 'friday' => [1.0] })
+    #   obj.should == { :tuesday => [ 1, 2, 3, nil ], :wednesday => nil, :thursday => [], 'friday' => [1] }
+    # end
 
+    # it 'handles array of record of ...' do
+    #   klass = Icss::Meta::TypeFactory.receive({
+    #       'type' => 'array',    'items' => {
+    #         'type'   => 'record',
+    #         'name'   => 'lab_experiment',
+    #         'fields' => [
+    #           { 'name' => 'day_of_week', 'type' => 'enum', 'symbols' => [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday] },
+    #           { 'name' => 'temperature', 'type' => 'float' },
+    #         ] } })
+    #   # #<HashSchema::Writer @type=:map, @value_factory=Icss::ArrayOfInt, @name=nil>
+    #   ap klass
+    #   ap klass._schema
+    #   ap klass.item_factory._schema
+    #   klass.type.should == :array
+    #   klass.item_factory.to_s.should == 'Icss::LabExperiment'
+    #
+    #   obj = klass.receive({ :tuesday => [ "1", 2, 3.4, nil ], :wednesday => nil, :thursday => [], 'friday' => [1.0] })
+    #   obj.should == { :tuesday => [ 1, 2, 3, nil ], :wednesday => nil, :thursday => [], 'friday' => [1] }
+    # end
+  end
+end

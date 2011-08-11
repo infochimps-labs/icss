@@ -3,14 +3,11 @@ require 'icss/type'
 require 'icss/receiver_model/active_model_shim'
 require 'icss/type/primitive_types'
 require 'icss/type/simple_types'
-require 'icss/type/named_schema'
 require 'icss/type/has_fields'
-require 'icss/type/named_schema'
 require 'icss/type/record_type'
 require 'icss/type/type_factory'
+require 'icss/type/named_schema'
 require 'icss/type/complex_types'
-
-require 'awesome_print'
 
 module Icss
   module This

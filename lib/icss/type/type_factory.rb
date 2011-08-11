@@ -46,8 +46,8 @@ module Icss
         when :is_type         then return klass
         when :factory         then return klass
         when :complex_type    then return receive_complex_type(schema, klass)
+        when :record_type     then return receive_record_type(schema)
         when :union_type      then return receive_union_type(schema)
-        when :record_type     then return receive_union_type(schema)
         when :defined_type    then return receive_defined_type(schema)
         else
           raise ArgumentError, %Q{Can not create #{schema.inspect}: should be the handle for a named type; an array (representing a union type); one of #{SIMPLE_TYPES.keys.join(',')}; or a schema of the form {"type": "typename" ...attributes...}.}
@@ -70,13 +70,13 @@ module Icss
         elsif type.respond_to?(:each_pair)        then
           p ['recursing!', type, schema];
           return Icss::Meta::TypeFactory.receive(type)
-        elsif ::Icss::FACTORY_TYPES.include?(type)   then return [:factory,    FACTORY_TYPES[type]]
-        elsif ::Icss::PRIMITIVE_TYPES.has_key?(type) then return [:primitive,  PRIMITIVE_TYPES[type]]
-        elsif ::Icss::SIMPLE_TYPES.has_key?(type)    then return [:simple,     SIMPLE_TYPES[type]]
+        elsif ::Icss::FACTORY_TYPES.include?(type)   then return [:factory,      FACTORY_TYPES[type]]
+        elsif ::Icss::PRIMITIVE_TYPES.has_key?(type) then return [:primitive,    PRIMITIVE_TYPES[type]]
+        elsif ::Icss::SIMPLE_TYPES.has_key?(type)    then return [:simple,       SIMPLE_TYPES[type]]
         elsif ::Icss::COMPLEX_TYPES.has_key?(type)   then return [:complex_type, COMPLEX_TYPES[type]]
-        elsif ::Icss::RECORD_TYPES.has_key?(type)    then return [:record_type, RECORD_TYPES[type]]
-        elsif ::Icss::UNION_TYPES.has_key?(type)     then return [:union_type, UNION_TYPES[type]]
-        elsif type.is_a?(Module)                     then return [:is_type,    type]
+        elsif ::Icss::RECORD_TYPES.has_key?(type)    then return [:record_type,  RECORD_TYPES[type]]
+        elsif ::Icss::UNION_TYPES.has_key?(type)     then return [:union_type,   UNION_TYPES[type]]
+        elsif type.is_a?(Module)                     then return [:is_type,      type]
         else
           return [:defined_type, type]
         end

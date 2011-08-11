@@ -45,19 +45,10 @@ module Icss
           ).compact_blank
       end
 
-      def inscribe_schema(schema_obj, klass)
-        klass.class_eval{ define_method(:_schema){ schema_obj } }
-        field_names.each do |attr|
-          val = schema_obj.send(attr)
-          klass.class_eval{ define_method(attr){ val } }
-        end
-      end
-
-      def get_metatype
-        metatype_module = Icss::Meta::NamedSchema.get_meta_module(self.to_s)
-        self.class_eval{ include(metatype_module) }
-        metatype_module
-      end
+      # ---------------------------------------------------------------------------
+      #
+      # Schema Factory methods
+      #
 
       #
       # for type science.astronomy.ufo_sighting, we synthesize
@@ -104,6 +95,20 @@ module Icss
 
     protected
 
+      def get_metatype
+        metatype_module = Icss::Meta::NamedSchema.get_meta_module(self.to_s)
+        self.class_eval{ include(metatype_module) }
+        metatype_module
+      end
+
+      def inscribe_schema(schema_obj, type_schema)
+        type_schema.class_eval{ define_method(:_schema){ schema_obj } }
+        field_names.each do |attr|
+          val = schema_obj.send(attr)
+          type_schema.class_eval{ define_method(attr){ val } }
+        end
+      end
+
       # Turns a dotted namespace.name into camelized rubylike names for a class
       # @example
       #   scope_names_for('this.that.the_other')
@@ -140,7 +145,6 @@ module Icss
         meta_module_name = scope_names.pop + "Type"
         get_nested_module(%w[Icss Meta] + scope_names + [meta_module_name])
       end
-
 
     end
   end
