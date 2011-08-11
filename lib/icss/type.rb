@@ -8,13 +8,14 @@ module Icss
 
   # full definitions in type/record_type.rb and type/complex_types.rb
   module Meta
-    module RecordType  ; class Schema ; class Writer ; end ; end ; end
-    module ErrorType   ; class Schema ; class Writer ; end ; end ; end
-    module HashSchema  ; class Writer ; end ; end
-    module ArraySchema ; class Writer ; end ; end
-    module FixedSchema ; class Writer ; end ; end
-    module EnumSchema  ; class Writer ; end ; end
-    module UnionSchema ; class Writer ; end ; end
+    module NamedSchema ; class Writer ; end ; end
+    module RecordType  ; module Schema ; class Writer < NamedSchema::Writer ; end ; end ; end
+    module ErrorType   ; module Schema ; class Writer < NamedSchema::Writer ; end ; end ; end
+    module HashSchema  ; class Writer < NamedSchema::Writer ; end ; end
+    module ArraySchema ; class Writer < NamedSchema::Writer ; end ; end
+    module FixedSchema ; class Writer < NamedSchema::Writer ; end ; end
+    module EnumSchema  ; class Writer < NamedSchema::Writer ; end ; end
+    module UnionSchema ; class Writer < NamedSchema::Writer ; end ; end
   end
 
   ::Icss::SIMPLE_TYPES    = {} unless defined?( ::Icss::SIMPLE_TYPES  )

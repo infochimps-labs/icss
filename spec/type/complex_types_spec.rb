@@ -45,27 +45,24 @@ describe 'complex types' do
     ].each do |schema, expected_item_factory|
       describe "With #{schema}" do
         before do
-          @arr_klass = Icss::Meta::ArraySchema::Writer.receive_schema(schema)
-          @arr_schema_writer = @arr_klass._schema
-        end
-        it 'round-trips the schema' do
-          @arr_klass.to_schema.should == schema
+          @klass = Icss::Meta::ArraySchema::Writer.receive_schema(schema)
+          @schema_writer = @klass._schema
         end
         it 'is a descendent of Array and its metatype' do
-          @arr_klass.should < Array
-          @arr_klass.should be_a Icss::Meta::ArraySchema
+          @klass.should < Array
+          @klass.should be_a Icss::Meta::ArraySchema
         end
         it 'has items and an item_factory' do
-          @arr_klass.should respond_to(:items)
-          @arr_klass.items.should == schema[:items]
-          @arr_klass.item_factory.should == expected_item_factory
+          @klass.should respond_to(:items)
+          @klass.items.should == schema[:items]
+          @klass.item_factory.should == expected_item_factory
         end
         it 'has schema_writer' do
-          @arr_schema_writer.type.should  == :array
-          @arr_schema_writer.items.should == schema[:items]
-          @arr_schema_writer.should be_valid
-          @arr_schema_writer.type = :YO_ADRIAN
-          @arr_schema_writer.should_not be_valid
+          @schema_writer.type.should  == :array
+          @schema_writer.items.should == schema[:items]
+          @schema_writer.should be_valid
+          @schema_writer.items = nil
+          @schema_writer.should_not be_valid
         end
       end
     end
@@ -105,27 +102,24 @@ describe 'complex types' do
     ].each do |schema, expected_value_factory|
       describe "With #{schema}" do
         before do
-          @arr_klass = Icss::Meta::HashSchema::Writer.receive_schema(schema)
-          @arr_schema_writer = @arr_klass._schema
-        end
-        it 'round-trips the schema' do
-          @arr_klass.to_schema.should == schema
+          @klass = Icss::Meta::HashSchema::Writer.receive_schema(schema)
+          @schema_writer = @klass._schema
         end
         it 'is a descendent of Hash and of its metatype' do
-          @arr_klass.should < Hash
-          @arr_klass.should be_a Icss::Meta::HashSchema
+          @klass.should < Hash
+          @klass.should be_a Icss::Meta::HashSchema
         end
         it 'has values and an value_factory' do
-          @arr_klass.should respond_to(:values)
-          @arr_klass.values.should == schema[:values]
-          @arr_klass.value_factory.should == expected_value_factory
+          @klass.should respond_to(:values)
+          @klass.values.should == schema[:values]
+          @klass.value_factory.should == expected_value_factory
         end
         it 'has schema_writer' do
-          @arr_schema_writer.type.should  == :map
-          @arr_schema_writer.values.should == schema[:values]
-          @arr_schema_writer.should be_valid
-          @arr_schema_writer.type = :YO_ADRIAN
-          @arr_schema_writer.should_not be_valid
+          @schema_writer.type.should  == :map
+          @schema_writer.values.should == schema[:values]
+          @schema_writer.should be_valid
+          @schema_writer.values = nil
+          @schema_writer.should_not be_valid
         end
       end
     end
@@ -166,27 +160,22 @@ describe 'complex types' do
     ].each do |schema|
       describe "With #{schema}" do
         before do
-          @arr_klass = Icss::Meta::EnumSchema::Writer.receive_schema(schema)
-          @arr_schema_writer = @arr_klass._schema
-        end
-        it 'round-trips the schema' do
-          expected_schema = schema.dup
-          expected_schema[:symbols] = expected_schema[:symbols].map(&:to_sym)
-          @arr_klass.to_schema.should == expected_schema
+          @klass = Icss::Meta::EnumSchema::Writer.receive_schema(schema)
+          @schema_writer = @klass._schema
         end
         it 'is a descendent of Enum and of its metatype' do
-          @arr_klass.should < Symbol
-          @arr_klass.should be_a Icss::Meta::EnumSchema
+          @klass.should < Symbol
+          @klass.should be_a Icss::Meta::EnumSchema
         end
         it 'has symbols' do
-          @arr_klass.should respond_to(:symbols)
-          @arr_schema_writer.symbols.should == schema[:symbols].map(&:to_sym)
+          @klass.should respond_to(:symbols)
+          @schema_writer.symbols.should == schema[:symbols].map(&:to_sym)
         end
         it 'has schema_writer' do
-          @arr_schema_writer.type.should  == :enum
-          @arr_schema_writer.should be_valid
-          @arr_schema_writer.type = :YO_ADRIAN
-          @arr_schema_writer.should_not be_valid
+          @schema_writer.type.should  == :enum
+          @schema_writer.should be_valid
+          @schema_writer.symbols = []
+          @schema_writer.should_not be_valid
         end
       end
     end
@@ -220,54 +209,70 @@ describe 'complex types' do
     end
   end
 
-  # context Icss::Meta::UnionType do
-  #   it 'receives simple unions' do
-  #     uu = Icss::Meta::UnionType.receive([:int, :string])
-  #     uu.declaration_flavors.should == [:primitive, :primitive]
-  #     uu.to_schema.should == [:int, :string]
-  #   end
-  #
-  #   it 'receives complex unions' do
-  #     uu = Icss::Meta::UnionType.receive([ 'boolean', 'double',
-  #         {'type' => 'array', 'items' => 'bytes'}])
-  #     uu.declaration_flavors.should == [:primitive, :primitive]
-  #     uu.to_schema.should == [:int, :string]
-  #   end
-  # end
+  describe Icss::Meta::FixedSchema::Writer do
+    [
+      {:type => :fixed, :name => 'geo_feature_category', :size => 1 },
+      {:type => :fixed, :name => 'sixteen_bytes_long',   :size => 16 },
+    ].each do |schema|
+      describe "With #{schema}" do
+        before do
+          @klass = Icss::Meta::FixedSchema::Writer.receive_schema(schema)
+          @schema_writer = @klass._schema
+        end
+        it 'has schema_writer' do
+          @schema_writer.type.should  == :fixed
+          @schema_writer.should be_valid
+          @schema_writer.size = nil
+          @schema_writer.should_not be_valid
+        end
+
+      end
+    end
+
+    context '.receive' do
+      it 'applies the value_factory' do
+        Icss::Meta::FixedSchema::Writer.receive_schema({:type => :fixed, :name => 'sixteen_bytes_long', :size => 16})
+        Icss::SixteenBytesLong.receive('heads').should == 'heads'
+        Icss::SixteenBytesLong.receive('123456789_123456').should == '123456789_123456'
+      end
+      it 'raises an error on too-long value' do
+        Icss::Meta::FixedSchema::Writer.receive_schema({:type => :fixed, :name => 'sixteen_bytes_long', :size => 16})
+        lambda{ Icss::SixteenBytesLong.receive('123456789_1234567') }.should raise_error(ArgumentError, /Length of fixed type sixteen_bytes_long out of bounds: 123456789_1234567 is too large/)
+      end
+      it ' on non-stringlike value' do
+        Icss::Meta::FixedSchema::Writer.receive_schema({:type => :fixed, :name => 'sixteen_bytes_long', :size => 16})
+        lambda{ Icss::SixteenBytesLong.receive(77) }.should raise_error(ArgumentError, /Value for this field must be Stringlike/)
+      end
+      it 'returns nil on nil/empty string value' do
+        Icss::Meta::FixedSchema::Writer.receive_schema({:type => :fixed, :name => 'sixteen_bytes_long', :size => 16})
+        Icss::SixteenBytesLong.receive(nil).should be_nil
+        Icss::SixteenBytesLong.receive('').should be_nil
+        Icss::SixteenBytesLong.receive(:"").should be_nil
+      end
+    end
+  end
 end
 
+# describe 'type coercion' do
+#   [
+#
+#     [Array,  ['this', 'that', 'thother'], ['this', 'that', 'thother'] ],
+#     [Array,  ['this,that,thother'],       ['this,that,thother'] ],
+#     [Array,   'this,that,thother',        ['this,that,thother'] ],
+#     [Array,  'alone', ['alone'] ],
+#     [Array,  '',      []        ],
+#     [Array,  nil,     nil       ],
+#     [Hash,   {:hi => 1}, {:hi => 1}], [Hash,   nil,     nil],    [Hash,   "",      {}], [Hash,   [],      {}], [Hash,   {},      {}],
+#     [Object,  {:foo => [1]}, {:foo => [1]} ], [Object, nil, nil], [Object, 1, 1],
+#   ].each do |type, orig, desired|
+#     it_correctly_converts type, orig, desired
+#   end
 
-    # it 'each core class .receive method' do
-    #   Symbol.receive('hi').should == :hi
-    #   Integer.receive(3.4).should == 3
-    #   Float.receive("4.5").should == 4.5
-    #   String.receive(4.5).should == "4.5"
-    #   Time.receive('1985-11-05T04:03:02Z').should == Time.parse('1985-11-05T04:03:02Z')
-    #   Date.receive('1985-11-05T04:03:02Z').should == Date.parse('1985-11-05')
-    #   Boolean.receive("false").should == false
-    #   NilClass.receive(nil).should == nil
-    # end
-
-    # describe 'type coercion' do
-    #   [
-    #
-    #     [Array,  ['this', 'that', 'thother'], ['this', 'that', 'thother'] ],
-    #     [Array,  ['this,that,thother'],       ['this,that,thother'] ],
-    #     [Array,   'this,that,thother',        ['this,that,thother'] ],
-    #     [Array,  'alone', ['alone'] ],
-    #     [Array,  '',      []        ],
-    #     [Array,  nil,     nil       ],
-    #     [Hash,   {:hi => 1}, {:hi => 1}], [Hash,   nil,     nil],    [Hash,   "",      {}], [Hash,   [],      {}], [Hash,   {},      {}],
-    #     [Object,  {:foo => [1]}, {:foo => [1]} ], [Object, nil, nil], [Object, 1, 1],
-    #   ].each do |type, orig, desired|
-    #     it_correctly_converts type, orig, desired
-    #   end
-
-      # describe 'controversially' do
-      #   [
-      #     [Hash,  ['does no type checking'],      ['does no type checking'] ],
-      #     [Hash,   'does no type checking',        'does no type checking'  ],
-      #   ].each do |type, orig, desired|
-      #     it_correctly_converts type, orig, desired
-      #   end
-      # end
+# describe 'controversially' do
+#   [
+#     [Hash,  ['does no type checking'],      ['does no type checking'] ],
+#     [Hash,   'does no type checking',        'does no type checking'  ],
+#   ].each do |type, orig, desired|
+#     it_correctly_converts type, orig, desired
+#   end
+# end

@@ -165,13 +165,16 @@ module Icss
       #
       def rcvr(field_name, type, schema={})
         return if schema[:receiver] == :none
-        body = ::Icss::Meta::HasFields.receiver_body_for(type, schema)
-        metatype.send(:define_method, "receive_#{field_name}") do |*args|
-          val = body.call(*args)
-          _set_field_val(field_name, val)
-          val
+
+        klass = Icss::Meta::TypeFactory.receive(schema.merge( :type => type ))
+        metatype.send(:define_method, "receive_#{field_name}") do |val|
+          return nil if val.nil?
+          result = klass.receive(val)
+          _set_field_val(field_name, result)
+          result
         end
       end
+
 
       #
       # Defines a receiver for attributes sent to receive! that are
@@ -195,28 +198,6 @@ module Icss
       end
 
     protected
-
-      def self.receiver_body_for type, schema
-        print [__FILE__, __LINE__, type, schema].map(&:inspect).join("\t")
-        klass = Icss::Meta::TypeFactory.receive(schema.merge( :type => type ))
-        puts  ["===>", type, schema, klass].map(&:inspect).join("\t")
-        return lambda{|v| v.blank? ? nil : klass.receive(v) }
-
-        case
-        when type == Array
-          receiver_type = Icss::Meta::ArraySchema::Writer.receive_schema(schema)
-          lambda{|val|  receiver_type.receive(val) }
-        when type == Hash
-          receiver_type = Icss::Meta::HashSchema::Writer.receive_schema(schema)
-          lambda{|val| receiver_type.receive(val) }
-        when type == Object
-          lambda{|v| v }
-        when type.respond_to?(:receive)
-          lambda{|v| v.blank? ? nil : type.receive(v) }
-        else
-          raise("Can't receive #{type} #{schema}")
-        end
-      end
 
       # yield, in turn, the result of calling the given method on each
       # ancestor that responds. (ancestors are called from parent to

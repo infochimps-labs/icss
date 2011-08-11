@@ -5,6 +5,9 @@ module Icss
       module Schema
         include Icss::Meta::HasFields
         include Icss::Meta::NamedSchema
+
+        class Writer < ::Icss::Meta::NamedSchema::Writer
+        end
       end
       def self.included(base) base.extend(Icss::Meta::RecordType::Schema) ; end
 
@@ -40,6 +43,10 @@ module Icss
         include Icss::Meta::HasFields
         include Icss::Meta::NamedSchema
         include Icss::Meta::RecordType::Schema
+
+        class Writer < ::Icss::Meta::NamedSchema::Writer
+        end
+
       end
       def self.included(base) base.extend(Icss::Meta::ErrorType::Schema) ; end
     end

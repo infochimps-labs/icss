@@ -1,6 +1,36 @@
 module Icss
   module Meta
 
+    module NamedSchema
+      class Writer
+        extend Icss::Meta::NamedSchema
+        include Icss::Meta::RecordType
+        include Icss::ReceiverModel::ActiveModelShim
+        #
+        field :type,         Symbol, :required => true
+        field :name,         Symbol
+        validates :type,    :presence => true
+        validates :name,    :presence => true
+
+        def self.get_klass_name(schema)
+          schema[:name]
+        end
+
+        # * create a schema writer object.
+        # * create a named class to represent the type
+        #
+        def self.receive_schema(schema, superklass, metatype)
+          schema_obj = self.receive(schema)
+          schema_obj.name ||= get_klass_name(schema)
+          type_klass = Icss::Meta::NamedSchema.get_type_klass(schema_obj.name, superklass)
+          type_klass.class_eval{ extend(::Icss::Meta::NamedSchema) }
+          type_klass.class_eval{ extend(metatype) }
+          inscribe_schema(schema_obj, type_klass.singleton_class)
+          type_klass
+        end
+      end
+    end
+
     # -------------------------------------------------------------------------
     #
     # Container Types (array, map and union)
@@ -20,42 +50,30 @@ module Icss
     module ArraySchema
       def receive(raw)
         return nil if raw.nil? || (raw == "")
-        self.new( raw.map{|raw_item| p [__FILE__, self, raw, item_factory] ; item_factory.receive(raw_item) } )
+        self.new( raw.map{|raw_item| item_factory.receive(raw_item) } )
       end
 
       def to_schema()
         (defined?(super) ? super() : {}).merge({ :type => self.type, :items => self.items })
       end
 
-      class Writer
-        extend Icss::Meta::NamedSchema
-        include Icss::Meta::RecordType
-        include Icss::ReceiverModel::ActiveModelShim
-        #
-        field :name,         String
-        field :type,         Symbol, :validates => { :format => { :with => /^array$/ } }
-        field :items,        Object
-        field :item_factory, Icss::Meta::TypeFactory
+      class Writer < ::Icss::Meta::NamedSchema::Writer
+        field     :items,        Object
+        validates :items,        :presence => true
+        field     :item_factory, Icss::Meta::TypeFactory
         after_receive{|hsh| self.receive_item_factory(self.items) }
-        #
-        validates :type,  :presence => true, :format => { :with => /^array$/ }
-        validates :items, :presence => true
 
-        def self.name_for_klass(schema)
-          return schema[:name] if schema.has_key?(:name)
+
+        def self.get_klass_name(schema)
+          return if super(schema)
           return unless schema[:items].is_a?(Module) || schema[:items].respond_to?(:to_sym)
           items_type_name = schema[:items].to_s.to_sym
           slug = Icss::Meta::Type.klassname_for(items_type_name).gsub(/^:*Icss:+/, '').gsub(/:+/, '_')
           "ArrayOf#{slug}"
         end
 
-        # retrieve the
         def self.receive_schema(schema)
-          schema_obj = self.receive(schema)
-          type_klass = Icss::Meta::NamedSchema.get_type_klass( name_for_klass(schema),  Array)
-          type_klass.class_eval{ extend(::Icss::Meta::ArraySchema) }
-          inscribe_schema(schema_obj, type_klass.singleton_class)
-          type_klass
+          super(schema, Array, ::Icss::Meta::ArraySchema)
         end
       end
     end
@@ -91,32 +109,22 @@ module Icss
         (defined?(super) ? super() : {}).merge({ :type => self.type, :values => self.values })
       end
 
-      class Writer
-        extend Icss::Meta::NamedSchema
-        include Icss::Meta::RecordType
-        include Icss::ReceiverModel::ActiveModelShim
-        #
-        field :type,          Symbol, :validates => { :format => { :with => /^map$/ } }
-        field :values,        Object
-        field :value_factory, Icss::Meta::TypeFactory
+      class Writer < ::Icss::Meta::NamedSchema::Writer
+        field     :values,        Object
+        validates :values,        :presence => true
+        field     :value_factory, Icss::Meta::TypeFactory
         after_receive{|hsh| self.receive_value_factory(self.values) }
 
-        validates :type,  :presence => true, :format => { :with => /^map$/ }
-        validates :values, :presence => true
-
-        def self.name_for_klass(schema)
-          return unless schema[:values].respond_to?(:to_sym)
-          slug = Icss::Meta::Type.klassname_for(schema[:values].to_sym).gsub(/^:*Icss:+/, '').gsub(/:+/, '_')
+        def self.get_klass_name(schema)
+          return if super(schema)
+          return unless schema[:values].is_a?(Module) || schema[:values].respond_to?(:to_sym)
+          values_type_name = schema[:values].to_s.to_sym
+          slug = Icss::Meta::Type.klassname_for(values_type_name).gsub(/^:*Icss:+/, '').gsub(/:+/, '_')
           "HashOf#{slug}"
         end
 
-        # retrieve the
         def self.receive_schema(schema)
-          schema_obj = self.receive(schema)
-          type_klass = Icss::Meta::NamedSchema.get_type_klass( name_for_klass(schema),  Hash)
-          type_klass.class_eval{ extend(::Icss::Meta::HashSchema) }
-          inscribe_schema(schema_obj, type_klass.singleton_class)
-          type_klass
+          super(schema, Hash, ::Icss::Meta::HashSchema)
         end
       end
     end # HashSchema
@@ -151,26 +159,12 @@ module Icss
         { :type => self.type, :name => self.fullname, :symbols => self.symbols }
       end
 
-      class Writer
-        extend Icss::Meta::NamedSchema
-        include Icss::Meta::RecordType
-        include Icss::ReceiverModel::ActiveModelShim
-        #
-        field :type,         Symbol, :validates => { :format => { :with => /^enum$/ } }
-        field :name,         Symbol, :validates => { :format => { :with => /^enum$/ } }
-        field :symbols,      :array,  :items => Symbol, :required => true # , :default => []
-        validates :type,    :presence => true, :format => { :with => /^enum$/ }
-        validates :name,    :presence => true
+      class Writer < ::Icss::Meta::NamedSchema::Writer
+        field     :symbols, :array,  :items => Symbol, :required => true # , :default => []
         validates :symbols, :presence => true
 
-        # retrieve the
         def self.receive_schema(schema)
-          schema_obj = self.receive(schema)
-          type_klass = Icss::Meta::NamedSchema.get_type_klass( schema[:name], Symbol )
-          type_klass.class_eval{ extend(::Icss::Meta::EnumSchema) }
-          type_klass.class_eval{ extend(::Icss::Meta::NamedSchema) }
-          inscribe_schema(schema_obj, type_klass.singleton_class)
-          type_klass
+          super(schema, Symbol, ::Icss::Meta::EnumSchema)
         end
       end
     end # EnumSchema
@@ -188,53 +182,29 @@ module Icss
     #
     #     {"type": "fixed", "size": 16, "name": "md5"}
     #
-    class FixedType < String
-      # include Icss::Meta::NamedSchema
-      # extend  RecordType::FieldDecorators
-      # #
-      # field :size, Integer, :required => true
-      # def to_schema
-      #   (defined?(super) ? super : {}).merge( :size => size )
-      # end
-    end
+    module FixedSchema
+      def receive(raw)
+        return nil if raw.blank?
+        raise ArgumentError, "Value for this field must be Stringlike" if not (raw.respond_to?(:to_sym))
+        obj = raw.to_s
+        unless raw.length <= size then raise ArgumentError, "Length of fixed type #{self.fullname} out of bounds: #{raw[0..30]} is too large" ; end
+        obj
+      end
 
+      def to_schema()
+        { :type => self.type, :name => self.fullname, :size => self.size }
+      end
 
+      class Writer < ::Icss::Meta::NamedSchema::Writer
+        field     :size,    Integer, :validates => { :numericality => { :greater_than => 0 }}
+        validates :size,    :numericality => { :greater_than => 0 }
 
-    # #
-    # # Describes an Avro Union type.
-    # #
-    # # Unions are represented using JSON arrays. For example, ["string", "null"]
-    # # declares a schema which may be either a string or null.
-    # #
-    # # Unions may not contain more than one schema with the same type, except for
-    # # the named types record, fixed and enum. For example, unions containing two
-    # # array types or two map types are not permitted, but two types with different
-    # # names are permitted. (Names permit efficient resolution when reading and
-    # # writing unions.)
-    # #
-    # # Unions may not immediately contain other unions.
-    # #
-    # class UnionType
-    #   extend Icss::Meta::ContainerType
-    #   #
-    #   attr_accessor :embedded_types
-    #   attr_accessor :declaration_flavors
-    #   #
-    #   def receive! type_list
-    #     self.declaration_flavors = []
-    #     self.embedded_types = type_list.map do |schema|
-    #       type = TypeFactory.receive(schema)
-    #       declaration_flavors << TypeFactory.classify_schema_declaration(schema)
-    #       type
-    #     end
-    #   end
-    #   def to_schema
-    #     embedded_types.zip(declaration_flavors).map do |t,fl|
-    #       [:complex_type].include?(fl) ? t.name : t.to_schema
-    #     end
-    #   end
-    # end
-    #
+        # retrieve the
+        def self.receive_schema(schema)
+          super(schema, String, ::Icss::Meta::FixedSchema)
+        end
+      end
+    end # FixedSchema
   end
 
 end
