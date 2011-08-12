@@ -20,7 +20,6 @@ ___________________________________________________________________________
 
     date        simple      Date           string    "2011-01-02"           'date'
     time        simple      Time           string    "2011-01-02T03:04:05Z" 'time'
-    text        simple      Text           string    "long text"            'text'
     regexp      simple      Regexp         string    "^hel*o newman"        'regexp'
     url         simple      Url            string    "http://..."           'url'
     file_path   simple      FilePath       string    "/tmp/foo"             'file_path'

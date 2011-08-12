@@ -58,7 +58,7 @@ module Icss
 end
 
 icss_filenames = %w[
-    schema_org/thing schema_org/place
+    icss/core/*
   ].map{|fn| example_files(fn) }.flatten
 
 icss_filenames[0..2].each do |icss_filename|

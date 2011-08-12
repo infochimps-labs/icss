@@ -1,24 +1,34 @@
 module Icss
   module Meta
-    module ::Icss::Meta::TextSchema       ; def to_schema() :text       ; end ; end
-    module ::Icss::Meta::FilePathSchema   ; def to_schema() :file_path  ; end ; end
-    module ::Icss::Meta::RegexpSchema     ; def to_schema() :regexp     ; end ; end
-    module ::Icss::Meta::UrlSchema        ; def to_schema() :url        ; end ; end
-    module ::Icss::Meta::EpochTimeSchema  ; def to_schema() :epoch_time ; end ; end
+    # patron saint of Simple Types (Structured Text)
+    module St
+      module ::Icss::Meta::St::FilePathSchema     ; def to_schema() :'file_path'  ; end ; end
+      module ::Icss::Meta::St::RegexpSchema       ; def to_schema() :'regexp'     ; end ; end
+      module ::Icss::Meta::St::UrlSchema          ; def to_schema() :'url'        ; end ; end
+      module ::Icss::Meta::St::Md5HexdigestSchema ; def to_schema() :'st.md5_hexdigest' ; end ; end
+    end
+    # pasture wherein graze MeasurementUnits
+    module Mu
+      module ::Icss::Meta::Mu::EpochTimeSchema  ; def to_schema() :epoch_time ; end ; end
+    end
   end
 
-  class Text       < ::String  ; self.extend ::Icss::Meta::TextSchema      ; end
-  class FilePath   < ::String  ; self.extend ::Icss::Meta::FilePathSchema  ; end
-  class Regexp     < ::String  ; self.extend ::Icss::Meta::RegexpSchema    ; end
-  class Url        < ::String  ; self.extend ::Icss::Meta::UrlSchema       ; end
-  class EpochTime  < ::Integer ; self.extend ::Icss::Meta::EpochTimeSchema ; end
+  module St
+    class FilePath     < ::String  ; self.extend ::Icss::Meta::St::FilePathSchema     ; end
+    class Regexp       < ::String  ; self.extend ::Icss::Meta::St::RegexpSchema       ; end
+    class Url          < ::String  ; self.extend ::Icss::Meta::St::UrlSchema          ; end
+    class Md5Hexdigest < ::String  ; self.extend ::Icss::Meta::St::Md5HexdigestSchema ; end
+  end
+  module Mu
+    class EpochTime  < ::Integer ; self.extend ::Icss::Meta::Mu::EpochTimeSchema ; end
+  end
 
   ::Icss::SIMPLE_TYPES.merge!({
-      :text       => ::Icss::Text,
-      :file_path  => ::Icss::FilePath,
-      :regexp     => ::Icss::Regexp,
-      :url        => ::Icss::Url,
-      :epoch_time => ::Icss::EpochTime,
+      :file_path  => ::Icss::St::FilePath,
+      :regexp     => ::Icss::St::Regexp,
+      :url        => ::Icss::St::Url,
+      #
+      :epoch_time => ::Icss::Mu::EpochTime,
     })
 
 

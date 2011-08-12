@@ -147,7 +147,6 @@ module Icss
       # @return [Object] a new instance
       def receive *args
         hsh = args.pop
-        # p ['receive', __FILE__, hsh, self, args]
         raise ArgumentError, "Can't receive (it isn't hashlike): '#{hsh.inspect}' -- the hsh should be the *last* arg" unless hsh.respond_to?(:[]) && hsh.respond_to?(:has_key?)
         obj = self.new(*args)
         obj.receive!(hsh)
@@ -214,17 +213,16 @@ module Icss
       end
 
       def add_field_accessor(name, schema)
-        reader_info = schema[:reader] || schema[:accessor]
-        writer_info = schema[:writer] || schema[:accessor]
-        #
+        accessor_info = schema[:accessor]
+        reader_name = name ; writer_name = "#{name}="
         metatype.class_eval do
-          unless (reader_info == :none)
-            attr_reader(name) unless method_defined?(name)
-            case reader_info when :protected then protected(name) when :private then private(name) else public(name) end
-          end
-          unless (writer_info == :none)
-            attr_writer(name) unless method_defined?("#{name}=")
-            case writer_info when :protected then protected("#{name}=") when :private then private("#{name}=") else public("#{name}=") end
+          unless (accessor_info == :none)
+            attr_reader(name) unless method_defined?(reader_name)
+            attr_writer(name) unless method_defined?(writer_name)
+            case accessor_info
+            when :protected then protected(reader_name) ; protected(writer_name)
+            when :private  then  private(reader_name)   ; private(writer_name)
+            else                 public(reader_name)    ; public(writer_name) ; end
           end
         end
       end

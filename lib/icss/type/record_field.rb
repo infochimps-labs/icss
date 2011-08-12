@@ -3,6 +3,9 @@ module Icss
 
     class RecordField
       include Icss::Meta::RecordType
+      include Icss::ReceiverModel::ActsAsHash
+      include Gorillib::Hashlike
+      include Gorillib::Hashlike::Keys
       remove_possible_method(:type)
 
       field :name,      Symbol,                  :required => true
@@ -11,6 +14,8 @@ module Icss
       field :default,   Object
       field :required,  Boolean
       field :order,     String
+      field :accessor,  Hash
+      field :receiver,  Hash
       field :validates, Hash
       attr_reader   :parent
       attr_accessor :is_reference
@@ -32,6 +37,7 @@ module Icss
 
       module Schema
         def receive_fields(fields)
+          p fields
           fields.each do |field_schema|
             field_schema.symbolize_keys!
             field(field_schema[:name], field_schema[:type], field_schema)
@@ -39,9 +45,19 @@ module Icss
         end
 
         class Writer < ::Icss::Meta::NamedSchema::Writer
-          field :fields,           Array
-          field :is_a,             :array, :items => Icss::Meta::TypeFactory
-          field :_domain_id_field, Icss::Meta::TypeFactory
+          # true if the attr is a receiver variable and it has been set
+          def attr_set?(attr)
+            self.class.fields.has_key?(attr) && self.instance_variable_defined?("@#{attr}")
+          end
+
+          def unset!(attr)
+            self.send(:remove_instance_variable, "@#{attr}") if self.instance_variable_defined?("@#{attr}")
+          end
+          protected :unset!
+
+          field :fields,           :array, :items => Icss::Meta::RecordField, :default => []
+          field :is_a,             :array, :items => Icss::Meta::TypeFactory, :default => []
+          field :_domain_id_field, String, :default => 'name'
 
           def self.inscribe_schema(schema_obj, type_schema)
             type_schema.singleton_class.class_eval{ define_method(:_schema){ schema_obj } }

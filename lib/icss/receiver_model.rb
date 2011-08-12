@@ -1,5 +1,3 @@
-require 'gorillib/hashlike'
-require 'gorillib/hashlike/tree_merge'
 require 'icss/receiver_model/acts_as_hash'
 require 'icss/receiver_model/acts_as_loadable'
 # require 'icss/receiver_model/active_model_shim'
@@ -22,7 +20,7 @@ module Icss
 
       # true if the attr is a receiver variable and it has been set
       def attr_set?(attr)
-        receiver_attrs.has_key?(attr) && self.instance_variable_defined?("@#{attr}")
+        self.class.fields.has_key?(attr) && self.instance_variable_defined?("@#{attr}")
       end
 
       def unset!(attr)

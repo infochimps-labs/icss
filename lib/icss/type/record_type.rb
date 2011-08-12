@@ -21,13 +21,17 @@ module Icss
           else  next ; end
           self.send(rcv_method, val)
         end
-        self.class.after_receivers.each do |after_receiver|
-          self.instance_exec(hsh, &after_receiver)
-        end
+        run_after_receivers(hsh)
         self
       end
 
     protected
+
+      def run_after_receivers(hsh)
+        self.class.after_receivers.each do |after_receiver|
+          self.instance_exec(hsh, &after_receiver)
+        end
+      end
 
       def _set_field_val(field_name, val)
         self.instance_variable_set("@#{field_name}", val)

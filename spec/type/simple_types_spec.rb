@@ -7,7 +7,7 @@ require 'icss/type/simple_types'
 
 SIMPLE_TYPES_TO_TEST = {
   ::Symbol         => [Symbol,    :bob],  ::Date            => [Date, Date.today],
-  ::Time           => [Time,  Time.now],  ::Icss::Text      => [String, "blabla"],
+  ::Time           => [Time,  Time.now],
   ::Icss::FilePath => [String,  "/tmp"],  ::Icss::Regexp    => [String,  "hel*o"],
   ::Icss::Url      => [String,"bit.ly"],  ::Icss::EpochTime => [Integer, Time.now.to_i],
 }

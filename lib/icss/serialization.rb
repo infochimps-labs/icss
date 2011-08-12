@@ -28,15 +28,16 @@ end
 
 module Icss::ReceiverModel
   def as_json(*args)
-    to_hash.compact_blank
+    {}.tap{|hsh| self.each{|k,v| hsh[k] = (v.respond_to?(:as_json) ? v.as_json : v) } }
+    # to_hash.compact_blank
   end
   def to_json(*args)
-    JSON.pretty_generate( as_json.to_json(*args) )
+    as_json.to_json(*args)
   end
 end
 
 class Time
-  def to_json
+  def as_json
     self.iso8601
   end
 end
