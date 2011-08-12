@@ -212,17 +212,18 @@ module Icss
         @fields[name] = schema.merge({ :name => name, :type => type })
       end
 
-      def add_field_accessor(name, schema)
+      def add_field_accessor(attr, schema, meth=nil)
         accessor_info = schema[:accessor]
-        reader_name = name ; writer_name = "#{name}="
+        meth ||= attr
+        attr_name = "@#{attr}" ; reader_meth = meth ; writer_meth = "#{meth}="
         metatype.class_eval do
           unless (accessor_info == :none)
-            attr_reader(name) unless method_defined?(reader_name)
-            attr_writer(name) unless method_defined?(writer_name)
+            define_method(reader_meth){    instance_variable_get(attr_name)    } unless method_defined?(reader_meth)
+            define_method(writer_meth){|v| instance_variable_set(attr_name, v) } unless method_defined?(writer_meth)
             case accessor_info
-            when :protected then protected(reader_name) ; protected(writer_name)
-            when :private  then  private(reader_name)   ; private(writer_name)
-            else                 public(reader_name)    ; public(writer_name) ; end
+            when :protected then protected(reader_meth) ; protected(writer_meth)
+            when :private  then  private(reader_meth)   ; private(writer_meth)
+            else                 public(reader_meth)    ; public(writer_meth) ; end
           end
         end
       end

@@ -13,6 +13,7 @@ module Icss
       field :doc,       String
       field :default,   Object
       field :required,  Boolean
+      field :aliases,   :array, :items => String
       field :order,     String
       field :accessor,  Hash
       field :receiver,  Hash
@@ -37,7 +38,6 @@ module Icss
 
       module Schema
         def receive_fields(fields)
-          p fields
           fields.each do |field_schema|
             field_schema.symbolize_keys!
             field(field_schema[:name], field_schema[:type], field_schema)
@@ -55,7 +55,8 @@ module Icss
           end
           protected :unset!
 
-          field :fields,           :array, :items => Icss::Meta::RecordField, :default => []
+          # , :items => Object
+          field :fields,           :array,  :default => [], :items => Icss::Meta::RecordField
           field :is_a,             :array, :items => Icss::Meta::TypeFactory, :default => []
           field :_domain_id_field, String, :default => 'name'
 
@@ -70,12 +71,11 @@ module Icss
             end
           end
 
-          def self.receive_schema(schema)
+          def self.receive_schema(schema, default_superklass=Object)
             schema_obj = self.receive(schema)
             schema_obj.fullname ||= get_klass_name(schema)
-            ap [__FILE__, schema_obj.is_a, schema_obj, self.fields]
-            superklass = schema_obj.is_a.first || Object
-            warn "No multiple inheritance yet" if schema_obj.is_a.length > 1
+            superklass = schema_obj.is_a.first || default_superklass
+            warn "No multiple inheritance yet (sorry, #{schema_obj.fullname})" if schema_obj.is_a.length > 1
             type_klass = Icss::Meta::NamedSchema.get_type_klass(schema_obj.fullname, superklass)
             type_klass.class_eval{ include(::Icss::Meta::RecordType) }
             #

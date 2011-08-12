@@ -73,7 +73,7 @@ module Icss
         if    schema.is_a?(Array)                   then return [:union_type, nil]
         elsif type.respond_to?(:each_pair)        then
           p ['recursing!', type, schema];
-          return Icss::Meta::TypeFactory.receive(type)
+          return [:is_type, Icss::Meta::TypeFactory.receive(type)]
         elsif ::Icss::FACTORY_TYPES.include?(type)   then return [:factory,      FACTORY_TYPES[type]]
         elsif ::Icss::PRIMITIVE_TYPES.has_key?(type) then return [:primitive,    PRIMITIVE_TYPES[type]]
         elsif ::Icss::SIMPLE_TYPES.has_key?(type)    then return [:simple,       SIMPLE_TYPES[type]]
@@ -84,7 +84,6 @@ module Icss
         elsif type.is_a?(Module)                     then
           return [:is_type,      type]
         else
-          ap ["DEFINES WTC", schema, type]
           return [:defined_type, type]
         end
       end
@@ -96,7 +95,6 @@ module Icss
       end
 
       def self.receive_defined_type(schema)
-        ap ["FAILED TO FIND TYPE?", schema]
         Icss::Meta::Type.klassname_for(schema.to_sym).constantize
       end
 
