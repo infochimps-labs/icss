@@ -85,6 +85,12 @@ module Icss
         add_field_schema(field_name, type, schema)
         add_field_accessor(field_name, schema)
         rcvr(field_name, type, schema)
+        if schema[:aliases]
+          schema[:aliases].each do |alias_name|
+            add_field_accessor(alias_name, schema, field_name)
+            rcvr(alias_name, type, schema, field_name)
+          end
+        end
         add_after_receivers(field_name, type, schema)
       end
 
@@ -154,7 +160,6 @@ module Icss
 
       #
       # define a receiver attribute.
-      # automatically generates an attr_accessor on the class if none exists
       #
       # @param  [Symbol]  field_name - name of the receiver property
       # @param  [Class]   type - a
@@ -162,14 +167,15 @@ module Icss
       # @option [Object]  :default  - After any receive! operation, attribute is set to this value unless attr_set? is true
       # @option [Class]   :of       - For collections (Array, Hash, etc), the type of the collection's items
       #
-      def rcvr(field_name, type, schema={})
+      def rcvr(field_name, type, schema={}, attr_name=nil)
         return if schema[:receiver] == :none
+        attr_name ||= field_name
 
         klass = Icss::Meta::TypeFactory.receive(schema.merge( :type => type ))
         metatype.send(:define_method, "receive_#{field_name}") do |val|
           return nil if val.nil?
           result = klass.receive(val)
-          _set_field_val(field_name, result)
+          _set_field_val(attr_name, result)
           result
         end
       end
@@ -212,10 +218,9 @@ module Icss
         @fields[name] = schema.merge({ :name => name, :type => type })
       end
 
-      def add_field_accessor(attr, schema, meth=nil)
+      def add_field_accessor(field_name, schema, attr=nil)
         accessor_info = schema[:accessor]
-        meth ||= attr
-        attr_name = "@#{attr}" ; reader_meth = meth ; writer_meth = "#{meth}="
+        reader_meth = field_name ; writer_meth = "#{field_name}=" ; attr_name = "@#{attr || field_name}"
         metatype.class_eval do
           unless (accessor_info == :none)
             define_method(reader_meth){    instance_variable_get(attr_name)    } unless method_defined?(reader_meth)
