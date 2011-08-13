@@ -13,31 +13,98 @@
 require 'yaml'
 
 class ZAML
+  VERSION = "0.1.4m"
+
+  DEFAULT_VALIGN = 24
+
+  attr_accessor :result, :indent
+  # line up simple value tokens at this vertical column
+  attr_accessor :valign
 
   #
   # Class Methods
   #
-  def self.dump(stuff, where='')
-    z = new
+  def self.dump(stuff, where='', options={})
+    z = self.new
+    z.emit('--- ')
     stuff.to_zaml(z)
     where << z.to_s
   end
+
   #
   # Instance Methods
   #
-  def initialize
+  def initialize(options={})
+    reset!
+    self.valign = options[:valign]
+  end
+
+  def reset!
     @result = []
     @indent = nil
     @structured_key_prefix = nil
     Label.counter_reset
-    emit('--- ')
   end
+
+  # for all code within the block, the cursor supplies
   def nested(tail='  ')
     old_indent = @indent
-    @indent = "#{@indent || "\n"}#{tail}"
+    @indent    = "#{@indent || "\n"}#{tail}"
     yield
-    @indent = old_indent
+    @indent    = old_indent
   end
+
+  def emit(s)
+    @result << s
+    @recent_nl = false unless s.kind_of?(Label)
+  end
+  def nl(s='')
+    emit(@indent || "\n") unless @recent_nl
+    emit(s)
+    @recent_nl = true
+  end
+  def prefix_structured_keys(x)
+    @structured_key_prefix = x
+    yield
+    nl unless @structured_key_prefix
+    @structured_key_prefix = nil
+  end
+  # def vpadding
+  #   return '' if (not @valign) || @recent_nl || result.empty?
+  #   rp  = @valign - ((@indent || "\n").length - 1)
+  #   rp -= @result.last.length
+  #   rp > 0 ?
+  # end
+
+  def new_label_for(obj)
+    Label.new(obj,(Hash === obj || Array === obj) ? "#{@indent || "\n"}  " : ' ')
+  end
+  def first_time_only(obj)
+    if label = Label.for(obj)
+      emit(label.reference)
+    else
+      if @structured_key_prefix and not obj.is_a? String
+        emit(@structured_key_prefix)
+        @structured_key_prefix = nil
+      end
+      emit(new_label_for(obj))
+      yield
+    end
+  end
+
+  def to_s
+    @result.join
+  end
+  def inspect
+    res = to_s
+    res = res[0..46]+"..." if res.length > 50
+    %Q{\#<ZAML ind=#{indent} pfx=#{structured_key_prefix} result='#{res}'>}
+  end
+
+
+  #
+  # Label class -- resolves circular references
+  #
   class Label
     #
     # YAML only wants objects in the datastream once; if the same object
@@ -75,40 +142,7 @@ class ZAML
       @@previously_emitted_object[obj.object_id]
     end
   end
-  def new_label_for(obj)
-    Label.new(obj,(Hash === obj || Array === obj) ? "#{@indent || "\n"}  " : ' ')
-  end
-  def first_time_only(obj)
-    if label = Label.for(obj)
-      emit(label.reference)
-    else
-      if @structured_key_prefix and not obj.is_a? String
-        emit(@structured_key_prefix)
-        @structured_key_prefix = nil
-      end
-      emit(new_label_for(obj))
-      yield
-    end
-  end
 
-  def emit(s)
-    @result << s
-    @recent_nl = false unless s.kind_of?(Label)
-  end
-  def nl(s='')
-    emit(@indent || "\n") unless @recent_nl
-    emit(s)
-    @recent_nl = true
-  end
-  def to_s
-    @result.join
-  end
-  def prefix_structured_keys(x)
-    @structured_key_prefix = x
-    yield
-    nl unless @structured_key_prefix
-    @structured_key_prefix = nil
-  end
 end
 
 ################################################################
@@ -232,7 +266,7 @@ class String
       when (
           (self =~ /\A(true|false|yes|no|on|null|off|#{num}(:#{num})*|!|=|~)$/i) or
           (self =~ /\A\n* /) or
-          (self =~ /[\s:]/) or
+          (self =~ /[\s:]$/) or
           (self =~ /^[>|][-+\d]*\s/i) or
           (self[-1..-1] =~ /\s/) or
           (self =~ /[\x00-\x08\x0B\x0C\x0E-\x1F\x80-\xFF]/) or
