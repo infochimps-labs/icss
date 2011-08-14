@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 #
 # ZAML -- A partial replacement for YAML, writen with speed and code clarity
 #         in mind.  ZAML fixes one YAML bug (loading Exceptions) and provides
@@ -13,9 +14,8 @@
 require 'yaml'
 
 class ZAML
-  VERSION = "0.1.4m"
-
-  DEFAULT_VALIGN = 24
+  VERSION = "0.1.4m"   unless defined?(::ZAML::VERSION)
+  DEFAULT_VALIGN = 24  unless defined?(::ZAML::DEFAULT_VALIGN)
 
   attr_accessor :result, :indent
   # line up simple value tokens at this vertical column
@@ -49,7 +49,8 @@ class ZAML
   # for all code within the block, the cursor supplies
   def nested(tail='  ')
     old_indent = @indent
-    @indent    = "#{@indent || "\n"}#{tail}"
+    # @indent    = "#{@indent || "\n"}#{tail}"
+    @indent    = @indent ? "#{@indent}#{tail}" : "\n"
     yield
     @indent    = old_indent
   end
@@ -246,30 +247,36 @@ class Exception
   end
 end
 
+ZAML::NUM_RE    = '[-+]?(0x)?\d+\.?\d*' unless defined?(::ZAML::NUM_RE)
+ZAML::SIMPLE_STRING_RE = /\A(true|false|yes|no|on|null|off|#{ZAML::NUM_RE}(:#{ZAML::NUM_RE})*|!|=|~)$/io unless defined?(::ZAML::SIMPLE_STRING_RE)
+ZAML::ZAML_ESCAPES = %w{\x00 \x01 \x02 \x03 \x04 \x05 \x06 \a \x08 \t \n \v \f \r \x0e \x0f \x10 \x11 \x12 \x13 \x14 \x15 \x16 \x17 \x18 \x19 \x1a \e \x1c \x1d \x1e \x1f } unless defined?(ZAML::ZAML_ESCAPES)
+
+ZAML::HI_BIT_CHARS = '\x80-\xFF'
+if RUBY_VERSION > "1.9" then ZAML::HI_BIT_CHARS.force_encoding('ASCII-8BIT') ; end
+ZAML::EXTENDED_CHARS_RE = /[\x00-\x08\x0B\x0C\x0E-\x1F#{ZAML::HI_BIT_CHARS}]/o
+
 class String
-  ZAML_ESCAPES = %w{\x00 \x01 \x02 \x03 \x04 \x05 \x06 \a \x08 \t \n \v \f \r \x0e \x0f \x10 \x11 \x12 \x13 \x14 \x15 \x16 \x17 \x18 \x19 \x1a \e \x1c \x1d \x1e \x1f }
   def escaped_for_zaml
     gsub( /\x5C/, "\\\\\\" ).  # Demi-kludge for Maglev/rubinius; the regexp should be /\\/ but parsetree chokes on that.
       gsub( /"/, "\\\"" ).
-      gsub( /([\x00-\x1F])/ ) { |x| ZAML_ESCAPES[ x.unpack("C")[0] ] }.
-      gsub( /([\x80-\xFF])/ ) { |x| "\\x#{x.unpack("C")[0].to_s(16)}" }
+      gsub( /([\x00-\x1F])/ ){|x| ZAML::ZAML_ESCAPES[ x.unpack("C")[0] ] }.
+      gsub( /([#{ZAML::HI_BIT_CHARS}])/ ){|x| "\\x#{x.unpack("C")[0].to_s(16)}" }
   end
   def to_zaml(z)
     z.first_time_only(self) {
-      num = '[-+]?(0x)?\d+\.?\d*'
       case
       when self == ''
         z.emit('""')
-        # when self =~ /[\x00-\x08\x0B\x0C\x0E-\x1F\x80-\xFF]/
-        #   z.emit("!binary |\n")
-        #   z.emit([self].pack("m*"))
+      when (self =~ ZAML::EXTENDED_CHARS_RE) #
+        #   z.emit("!binary |") ;
+        #   z.nested{ z.nl; z.emit([self].pack("m72")) }
+        z.emit("\"#{escaped_for_zaml}\"")
       when (
-          (self =~ /\A(true|false|yes|no|on|null|off|#{num}(:#{num})*|!|=|~)$/i) or
+          (self =~ ZAML::SIMPLE_STRING_RE) or
           (self =~ /\A\n* /) or
           (self =~ /[\s:]$/) or
           (self =~ /^[>|][-+\d]*\s/i) or
           (self[-1..-1] =~ /\s/) or
-          (self =~ /[\x00-\x08\x0B\x0C\x0E-\x1F\x80-\xFF]/) or
           (self =~ /[,\[\]\{\}\r\t]|:\s|\s#/) or
           (self =~ /\A([-:?!#&*'"]|<<|%.+:.)/)
           )
@@ -294,7 +301,7 @@ class Hash
         else
           each_pair { |k, v|
             z.nl
-            z.prefix_structured_keys('? ') { k.to_zaml(z) }
+            z.prefix_structured_keys('? '){ k.to_zaml(z) }
             z.emit(': ')
             v.to_zaml(z)
           }

@@ -1,12 +1,18 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
 require 'test/unit'
 require 'yaml'
 
 $LOAD_PATH.unshift(File.expand_path('../../lib', File.dirname(__FILE__)))
 require 'icss/serialization/zaml'
-# require 'zaml'
 
 DICT_WORDS_PATH = '/usr/share/dict/words'
 SLOWNESS = 0 # how acceptably slow are you willing to have the tests take
+
+ENCODING_KLUDGE          = true  # YAML loads in UTF-8, causing strings to compare unequal
+INDENTED_ARRAYS_KLUDGE   = true  # YAML is uglier about indenting arrays under hashes
+YAML_DUPS_STRINGS_KLUDGE = true  # YAML in 1.9 is less aggressive about referencing strings
 
 class My_class
   def initialize
@@ -37,6 +43,7 @@ class ZamlDumpTest < Test::Unit::TestCase
       new.test(a,b)
     end
     def test(a,b)
+      #       p [a == b, a, b]
       @result = equivalent(a,b)
       self
     end
@@ -53,7 +60,7 @@ class ZamlDumpTest < Test::Unit::TestCase
       result
     end
     def matched_before(a,b)
-      (self[a.object_id] == self[b.object_id]) or note_failure("#{a.inspect} and #{b.inspect} should refer to the same object.\n")
+      (self[a.object_id] == self[b.object_id]) or note_failure("#{a.inspect} [#{a.object_id}] and #{b.inspect} [#{b.object_id}] should refer to the same object.\n")
     end
     def same_object(a,b)
       a.object_id == b.object_id
@@ -91,7 +98,8 @@ class ZamlDumpTest < Test::Unit::TestCase
       result
     end
     def equivalent(a,b)
-      seen_either_before(a,b) ? matched_before(a,b) : (same_object(a,b) or (same_class(a,b) and same_properties(a,b)))
+      if seen_either_before(a,b) then matched_before(a,b) else
+        (same_object(a,b) or (same_class(a,b) and same_properties(a,b))) ; end
     end
   end
   def stripped(x)
@@ -101,11 +109,14 @@ class ZamlDumpTest < Test::Unit::TestCase
     z_load = YAML.load(z_dump = ZAML.dump(obj)) rescue "ZAML produced something YAML can't load."
     y_load = YAML.load(y_dump = YAML.dump(obj)) rescue "YAML failed to eat it's own dogfood"
     context = {}
+    if ENCODING_KLUDGE && (RUBY_VERSION >= "1.9")
+      if obj.respond_to?(:encoding) && z_load.respond_to?(:force_encoding) then z_load.force_encoding(obj.encoding) ; end
+    end
     test = Equivalency.test(z_load,obj)
     assert_block("Reload discrepancy:\n#{test.message}\nZAML:\"\n#{z_dump}\"\nYAML:\"\n#{y_dump}\"\n\n") { test.result }
-    #         if Equivalency.test(y_load,obj).result and not obj.is_a? String
-    #             assert_equal stripped(y_dump),stripped(z_dump), "Dump discrepancy"
-    #             end
+    if Equivalency.test(y_load,obj).result and (not obj.is_a? String) and ($skip_text_compare != :skip)
+      assert_equal stripped(y_dump), stripped(z_dump), "Dump discrepancy"
+    end
   end
 
   #
@@ -155,8 +166,8 @@ class ZamlDumpTest < Test::Unit::TestCase
   def test_dump_short_strings
     #
     every_character = (0..255).collect{|n| n.chr }
-    letters = 'a'..'z'
-    some_characters = (0..128).collect{|n| n.chr } - ('A'..'Z').to_a - ('b'..'z').to_a - ('1'..'9').to_a
+    letters         = 'a'..'z'
+    some_characters = (0..127).collect{|n| n.chr } - ('A'..'Z').to_a - ('b'..'z').to_a - ('1'..'9').to_a
     fewer_characters = some_characters - every_character[1..31] + ["\n","\r","\t","\e"] - [127.chr,128.chr]
     #
     every_character.each{|c1| dump_test c1 }
@@ -165,6 +176,7 @@ class ZamlDumpTest < Test::Unit::TestCase
       every_character.each{|c2| dump_test c1+c2 }
       if idx % 16 == 0 then print ',' ; $stdout.flush ; end
     } if SLOWNESS >= 1
+
     letters.each{|c1|
       letters.each{|c2|
         print c1,c2,' ',8.chr*3
@@ -277,6 +289,8 @@ class ZamlDumpTest < Test::Unit::TestCase
     dump_test("1e5")
   end
 
+  STR = 'happy_str'
+
   HASH = {
     :nil => nil,
     :sym => :value,
@@ -285,10 +299,10 @@ class ZamlDumpTest < Test::Unit::TestCase
     :int => 100,
     :float => 1.1,
     :regexp => /abc/,
-    'str' => 'value',
+    STR => 'value',
     :range => 1..10
   }
-  ARRAY = [nil, :sym, true, false, 100, 1.1, /abc/, 'str', 1..10]
+  ARRAY = [ nil, :sym, true, false, 100, 1.1, /abc/, STR, 1..10 ]
 
   #
   # hash
@@ -301,16 +315,31 @@ class ZamlDumpTest < Test::Unit::TestCase
     dump_test(HASH)
   end
   def test_dump_simple_nested_hash
+    $skip_text_compare = :skip if INDENTED_ARRAYS_KLUDGE
     dump_test({:hash => {:key => 'value'}, :array => [1,2,3]})
+    $skip_text_compare = false
   end
   def test_dump_nested_hash
+    $skip_text_compare = :skip if INDENTED_ARRAYS_KLUDGE
     dump_test(HASH.merge(:hash => {:hash => {:key => 'value'}}, :array => [[1,2,3]]))
+    $skip_text_compare = false
   end
 
   # def test_dump_self_referential_hash
   #   array = ARRAY + [ARRAY]
   #   dump_test(HASH.merge(:hash => HASH, :array => array))
   # end
+
+  def test_dump_self_referential_hash
+    if YAML_DUPS_STRINGS_KLUDGE
+      array = ARRAY.dup  ; hsh   = HASH.dup
+      array.delete(STR)  ; hsh.delete(STR)
+      dump_test(hsh.merge(:hash => hsh, :array => (array + [ array ])))
+    else
+      array = ARRAY + [ARRAY]
+      dump_test(HASH.merge(:hash => HASH, :array => array))
+    end
+  end
 
   def test_dump_singlular_self_referential_hash
     hash = {}
@@ -336,13 +365,22 @@ class ZamlDumpTest < Test::Unit::TestCase
     dump_test([{:key => 'value'}, [1,2,3]])
   end
   def test_dump_nested_array
+    $skip_text_compare = :skip if INDENTED_ARRAYS_KLUDGE
     dump_test(ARRAY.concat([{:array => [1,2,3]}, [[1,2,3]]]))
+    $skil_text_compare = false
   end
 
-  # def test_dump_self_referential_array
-  #   array = ARRAY + [ARRAY, HASH.merge(:hash => HASH)]
-  #   dump_test(array)
-  # end
+  def test_dump_self_referential_array
+    if YAML_DUPS_STRINGS_KLUDGE
+      arr = ARRAY.dup  ; hsh   = HASH.dup
+      arr.delete(STR)  ; hsh.delete(STR)
+      array = arr + [arr, hsh.merge(:hash => hsh)]
+      dump_test(array)
+    else
+      array = ARRAY + [ARRAY, HASH.merge(:hash => HASH)]
+      dump_test(array)
+    end
+  end
 
   def test_dump_singlular_self_referential_array
     array = []
