@@ -1,23 +1,24 @@
 source "http://rubygems.org"
 # Add dependencies required to use your gem here.
 # Example:
-#   gem "activesupport", ">= 2.3.5"
+#   gem                "activesupport", ">= 2.3.5"
 
-# gem   'gorillib',        :git => 'https://github.com/infochimps/gorillib.git'
-# gem   'gorillib',  "~> 0.1.5"
-gem   'activemodel', "~> 3.0.9"
+# gem 'gorillib',      :git => 'https://github.com/infochimps/gorillib.git'
+# gem 'gorillib',      "~> 0.1.5"
+gem   'activemodel',   "~> 3.0.9"
 
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.
-group :development do
-  gem "rspec", "~> 2.3.0"
-  gem "yard", "~> 0.6.0"
-  gem "bundler", "~> 1.0.0"
-  gem "jeweler", "~> 1.5.2"
-  gem "rcov", ">= 0"
+group                  :development do
+  gem 'awesome_print', "~> 0.4.0"
+  gem 'rspec',         "~> 2.3.0"
+  gem 'yard',          "~> 0.6.0"
+  gem 'bundler',       "~> 1.0.0"
+  gem 'jeweler',       "~> 1.5.2"
+  gem 'rcov',          ">= 0"
 end
 
-group :test do
-  gem 'spork',     "~> 0.9.0.rc5"
+group                  :test do
+  gem 'spork',         "~> 0.9.0.rc5"
   gem 'watchr'
 end
