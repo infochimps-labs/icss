@@ -1,0 +1,31 @@
+--- 
+# first comment
+complex:                :hash
+:of:                    
+  2:                    !ruby/regexp /pairs/
+:and:                   
+  # informative comments
+  - :name:              a few
+    :nested:            elements
+    :including:         |-
+      line
+      breaking
+      strings
+    :and_including:     |
+      newline terminated
+      line
+      breaking
+      strings
+
+    :so:                ":what\n            :dyathink, :of, :that\n          "
+  # more informative comments, 
+  # spread across
+  #  multiple lines
+  - :name:              bob
+    # comment can be in hash key, 
+    # spread across
+    #  multiple lines;
+  - # does the right thing 
+    # even when
+    # is the only item
+    []

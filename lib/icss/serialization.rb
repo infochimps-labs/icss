@@ -11,7 +11,7 @@ module Icss
         }.reject{|k,v| v.nil? }
       end
 
-    protected
+      protected
       def expand_type
         case
         when is_reference? && type.respond_to?(:fullname) then type.fullname
@@ -39,5 +39,34 @@ end
 class Time
   def as_json
     self.iso8601
+  end
+end
+
+if defined?(ZAML)
+  module Icss
+
+    module ReceiverModel
+      def to_zaml(z)
+        hsh = self.to_hash
+        z.first_time_only(self){
+          z.nested{
+            if hsh.empty? then z.emit('{}')
+            else
+              hsh.each_pair{|field_name, val|
+                z.nl
+                z.prefix_structured_keys('? '){ field_name.to_zaml(z) }
+                z.emit(': ')
+                v.to_zaml(z)
+              }
+            end
+          }
+        }
+      end
+    end
+
+
+    class DummyProtocol
+    end
+
   end
 end

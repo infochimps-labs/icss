@@ -5,7 +5,10 @@ module Icss
       class Writer
         extend Icss::Meta::NamedSchema
         include Icss::Meta::RecordType
-        include Icss::ReceiverModel::ActiveModelShim
+
+        def self.validates(*args) ; end unless singleton_class.method_defined?(:validates)
+        # include Icss::ReceiverModel::ActiveModelShim
+
         #
         field     :type,     Symbol, :required => true
         field     :fullname, Symbol

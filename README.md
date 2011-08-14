@@ -17,16 +17,11 @@ ___________________________________________________________________________
     double      primitive   Double         number    1.1                    'double'
     bytes       primitive   Binary         string    "\u00FF"               'bytes'
     string      primitive   String         string    "foo"                  'string'
-
-    date        simple      Date           string    "2011-01-02"           'date'
     time        simple      Time           string    "2011-01-02T03:04:05Z" 'time'
-    regexp      simple      Regexp         string    "^hel*o newman"        'regexp'
-    url         simple      Url            string    "http://..."           'url'
-    file_path   simple      FilePath       string    "/tmp/foo"             'file_path'
-    epoch_time  simple      EpochTime      string    1312507492             'epoch_time'
+    symbol      simple      Symbol         string    :belongs_to            'symbol'
 
-    array       container   ArrayOfXXX     array     [1,2]                  { 'type': 'array',  'items': 'int' }
-    map         container   HashOfXXX      object    { "a": 1 }             { 'type': 'map',    'values': 'int' }
+    array       container   (ArrayOfXXX)   array     [1,2]                  { 'type': 'array',  'items': 'int' }
+    map         container   (HashOfXXX)    object    { "a": 1 }             { 'type': 'map',    'values': 'int' }
 
     enum        named       (EnumType)     string    "heads"                { 'type': 'enum',   'name': 'result', 'symbols': ['heads', 'tails'] }
     fixed       named       (FixedType)    string    "\xBD\xF3)Q"           { 'type': 'fixed',  'name': 'crc32',  'length': 4 }
@@ -35,6 +30,11 @@ ___________________________________________________________________________
     error       rec/named   (ErrorType)    object    {"err":"db on fire"}   { 'type': 'record', 'name': 'database_on_fire, 'fields':[...] }
 
     union       union       <UnionType>    object                           [ 'long', { 'type': 'array', 'items': 'int' } ]
+
+    regexp      simple      Regexp         string    "^hel*o newman"        'regexp'
+    url         simple      Url            string    "http://..."           'url'
+    file_path   simple      FilePath       string    "/tmp/foo"             'file_path'
+    epoch_time  simple      EpochTime      string    1312507492             'epoch_time'
 
 
 #### Primitives (int, float, string, ...)

@@ -27,7 +27,7 @@ require 'icss/receiver_model/acts_as_loadable'
 
 require 'icss/type'
 require 'icss/entity'
-require 'icss/receiver_model/active_model_shim'
+# require 'icss/receiver_model/active_model_shim'
 require 'icss/type/primitive_types'
 require 'icss/type/simple_types'
 require 'icss/type/has_fields'
