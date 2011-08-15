@@ -15,27 +15,30 @@ require 'gorillib/hashlike'
 require 'time' # yeah don't we always
 require 'date' # alone on a saturday night
 
-# require 'icss/message'
-# require 'icss/message/sample_message_call'
-# require 'icss/protocol'
-# require 'icss/protocol/target'
-# require 'icss/protocol/data_asset'
-# require 'icss/protocol/code_asset'
-
 require 'icss/receiver_model/acts_as_hash'
-require 'icss/receiver_model/acts_as_loadable'
 
-require 'icss/type'
-require 'icss/entity'
-# require 'icss/receiver_model/active_model_shim'
-require 'icss/type/primitive_types'
-require 'icss/type/simple_types'
+require 'icss/type'                   # specd
+require 'icss/type/primitive_types'   # specd
+require 'icss/type/simple_types'      # specd
+#
 require 'icss/type/has_fields'
 require 'icss/type/record_type'
 require 'icss/type/type_factory'
+#
 require 'icss/type/named_schema'
 require 'icss/type/complex_types'
 require 'icss/type/record_field'
+
+require 'icss/receiver_model'
+require 'icss/receiver_model/active_model_shim'
+require 'icss/receiver_model/acts_as_loadable'
+
+# require 'icss/message'
+# # require 'icss/message/sample_message_call'
+# require 'icss/protocol'
+# # require 'icss/protocol/target'
+# # require 'icss/protocol/data_asset'
+# # require 'icss/protocol/code_asset'
 
 # require 'icss/deprecated'
 

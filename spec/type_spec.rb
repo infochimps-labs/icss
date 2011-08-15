@@ -11,6 +11,11 @@ module Icss
   Blinken = 7
 end
 
+
+#
+# note: the Icss::PRIMITIVE_TYPES etc are tested in primitive_type_spec.rb etc
+#
+
 describe Icss::Meta::Type do
   context '.fullname_for' do
     it 'converts from avro-style' do

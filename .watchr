@@ -34,12 +34,16 @@ watch("spec/.*_spec\.rb") do |match|
   run_spec match[0]
 end
 
-watch("lib/icss/(.*/)?(.*)\.rb") do |match|
+watch("lib/icss.rb") do |match|
+  run_spec      %{spec/icss_spec.rb}
+end
+
+watch("lib/icss/(.*)\.rb") do |match|
   if match.string =~ /zaml/
-    run_with_ruby %{spec/#{match[1]}#{match[2]}_test.rb}
-    run_spec      %{spec/#{match[1]}#{match[2]}_spec.rb}
+    run_with_ruby %{spec/#{match[1]}_test.rb}
+    run_spec      %{spec/#{match[1]}_spec.rb}
   else
-    run_spec      %{spec/#{match[1]}#{match[2]}_spec.rb}
+    run_spec      %{spec/#{match[1]}_spec.rb}
   end
 end
 

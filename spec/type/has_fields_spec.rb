@@ -2,7 +2,7 @@ require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 require 'icss/type'
 require 'icss/type/primitive_types'
 require 'icss/type/simple_types'
-require 'icss/type/named_schema'
+require 'icss/type/schema'
 require 'icss/type/has_fields'
 
 module Icss::Smurf
@@ -45,21 +45,21 @@ describe Icss::Meta::HasFields do
       new_smurf_klass.fields[:birthday  ].to_hash.should == {:name => :birthday,   :type => Date}
     end
     it 'sets accessor visibility' do
-      new_smurf_klass.field(:field_1, Integer, :reader => :none)
-      new_smurf_klass.field(:field_2, Integer, :writer => :protected, :accessor => :private)
+      new_smurf_klass.field(:field_1, Integer, :accessor => :none)
+      new_smurf_klass.field(:field_2, Integer, :accessor => :private)
+      new_smurf_klass.field(:field_3, Integer, :accessor => :protected)
       new_smurf = new_smurf_klass.new
-      new_smurf.should     respond_to('field_1=')
+      new_smurf.should_not respond_to('field_1=')
       new_smurf.should_not respond_to('field_1')
-      lambda{ new_smurf.field_2 = 3 }.should raise_error(NoMethodError, /protected method \`field_2=/)
-      lambda{ new_smurf.field_2     }.should raise_error(NoMethodError,   /private method \`field_2/)
+      lambda{ new_smurf.field_2 = :hi }.should raise_error(NoMethodError, /private method \`field_2=/)
+      lambda{ new_smurf.field_2       }.should raise_error(NoMethodError, /private method \`field_2/)
+      lambda{ new_smurf.field_3 = :yo }.should raise_error(NoMethodError, /protected method \`field_3=/)
+      lambda{ new_smurf.field_3       }.should raise_error(NoMethodError, /protected method \`field_3/)
     end
     it 'adds few methods' do
       (Icss::Smurf::Smurfette.public_methods - Class.public_methods).sort.should == [
         :after_receive, :after_receivers,
         :field, :field_names, :fields,
-        #
-        :get_metatype, :inscribe_schema,
-        #
         :metatype, :rcvr, :rcvr_remaining, :receive,
       ]
     end
@@ -70,6 +70,10 @@ describe Icss::Meta::HasFields do
         :receive_smurfiness, :smurfiness, :smurfiness=,
       ]
     end
+  end
+
+  context '#metatype' do
+
   end
 
   context '.fields' do

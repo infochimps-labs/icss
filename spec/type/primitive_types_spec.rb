@@ -54,7 +54,6 @@ describe 'Icss::PRIMITIVE_TYPES' do
   end
 
   describe '.receive' do
-
     def self.it_correctly_converts(type, orig, desired)
       it "for #{type} converts #{orig.inspect} to #{desired.inspect}" do
         type.receive(orig).should == desired
@@ -66,9 +65,13 @@ describe 'Icss::PRIMITIVE_TYPES' do
         [Symbol,   'foo', :foo], [Symbol, :foo, :foo], [Symbol, nil, nil],     [Symbol, '', nil],
         [Integer, '5', 5],       [Integer, 5,   5],    [Integer, nil, nil],    [Integer, '', nil],
         [Integer, '5', 5],       [Integer, 5,   5],    [Integer, nil, nil],    [Integer, '', nil],
+        [Long,    '5', 5],       [Long,    5,   5],    [Long,    nil, nil],    [Long,    '', nil],
         [Float,   '5.2', 5.2],   [Float,   5.2, 5.2],  [Float, nil, nil],      [Float, '', nil],
+        [Double,  '5.2', 5.2],   [Double,  5.2, 5.2],  [Double,nil, nil],      [Double,'', nil],
         [String,  'foo', 'foo'], [String, :foo, 'foo'], [String, nil, ""],     [String, '', ""],
         [String,  5.2, "5.2"],   [String, [1], "[1]"],  [String, 1, "1"],
+        [Binary,  'foo', 'foo'], [Binary, :foo, 'foo'], [Binary, nil, ""],     [Binary, '', ""],
+        [Binary,  5.2, "5.2"],   [Binary, [1], "[1]"],  [Binary, 1, "1"],
         [Time,  '1985-11-05T04:03:02Z',             Time.parse('1985-11-05T04:03:02Z')],
         [Time,  '1985-11-05T04:03:02+06:00',        Time.parse('1985-11-04T22:03:02Z')],
         [Time,  Time.parse('1985-11-05T04:03:02Z'), Time.parse('1985-11-05T04:03:02Z')],

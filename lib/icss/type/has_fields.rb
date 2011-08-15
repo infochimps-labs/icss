@@ -3,7 +3,23 @@ require 'icss/type/type_factory'
 module Icss
   module Meta
     module HasFields
-      include Icss::Meta::NamedSchema
+      include Icss::Meta::Schema
+
+      #
+      # Returns a new instance with the given hash used to set all rcvrs.
+      #
+      # All args up to the last one are passed to the initializer.
+      # The last arg must be a hash -- its attributes are set on the newly-created object
+      #
+      # @param hsh [Hash] attr-value pairs to set on the newly created object.
+      # @param *args [Array] arguments to pass to the constructor
+      # @return [Object] a new instance
+      def receive *args
+        hsh = args.pop
+        raise ArgumentError, "Can't receive (it isn't hashlike): '#{hsh.inspect}' -- the hsh should be the *last* arg" unless hsh.respond_to?(:[]) && hsh.respond_to?(:has_key?)
+        obj = self.new(*args)
+        obj.receive!(hsh)
+      end
 
       #
       # Describes a field in a Record object.
@@ -82,16 +98,10 @@ module Icss
       #
       def field(field_name, type, schema={})
         field_name = field_name.to_sym
+        #
         add_field_schema(field_name, type, schema)
         add_field_accessor(field_name, schema)
         rcvr(field_name, type, schema)
-        if schema[:aliases]
-          schema[:aliases].each do |alias_name|
-            add_field_accessor(alias_name, schema, field_name)
-            rcvr(alias_name, type, schema, field_name)
-          end
-        end
-        add_after_receivers(field_name, type, schema)
       end
 
       def fields
@@ -104,58 +114,6 @@ module Icss
         all_f = @field_names || []
         call_ancestor_chain(:field_names){|anc_f| all_f = anc_f | all_f }
         all_f
-      end
-
-      # after_receive blocks for self and all ancestors
-      def after_receivers
-        all_f = @after_receivers || []
-        call_ancestor_chain(:after_receivers){|anc_f| all_f = anc_f | all_f }
-        all_f
-      end
-
-      # make a block to run after each time  .receive! is invoked
-      def after_receive &block
-        @after_receivers = (@after_receivers || []) | [block]
-      end
-
-      # So you're asking yourself "Self, why didn't he just call .super?
-      # Consider:
-      #
-      #   class Base
-      #     extend(Icss::Meta::RecordType::FieldDecorators)
-      #     field :smurfiness, Integer
-      #   end
-      #   class Poppa < Base
-      #     field :height, Integer
-      #   end
-      #
-      # Poppa.field_names calls Icss::Meta::RecordType::FieldDecorators --
-      # it's the first member of its inheritance chain to define the method.
-      # We want it to do so for each ancestor that has added fields.
-
-      #
-      # Returns the metatype -- a module extending the type, on which all the
-      # accessors and receive methods are inscribed. (This allows you to call
-      # +super()+ from within receive_foo)
-      #
-      def metatype
-        @metatype ||= get_metatype
-      end
-
-      #
-      # Returns a new instance with the given hash used to set all rcvrs.
-      #
-      # All args up to the last one are passed to the initializer.
-      # The last arg must be a hash -- its attributes are set on the newly-created object
-      #
-      # @param hsh [Hash] attr-value pairs to set on the newly created object.
-      # @param *args [Array] arguments to pass to the constructor
-      # @return [Object] a new instance
-      def receive *args
-        hsh = args.pop
-        raise ArgumentError, "Can't receive (it isn't hashlike): '#{hsh.inspect}' -- the hsh should be the *last* arg" unless hsh.respond_to?(:[]) && hsh.respond_to?(:has_key?)
-        obj = self.new(*args)
-        obj.receive!(hsh)
       end
 
       #
@@ -172,12 +130,13 @@ module Icss
         attr_name ||= field_name
 
         klass = Icss::Meta::TypeFactory.receive(schema.merge( :type => type ))
-        metatype.send(:define_method, "receive_#{field_name}") do |val|
+        define_metatype_method("receive_#{field_name}") do |val|
           return nil if val.nil?
           result = klass.receive(val)
           _set_field_val(attr_name, result)
           result
         end
+        add_after_receivers(field_name, type, schema)
       end
 
       #
@@ -199,13 +158,43 @@ module Icss
           remaining_vals_hsh = hsh.reject{|k,v| (self.class.fields.include?(k)) || (k.to_s =~ /^_/) }
           self.send("receive_#{field_name}", remaining_vals_hsh)
         end
+        add_after_receivers(field_name, type, schema)
+      end
+
+      # make a block to run after each time  .receive! is invoked
+      def after_receive &block
+        @after_receivers = (@after_receivers || []) | [block]
+      end
+
+      # after_receive blocks for self and all ancestors
+      def after_receivers
+        all_f = @after_receivers || []
+        call_ancestor_chain(:after_receivers){|anc_f| all_f = anc_f | all_f }
+        all_f
       end
 
     protected
 
+      #
       # yield, in turn, the result of calling the given method on each
       # ancestor that responds. (ancestors are called from parent to
       # great-grandparent)
+      #
+      # So you're asking yourself "Self, why not just call .super?
+      #
+      # Consider:
+      #
+      #   class Base
+      #     extend(Icss::Meta::RecordType::FieldDecorators)
+      #     field :smurfiness, Integer
+      #   end
+      #   class Poppa < Base
+      #     field :height, Integer
+      #   end
+      #
+      # Poppa.field_names calls Icss::Meta::RecordType::FieldDecorators --
+      # it's the first member of its inheritance chain to define the method.
+      # We want it to do so for each ancestor that has added fields.
       def call_ancestor_chain(meth)
         self.ancestors[1..-1].each do |ancestor|
           yield(ancestor.send(meth)) if ancestor.respond_to?(meth)
@@ -218,18 +207,24 @@ module Icss
         @fields[name] = schema.merge({ :name => name, :type => type })
       end
 
-      def add_field_accessor(field_name, schema, attr=nil)
-        accessor_info = schema[:accessor]
-        reader_meth = field_name ; writer_meth = "#{field_name}=" ; attr_name = "@#{attr || field_name}"
+      def define_metatype_method(meth_name, visibility=:public, &blk)
         metatype.class_eval do
-          unless (accessor_info == :none)
-            define_method(reader_meth){    instance_variable_get(attr_name)    } unless method_defined?(reader_meth)
-            define_method(writer_meth){|v| instance_variable_set(attr_name, v) } unless method_defined?(writer_meth)
-            case accessor_info
-            when :protected then protected(reader_meth) ; protected(writer_meth)
-            when :private  then  private(reader_meth)   ; private(writer_meth)
-            else                 public(reader_meth)    ; public(writer_meth) ; end
+          define_method(meth_name, &blk) unless method_defined?(meth_name)
+          case visibility
+          when :protected then protected meth_name
+          when :private   then private   meth_name
+          when :public    then public    meth_name
+          else raise ArgumentError, "visibility must be :public, :private or :protected"
           end
+        end
+      end
+
+      def add_field_accessor(field_name, schema, attr=nil)
+        visibility = schema[:accessor] || :public
+        reader_meth = field_name ; writer_meth = "#{field_name}=" ; attr_name = "@#{attr || field_name}"
+        unless (visibility == :none)
+          define_metatype_method(reader_meth, visibility){    instance_variable_get(attr_name)    }
+          define_metatype_method(writer_meth, visibility){|v| instance_variable_set(attr_name, v) }
         end
       end
 
