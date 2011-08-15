@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 require 'yaml'
 require 'icss/serialization/zaml'
@@ -29,6 +30,7 @@ describe ZAML do
   def complex_hash
     { 'complex' => :hash,
       :of => {2 => /pairs/},
+      'Iñtërnâtiônàlizætiøn' => "look out for 'funny quotes'.",
       :and => [BASIC_HASH,  { :name => 'bob' }, [], ],
     }
   end
@@ -38,6 +40,7 @@ describe ZAML do
       ZAML::Comment.new("first comment") => 1,
       'complex' => :hash,
       :of => {2 => /pairs/},
+      'Iñtërnâtiônàlizætiøn' => "look out for 'funny quotes'.",
       :and => [
         ZAML::Comment.new("informative comments"),
         BASIC_HASH,
@@ -46,6 +49,7 @@ describe ZAML do
           :name => 'bob',
           ZAML::Comment.new("comment can be in hash key, \nspread across\n multiple lines;") => :zaml_ignores_their_hash_val
         },
+        ZAML.padding(3),
         [ZAML::Comment.new("does the right thing \neven when\nis the only item")],
       ],
     }
@@ -70,6 +74,7 @@ describe ZAML do
     it 'matches sample' do
       expected_yaml_str = File.read(ENV.root_path('spec/fixtures/zaml_complex_hash.yaml'))
       yaml_str = ZAML.dump(complex_hash_with_comments, '', :valign => 24 )
+      puts yaml_str
       yaml_str.should == expected_yaml_str
     end
   end

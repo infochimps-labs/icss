@@ -42,31 +42,17 @@ class Time
   end
 end
 
-if defined?(ZAML)
-  module Icss
+module Icss
 
-    module ReceiverModel
-      def to_zaml(z)
-        hsh = self.to_hash
-        z.first_time_only(self){
-          z.nested{
-            if hsh.empty? then z.emit('{}')
-            else
-              hsh.each_pair{|field_name, val|
-                z.nl
-                z.prefix_structured_keys('? '){ field_name.to_zaml(z) }
-                z.emit(': ')
-                v.to_zaml(z)
-              }
-            end
-          }
-        }
-      end
+  module ReceiverModel
+    def to_zaml(z=ZAML.new)
+      hsh = self.to_hash
+      hsh.to_zaml(z)
+      z.to_s
     end
+  end
 
 
-    class DummyProtocol
-    end
-
+  class DummyProtocol
   end
 end

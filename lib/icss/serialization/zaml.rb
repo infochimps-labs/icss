@@ -82,12 +82,6 @@ class ZAML
     nl unless @structured_key_prefix
     @structured_key_prefix = nil
   end
-  # def vpadding
-  #   return '' if (not @valign) || @recent_nl || result.empty?
-  #   rp  = @valign - ((@indent || "\n").length - 1)
-  #   rp -= @result.last.length
-  #   rp > 0 ?
-  # end
 
   def new_label_for(obj)
     Label.new(obj,(Hash === obj || Array === obj) ? "#{@indent || "\n"}  " : ' ')
@@ -110,11 +104,39 @@ class ZAML
     @result.join.tap{|s| s << "\n" if s[-1..-1] != "\n" }
   end
   def inspect
-    res = to_s
-    res = res[0..46]+"..." if res.length > 50
-    %Q{\#<ZAML ind=#{@indent} pfx=#{@structured_key_prefix} result='#{res}'>}
+    res = to_s.inspect
+    res = res[0..29]+"..."+res[-20..-1] if res.length > 50
+    %Q{\#<ZAML ind=#{@indent.inspect} pfx=#{@structured_key_prefix} result='#{res}'>}
   end
 
+  def self.padding(nlines)
+    Padding.new(nlines)
+  end
+
+  def no_comment(elt)
+    if elt.is_a?(ZAML::Comment) || elt.is_a?(ZAML::Padding)
+      elt.to_zaml(self)
+    else
+      yield
+    end
+  end
+
+  class Comment < String
+    def to_zaml(z=ZAML.new)
+      lines = self.split("\n",-1).map{|s| "# #{s}".strip }
+      lines.each{|line| z.nl ; z.emit(line) }
+    end
+  end
+
+  class Padding
+    def initialize(nlines)
+      @nlines = nlines
+    end
+    def to_zaml(z=ZAML.new)
+      @nlines.times{ z.nl ; z.emit('') }
+      z.to_s
+    end
+  end
 
   #
   # Label class -- resolves circular references
@@ -268,18 +290,30 @@ ZAML::ZAML_ESCAPES = %w{\x00 \x01 \x02 \x03 \x04 \x05 \x06 \a \x08 \t \n \v \f \
 unless defined?(ZAML::HI_BIT_CHARS)
   ZAML::HI_BIT_CHARS = '\x80-\xFF'
   if RUBY_VERSION > "1.9" then ZAML::HI_BIT_CHARS.force_encoding('ASCII-8BIT') ; end
+  ZAML::HI_BIT_CHARS_RE = /([#{ZAML::HI_BIT_CHARS}])/o
 end
-ZAML::EXTENDED_CHARS_RE = /[\x00-\x08\x0B\x0C\x0E-\x1F#{ZAML::HI_BIT_CHARS}]/o unless defined?(ZAML::EXTENDED_CHARS_RE)
+ZAML::EXTENDED_CHARS_RE = /[\x00-\x08\x0B\x0C\x0E-\x1F]/o unless defined?(ZAML::EXTENDED_CHARS_RE)
 
 class String
-  def escaped_for_zaml
-    gsub( /\x5C/, "\\\\\\" ).  # Demi-kludge for Maglev/rubinius; the regexp should be /\\/ but parsetree chokes on that.
-      gsub( /"/, "\\\"" ).
-      gsub( /([\x00-\x1F])/ ){|x| ZAML::ZAML_ESCAPES[ x.unpack("C")[0] ] }.
-      gsub( /([#{ZAML::HI_BIT_CHARS}])/ ){|x| "\\x#{x.unpack("C")[0].to_s(16)}" }
+  if RUBY_VERSION >= "1.9"
+    def escaped_for_zaml
+      gsub( /\x5C/, "\\\\\\" ).  # Demi-kludge for Maglev/rubinius; the regexp should be /\\/ but parsetree chokes on that.
+        gsub( /"/, "\\\"" ).
+        gsub( /([\x00-\x1F])/ ){|x| ZAML::ZAML_ESCAPES[ x.unpack("C")[0] ] }
+    end
+  else
+    def escaped_for_zaml
+      gsub( /\x5C/, "\\\\\\" ).  # Demi-kludge for Maglev/rubinius; the regexp should be /\\/ but parsetree chokes on that.
+        gsub( /"/, "\\\"" ).
+        gsub( /([\x00-\x1F])/ ){|x| ZAML::ZAML_ESCAPES[ x.unpack("C")[0] ] }.
+        gsub( ZAML::HI_BIT_CHARS_RE ){|x| "\\x#{x.unpack("C")[0].to_s(16)}" }
+    end
   end
 
   def classify_for_zaml
+    unless RUBY_VERSION >= "1.9"
+      return :escaped if (self =~ ZAML::HI_BIT_CHARS_RE)
+    end
     case
     when self == ''
       :bare
@@ -328,24 +362,6 @@ class String
 
   #   z.emit("!binary |") ;
   #   z.nested{ z.nl; z.emit([self].pack("m72")) }
-end
-
-
-class ZAML
-  class Comment < String
-    def to_zaml(z=ZAML.new)
-      lines = self.split("\n").map{|s| "# #{s}" }
-      lines.each{|line| z.nl ; z.emit(line) }
-    end
-  end
-
-  def no_comment(elt)
-    if elt.is_a?(ZAML::Comment)
-      elt.to_zaml(self)
-    else
-      yield
-    end
-  end
 end
 
 class Hash

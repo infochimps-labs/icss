@@ -3,6 +3,7 @@
 complex:                :hash
 :of:                    
   2:                    !ruby/regexp /pairs/
+Iñtërnâtiônàlizætiøn:   look out for 'funny quotes'.
 :and:                   
   # informative comments
   - :name:              a few
@@ -25,6 +26,9 @@ complex:                :hash
     # comment can be in hash key, 
     # spread across
     #  multiple lines;
+  
+  
+  
   - # does the right thing 
     # even when
     # is the only item
