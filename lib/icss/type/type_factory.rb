@@ -78,11 +78,11 @@ module Icss
       end
 
       def self.receive_structured_schema(schema_writer, schema)
-        schema_writer.receive_schema(schema)
+        schema_writer.receive(schema)
       end
 
       def self.receive_union_schema(schema_writer, schema)
-        schema_writer.receive_schema(schema)
+        schema_writer.receive(schema)
       end
 
     end

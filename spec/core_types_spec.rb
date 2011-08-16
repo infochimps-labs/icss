@@ -50,7 +50,7 @@ end
 #   class Entity
 #   end
 #   class Thing < Icss::Entity
-#     include Icss::Meta::RecordType
+#     include Icss::Meta::RecordModel
 #     field :name,        String, :doc => 'The name of the item.'
 #     field :description, String,   :doc => 'A short description of the item.'
 #     field :image,       String,    :doc => 'URL of an image of the item.'
@@ -58,7 +58,7 @@ end
 #   end
 #   module Core
 #     class Place < Icss::Thing
-#       # extend Icss::Meta::RecordType
+#       # extend Icss::Meta::RecordModel
 #       field :address_locality, String
 #       field :address_region,   String
 #     end

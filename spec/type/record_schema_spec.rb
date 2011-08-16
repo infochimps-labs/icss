@@ -13,7 +13,7 @@ module Icss
   end
 end
 
-describe Icss::Meta::RecordType do
+describe Icss::Meta::RecordModel do
   context 'enum schema' do
     it 'handles array of record of ...' do
       @klass = Icss::Meta::TypeFactory.receive({

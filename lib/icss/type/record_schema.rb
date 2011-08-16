@@ -2,7 +2,7 @@ module Icss
   module Meta
 
     # class RecordField
-    #   include Icss::Meta::RecordType
+    #   include Icss::Meta::RecordModel
     #   include Icss::ReceiverModel::ActsAsHash
     #   include Gorillib::Hashlike
     #   include Gorillib::Hashlike::Keys

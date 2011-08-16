@@ -4,7 +4,7 @@ module Icss
   module ReceiverModel
 
     #
-    # Makes an Icss::RecordType behave mostly like a hash.
+    # Makes an Icss::RecordModel behave mostly like a hash.
     #
     # By default, the hashlike methods iterate over the fields: instance #keys
     # delegates to self.class.field_names. All methods are defined naturally on

@@ -17,16 +17,17 @@ require 'date' # alone on a saturday night
 
 require 'icss/receiver_model/acts_as_hash'
 
-require 'icss/type'                   # specd
-require 'icss/type/simple_types'      # specd
-require 'icss/type/record_schema'        # specd
+require 'icss/type'                   #
+require 'icss/type/simple_types'      # Boolean, Integer, ...
+require 'icss/type/named_type'        # class methods for a named type: .metamodel .doc, .fullname, &c
+require 'icss/type/record_type'       # class methods for a record model: .field, .receive,
+require 'icss/type/record_model'      # instance methods for a record model
 #
-require 'icss/type/record_type'
-require 'icss/type/type_factory'
+require 'icss/type/type_factory'      #
 #
-require 'icss/type/named_schema'
-require 'icss/type/structured_schemas'
-require 'icss/type/record_field'
+require 'icss/type/structured_schema' # generate type from array, hash, &c schema
+require 'icss/type/union_schema'      # factory for instances based on type
+require 'icss/type/record_schema'
 
 require 'icss/receiver_model'
 require 'icss/receiver_model/active_model_shim'

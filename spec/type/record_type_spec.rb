@@ -1,18 +1,18 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 require 'icss/type'
 require 'icss/type/simple_types'
-require 'icss/type/schema'
-require 'icss/type/record_schema'
+require 'icss/type/named_type'
+require 'icss/type/record_type'
 
 module Icss::Smurf
   class Base
-    extend Icss::Meta::HasFields
+    extend Icss::Meta::RecordType
     field :smurfiness, Integer
   end
   class Poppa < Base
   end
   module Brainy
-    extend Icss::Meta::HasFields
+    extend Icss::Meta::RecordType
     field :doing_it, Boolean
   end
   class Smurfette < Poppa
@@ -21,9 +21,9 @@ module Icss::Smurf
   end
 end
 
-describe Icss::Meta::HasFields do
+describe Icss::Meta::RecordType do
   let(:new_smurf_klass){ k = Class.new(Icss::Smurf::Poppa)  }
-  let(:module_smurf   ){ m = Module.new; m.send(:extend, Icss::Meta::HasFields) ; m }
+  let(:module_smurf   ){ m = Module.new; m.send(:extend, Icss::Meta::RecordType) ; m }
   let(:poppa          ){ Icss::Smurf::Poppa.new() }
   let(:smurfette      ){ Icss::Smurf::Smurfette.new() }
 
@@ -59,8 +59,10 @@ describe Icss::Meta::HasFields do
       (Icss::Smurf::Smurfette.public_methods - Class.public_methods).sort.should == [
         :after_receive, :after_receivers,
         :field, :field_names, :fields,
-        :metatype, :rcvr, :rcvr_remaining, :receive,
-      ]
+        :metatype, :to_schema,
+        :fullname, :namespace, :typename, :doc, :doc=,
+        :rcvr, :rcvr_remaining, :receive,
+      ].sort
     end
     it 'adds few methods' do
       (Icss::Smurf::Smurfette.new.public_methods - Object.public_methods).sort.should == [
@@ -69,10 +71,6 @@ describe Icss::Meta::HasFields do
         :receive_smurfiness, :smurfiness, :smurfiness=,
       ]
     end
-  end
-
-  context '#metatype' do
-
   end
 
   context '.fields' do
@@ -111,6 +109,28 @@ describe Icss::Meta::HasFields do
       new_smurf_klass.class_eval{ def foo() "hello!" end }
       new_smurf_klass.field :foo, String
       new_smurf_klass.new.foo.should == "hello!"
+    end
+  end
+
+  context 'class schema' do
+    it "has .fullname, .namespace, .typename, and .doc" do
+      [:fullname, :namespace, :typename, :doc].each do |meth|
+        Icss::Smurf::Smurfette.should         respond_to(meth)
+        Icss::Smurf::Smurfette.new.should_not respond_to(meth)
+      end
+    end
+    it "name corresponds to its class & module scope" do
+      Icss::Smurf::Smurfette.typename.should  == 'smurfette'
+      Icss::Smurf::Smurfette.namespace.should == 'smurf'
+      Icss::Smurf::Smurfette.fullname.should  == 'smurf.smurfette'
+    end
+    it "has a settable doc string" do
+      Icss::Smurf::Poppa.doc = "Poppa Doc: be cool with them Haitians"
+      Icss::Smurf::Poppa.doc.should     == "Poppa Doc: be cool with them Haitians"
+      Icss::Smurf::Smurfette.doc.should == "Poppa Doc: be cool with them Haitians"
+      Icss::Smurf::Smurfette.doc        =  "Gentlesmurfs prefer blondes"
+      Icss::Smurf::Smurfette.doc.should == "Gentlesmurfs prefer blondes"
+      Icss::Smurf::Poppa.doc.should     == "Poppa Doc: be cool with them Haitians"
     end
   end
 

@@ -12,6 +12,7 @@ Spork.prefork do # Must restart for changes to config / code from libraries load
   require 'awesome_print'
 
   require 'gorillib/object/blank'
+  require 'gorillib/object/try_dup'
   require 'gorillib/string/inflections'
   require 'gorillib/string/constantize'
   require 'gorillib/array/compact_blank'

@@ -1,13 +1,8 @@
 module Icss
   module Meta
 
-    module RecordSchema
-      include Icss::Meta::HasFields
-      include Icss::Meta::Schema
-    end
-
-    module RecordType
-      def self.included(base) base.extend(Icss::Meta::RecordSchema) ; end
+    module RecordModel
+      def self.included(base) base.extend(Icss::Meta::RecordType) ; end
 
       #
       # modify object in place with new typecast values.
@@ -26,6 +21,16 @@ module Icss
         self
       end
 
+      # true if the attr is a receiver variable and it has been set
+      def attr_set?(attr)
+        self.class.fields.has_key?(attr) && self.instance_variable_defined?("@#{attr}")
+      end
+
+      def unset!(attr)
+        self.send(:remove_instance_variable, "@#{attr}") if self.instance_variable_defined?("@#{attr}")
+      end
+      protected :unset!
+
     protected
 
       def run_after_receivers(hsh)
@@ -39,16 +44,5 @@ module Icss
       end
 
     end
-
-    module ErrorSchema
-      include Icss::Meta::RecordSchema
-
-      class Writer < ::Icss::Meta::Schema::Writer
-      end
-    end
-    module ErrorType
-      def self.included(base) base.extend(Icss::Meta::ErrorSchema) ; end
-    end
-
   end
 end

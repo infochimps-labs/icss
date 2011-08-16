@@ -2,8 +2,8 @@ require 'icss/type/type_factory'
 
 module Icss
   module Meta
-    module HasFields
-      include Icss::Meta::Schema
+    module RecordType
+      include Icss::Meta::NamedType
 
       #
       # Returns a new instance with the given hash used to set all rcvrs.
@@ -40,7 +40,7 @@ module Icss
       #     float,double  number      Float       simple   1.1
       #     bytes         string      String      simple   "\u00FF"
       #     string        string      String      simple   "foo"
-      #     record        object      RecordType  named       {"a": 1}
+      #     record        object      RecordModel  named       {"a": 1}
       #     enum          string      Enum        named       "FOO"
       #     array         array       Array       container  [1]
       #     map           object      Hash        container  { "a": 1 }
@@ -145,7 +145,7 @@ module Icss
       # * field's name does not start with '_'
       #
       # @example
-      #     class Foo ; include RecordType
+      #     class Foo ; include RecordModel
       #       field  :bob, String
       #       rcvr_remaining :other_params
       #     end
@@ -185,14 +185,14 @@ module Icss
       # Consider:
       #
       #   class Base
-      #     extend(Icss::Meta::RecordType::FieldDecorators)
+      #     extend(Icss::Meta::RecordType)
       #     field :smurfiness, Integer
       #   end
       #   class Poppa < Base
       #     field :height, Integer
       #   end
       #
-      # Poppa.field_names calls Icss::Meta::RecordType::FieldDecorators --
+      # Poppa.field_names calls Icss::Meta::RecordType --
       # it's the first member of its inheritance chain to define the method.
       # We want it to do so for each ancestor that has added fields.
       def call_ancestor_chain(meth)
@@ -247,6 +247,6 @@ module Icss
         super(field_name, type, schema) if defined?(super)
       end
 
-    end # HasFields
+    end # RecordType
   end
 end

@@ -1,20 +1,19 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
-require 'icss/type'
-require 'icss/type/simple_types'
-require 'icss/type/named_schema'
-require 'icss/type/record_schema'
-require 'icss/type/named_schema'
-require 'icss/type/record_type'
+require 'icss/type'                   #
+require 'icss/type/simple_types'      # Boolean, Integer, ...
+require 'icss/type/named_type'        # class methods for a named type: .metamodel .doc, .fullname, &c
+require 'icss/type/record_type'       # class methods for a record model: .field, .receive,
+require 'icss/type/record_model'      # instance methods for a record model
 
 module Icss::Smurf
   class Base
-    include Icss::Meta::RecordType
+    include Icss::Meta::RecordModel
     field :smurfiness, Integer
   end
   class Poppa < Base
   end
   module Brainy
-    include Icss::Meta::RecordType
+    include Icss::Meta::RecordModel
     field :doing_it, Boolean
   end
   class Smurfette < Poppa
@@ -23,33 +22,11 @@ module Icss::Smurf
   end
 end
 
-describe Icss::Meta::RecordType do
+describe Icss::Meta::RecordModel do
   let(:new_smurf_klass){ k = Class.new(Icss::Smurf::Poppa)  }
-  let(:module_smurf   ){ m = Module.new; m.send(:extend, Icss::Meta::HasFields) ; m }
+  let(:module_smurf   ){ m = Module.new; m.send(:extend, Icss::Meta::RecordType) ; m }
   let(:poppa          ){ Icss::Smurf::Poppa.new() }
   let(:smurfette      ){ Icss::Smurf::Smurfette.new() }
-
-  context 'class schema' do
-    it "has .fullname, .namespace, .typename, and .doc" do
-      [:fullname, :namespace, :typename, :doc].each do |meth|
-        Icss::Smurf::Smurfette.should         respond_to(meth)
-        Icss::Smurf::Smurfette.new.should_not respond_to(meth)
-      end
-    end
-    it "name corresponds to its class & module scope" do
-      Icss::Smurf::Smurfette.typename.should  == 'smurfette'
-      Icss::Smurf::Smurfette.namespace.should == 'smurf'
-      Icss::Smurf::Smurfette.fullname.should  == 'smurf.smurfette'
-    end
-    it "has a settable doc string" do
-      Icss::Smurf::Poppa.doc = "Poppa Doc: be cool with them Haitians"
-      Icss::Smurf::Poppa.doc.should     == "Poppa Doc: be cool with them Haitians"
-      Icss::Smurf::Smurfette.doc.should == "Poppa Doc: be cool with them Haitians"
-      Icss::Smurf::Smurfette.doc        =  "Gentlesmurfs prefer blondes"
-      Icss::Smurf::Smurfette.doc.should == "Gentlesmurfs prefer blondes"
-      Icss::Smurf::Poppa.doc.should     == "Poppa Doc: be cool with them Haitians"
-    end
-  end
 
   context '#receive!' do
     it 'sets values' do

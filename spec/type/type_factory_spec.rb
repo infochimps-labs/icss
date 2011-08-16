@@ -1,8 +1,11 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
-require 'icss/type'
-require 'icss/type/simple_types'
-require 'icss/type/schema'
-require 'icss/type/record_schema'
+require 'icss/type'                   #
+require 'icss/type/simple_types'      # Boolean, Integer, ...
+require 'icss/type/named_type'        # class methods for a named type: .metamodel .doc, .fullname, &c
+require 'icss/type/record_type'       # class methods for a record model: .field, .receive,
+require 'icss/type/record_model'      # instance methods for a record model
+require 'icss/type/type_factory'      #
+#
 require ENV.root_path('spec/support/icss_test_helper')
 include IcssTestHelper
 
@@ -56,10 +59,10 @@ describe Icss::Meta::TypeFactory do
     #
     #   { 'type' => 'enum',   'name'  => 'Kind', 'symbols' => ['A','B','C']} => [Icss::Meta::EnumSchema::Writer, 'Icss::Kind'],
     #   { 'type' => 'fixed',  'name' => 'MD5',  'size' => 16}                => [Icss::Meta::FixedSchema::Writer, 'Icss::Md5'],
-    #   { 'type' => 'record', 'name'  => 'bob'      }                        => [Icss::Meta::RecordSchema::Writer, 'Icss::Bob'],
+    #   { 'type' => 'record', 'name'  => 'bob'      }                        => [Icss::Meta::RecordType::Writer, 'Icss::Bob'],
     #   # { 'type' => 'record','name' => 'Node', 'fields' => [
     #   #     { 'name' => 'label',    'type' => 'string'},
-    #   #     { 'name' => 'children', 'type' => {'type' => 'array', 'items' => 'Node'}}]} => Icss::Meta::RecordType,
+    #   #     { 'name' => 'children', 'type' => {'type' => 'array', 'items' => 'Node'}}]} => Icss::Meta::RecordModel,
     #   # { 'type' => 'map', 'values' => { 'name' => 'Foo', 'type' => 'record', 'fields' => [{'name' => 'label', 'type' => 'string'}]} } => Icss::HashType,
     # },
     # :union_type => {

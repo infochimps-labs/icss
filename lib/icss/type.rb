@@ -1,36 +1,56 @@
 module Icss
 
+  #
+  # Predefining the namespaces here makes inclusion-order less brittle.
+  #
+
   # full definitions in type/simple_types.rb
   class ::Boolean < ::BasicObject ; end
   class ::Long    < ::Integer     ; end
   class ::Double  < ::Float       ; end
   class ::Binary  < ::String      ; end
 
-  # full definitions in type/record_type.rb and type/structured_schemas.rb
+  # patron saint of Simple Types (Structured Text)
+  module St       ; end
+  # pasture wherein graze MeasurementUnits
+  module Mu       ; end
+  # stand in the place where you are
+  module Business ;  end
+  #
+  module Culture  ;  end
+  # Eventfully, Tom phoned the caterer.
+  module Ev       ; end
+  #
+  module Geo      ; end
+  # Relatively speaking, this is where links and relations go
+  module Rel      ; end
+  # I don't want to sell anything, buy anything, or process anything as a career.
+  # I don't want to sell anything bought or processed, or buy anything sold or processed, or process
+  # anything sold, bought, or processed, or repair anything sold, bought, or processed.
+  # You know, as a career, I don't want to do that.
+  module Prod     ;  end
+  #
+  module Social   ; end
+  #
+  module Web      ; end
+
+  # Buffalo Buffalo buffalo Buffalo Buffalo Buffalo buffalow.
   module Meta
-    module NamedSchema  ; class Writer ; end ; end
-    module RecordSchema ; class Writer < NamedSchema::Writer ; end ; end
-    module ErrorSchema  ; class Writer < NamedSchema::Writer ; end ; end
-    module HashSchema   ; class Writer < NamedSchema::Writer ; end ; end
-    module ArraySchema  ; class Writer < NamedSchema::Writer ; end ; end
-    module FixedSchema  ; class Writer < NamedSchema::Writer ; end ; end
-    module EnumSchema   ; class Writer < NamedSchema::Writer ; end ; end
-    module UnionSchema  ; class Writer < NamedSchema::Writer ; end ; end
+    # full definitions in type/structured_schema.rb and type/union_schema.rb
+    class NamedSchema  ; end
+    class RecordSchema < NamedSchema ; end
+    class ErrorSchema  < NamedSchema ; end
+    class HashSchema   < NamedSchema ; end
+    class ArraySchema  < NamedSchema ; end
+    class FixedSchema  < NamedSchema ; end
+    class EnumSchema   < NamedSchema ; end
+    class UnionSchema  < NamedSchema ; end
   end
 
-
-  # patron saint of Simple Types (Structured Text)
-  module St ; end
-  # pasture wherein graze MeasurementUnits
-  module Mu ; end
-
-
-
-  ::Icss::SIMPLE_TYPES    = {} unless defined?( ::Icss::SIMPLE_TYPES  )
-  ::Icss::STRUCTURED_SCHEMAS   = {} unless defined?( ::Icss::STRUCTURED_SCHEMAS )
-  ::Icss::RECORD_TYPES    = {} unless defined?( ::Icss::RECORD_TYPES  )
-  ::Icss::UNION_SCHEMAS     = {} unless defined?( ::Icss::UNION_SCHEMAS   )
-  ::Icss::FACTORY_TYPES   = {} unless defined?( ::Icss::FACTORY_TYPES )
+  ::Icss::SIMPLE_TYPES       = {} unless defined?( ::Icss::SIMPLE_TYPES       )
+  ::Icss::FACTORY_TYPES      = {} unless defined?( ::Icss::FACTORY_TYPES      )
+  ::Icss::STRUCTURED_SCHEMAS = {} unless defined?( ::Icss::STRUCTURED_SCHEMAS )
+  ::Icss::UNION_SCHEMAS      = {} unless defined?( ::Icss::UNION_SCHEMAS      )
 
   unless defined?(::Icss::AVRO_TYPES)
     ::Icss::AVRO_TYPES = {
@@ -44,8 +64,8 @@ module Icss
       :bytes    => ::Binary,
     }.freeze
   end
-
   ::Icss::SIMPLE_TYPES.merge!(::Icss::AVRO_TYPES)
+
   ::Icss::SIMPLE_TYPES.merge!({
       :binary  => ::Binary,
       :symbol  => ::Symbol,
@@ -54,21 +74,20 @@ module Icss
     })
 
   ::Icss::STRUCTURED_SCHEMAS.merge!({
-      :record  => Icss::Meta::RecordSchema::Writer,
-      :error   => Icss::Meta::ErrorSchema::Writer,
-      :map     => Icss::Meta::HashSchema::Writer,
-      Hash     => Icss::Meta::HashSchema::Writer,
-      :array   => Icss::Meta::ArraySchema::Writer,
-      Array    => Icss::Meta::ArraySchema::Writer,
-      :fixed   => Icss::Meta::FixedSchema::Writer,
-      :enum    => Icss::Meta::EnumSchema::Writer,
+      :record  => Icss::Meta::RecordSchema,
+      :error   => Icss::Meta::ErrorSchema,
+      :map     => Icss::Meta::HashSchema,
+      Hash     => Icss::Meta::HashSchema,
+      :array   => Icss::Meta::ArraySchema,
+      Array    => Icss::Meta::ArraySchema,
+      :fixed   => Icss::Meta::FixedSchema,
+      :enum    => Icss::Meta::EnumSchema,
     })
   ::Icss::UNION_SCHEMAS.merge!({
-      :union   => Icss::Meta::UnionSchema::Writer,
+      :union   => Icss::Meta::UnionSchema,
     })
 
   module Meta
-
     module Type
       #:nodoc:
       NORMAL_NAMED_CONSTANT_RE = /\A[\w\:\.]+\z/
@@ -116,7 +135,6 @@ module Icss
 
       def self.record?(tt)    false     ; end
     end
-
   end
 end
 
