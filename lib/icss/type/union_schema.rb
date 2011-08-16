@@ -33,7 +33,7 @@ module Icss
       #   end
       #   def to_schema
       #     embedded_types.zip(declaration_flavors).map do |t,fl|
-      #       [:complex_type].include?(fl) ? t.name : t.to_schema
+      #       [:structured_schema].include?(fl) ? t.name : t.to_schema
       #     end
       #   end
       # end

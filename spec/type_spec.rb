@@ -13,7 +13,7 @@ end
 
 
 #
-# note: the Icss::PRIMITIVE_TYPES etc are tested in primitive_type_spec.rb etc
+# note: the Icss::SIMPLE_TYPES etc are tested in simple_type_spec.rb etc
 #
 
 describe Icss::Meta::Type do

@@ -1,12 +1,13 @@
 module Icss
   module Meta
-    module RecordType
 
-      module Schema
-        include Icss::Meta::HasFields
-        include Icss::Meta::NamedSchema
-      end
-      def self.included(base) base.extend(Icss::Meta::RecordType::Schema) ; end
+    module RecordSchema
+      include Icss::Meta::HasFields
+      include Icss::Meta::Schema
+    end
+
+    module RecordType
+      def self.included(base) base.extend(Icss::Meta::RecordSchema) ; end
 
       #
       # modify object in place with new typecast values.
@@ -39,17 +40,14 @@ module Icss
 
     end
 
-    module ErrorType
-      module Schema
-        include Icss::Meta::HasFields
-        include Icss::Meta::NamedSchema
-        include Icss::Meta::RecordType::Schema
+    module ErrorSchema
+      include Icss::Meta::RecordSchema
 
-        class Writer < ::Icss::Meta::NamedSchema::Writer
-        end
-
+      class Writer < ::Icss::Meta::Schema::Writer
       end
-      def self.included(base) base.extend(Icss::Meta::ErrorType::Schema) ; end
+    end
+    module ErrorType
+      def self.included(base) base.extend(Icss::Meta::ErrorSchema) ; end
     end
 
   end

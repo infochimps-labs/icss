@@ -1,5 +1,26 @@
 module Icss
   module Meta
+
+
+    #
+    # Defines the schema methods:
+    # * metatype:  a module holding the methods we synthesize for you
+    #
+    # * self.make: generates a class with the given name and superclass,
+    #   with metatype attached.
+    #
+    # * Metatype module provides behavior to the instance
+    #
+    # * Schema module provides behavior to the class.
+    #
+    # Consider the Restaurant.
+    #
+    # * It includes RecordType
+    #
+    #   You typically *extend* WhateverSchema on FooType (so that its /class/
+    #   accepts schema Whatever-shaped schema). *include* Schema in FooSchema
+    #   (so that it also is_a Schema), and
+    #
     module Schema
 
       #
@@ -8,7 +29,10 @@ module Icss
       # +super()+ from within receive_foo)
       #
       def metatype
-        @metatype ||= get_metatype
+        return @metatype if @metatype
+        @metatype = Icss::Meta::Schema.get_meta_module(self.to_s)
+        self.class_eval{ include(@metatype) }
+        @metatype
       end
 
       # ---------------------------------------------------------------------------
@@ -17,21 +41,41 @@ module Icss
       #
 
       #
+      # Manufactures klass and metatype
+      #
       # for type science.astronomy.ufo_sighting, we synthesize
       # * a module, ::Icss::Meta::Science::Astronomy::UfoSightingType
       # * a class,  ::Icss::Science::Astronomy::UfoSighting
       #
       # If no superklass is given, Icss::Entity is used.
       def self.make(fullname, superklass)
-        meta_module = get_meta_module(fullname)
-        klass       = get_type_klass(fullname, superklass)
-        klass.class_eval{ include(meta_module) }
-        [klass, meta_module]
+        klass    = get_type_klass(fullname, superklass)
+        metatype = get_meta_module(klass.to_s)
+        klass.class_eval{ include(metatype) }
+        [klass, metatype]
       end
 
-      #
-      # Manufacture of klass and meta_module
-      #
+      def self.inscribe_schema(schema_obj, type_schema)
+        type_schema.class_eval{ define_method(:_schema){ schema_obj } }
+        field_names.each do |attr|
+          val = schema_obj.send(attr)
+          type_schema.class_eval{ define_method(attr){ val } }
+        end
+      end
+
+    protected
+
+      def define_metatype_method(meth_name, visibility=:public, &blk)
+        metatype.class_eval do
+          define_method(meth_name, &blk) unless method_defined?(meth_name)
+          case visibility
+          when :protected then protected meth_name
+          when :private   then private   meth_name
+          when :public    then public    meth_name
+          else raise ArgumentError, "visibility must be :public, :private or :protected"
+          end
+        end
+      end
 
       # Returns the klass for the given scope and name, starting with '::Icss'
       # and creating all necessary parents along the way. Note that if the given
@@ -59,20 +103,18 @@ module Icss
         end
       end
 
-    protected
-
-      def get_metatype
-        metatype_module = Icss::Meta::Schema.get_meta_module(self.to_s)
-        self.class_eval{ include(metatype_module) }
-        metatype_module
-      end
-
-      def inscribe_schema(schema_obj, type_schema)
-        type_schema.class_eval{ define_method(:_schema){ schema_obj } }
-        field_names.each do |attr|
-          val = schema_obj.send(attr)
-          type_schema.class_eval{ define_method(attr){ val } }
-        end
+      # Returns the meta-module for the given scope and name, starting with
+      # '::Icss::Meta' and creating all necessary parents along the way.
+      # @example
+      #   Icss::Meta::TypeFactory.get_meta_module(["This", "That"], "TheOther")
+      #   # Icss::Meta::This::That::TheOtherType
+      def self.get_meta_module(fullname)
+        fullname = Icss::Meta::Type.fullname_for(fullname)
+        return Module.new if fullname.nil?
+        #
+        scope_names      = scope_names_for(fullname)
+        scope_names[-1] += "Type"
+        get_nested_module(%w[Icss Meta] + scope_names)
       end
 
       # Turns a dotted namespace.name into camelized rubylike names for a class
@@ -96,20 +138,6 @@ module Icss
             parent_module.const_set(module_name.to_sym, Module.new)
           end
         end
-      end
-
-      # Returns the meta-module for the given scope and name, starting with
-      # '::Icss::Meta' and creating all necessary parents along the way.
-      # @example
-      #   Icss::Meta::TypeFactory.get_meta_module(["This", "That"], "TheOther")
-      #   # Icss::Meta::This::That::TheOtherType
-      def self.get_meta_module(fullname)
-        fullname = Icss::Meta::Type.fullname_for(fullname)
-        return Module.new if fullname.nil?
-        #
-        scope_names      = scope_names_for(fullname)
-        meta_module_name = scope_names.pop + "Type"
-        get_nested_module(%w[Icss Meta] + scope_names + [meta_module_name])
       end
 
     end

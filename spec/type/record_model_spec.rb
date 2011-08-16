@@ -1,9 +1,8 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 require 'icss/type'
-require 'icss/type/primitive_types'
 require 'icss/type/simple_types'
 require 'icss/type/named_schema'
-require 'icss/type/has_fields'
+require 'icss/type/record_schema'
 require 'icss/type/named_schema'
 require 'icss/type/record_type'
 

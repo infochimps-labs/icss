@@ -1,4 +1,51 @@
 
+require 'yaml'
+
+def example_files(filename)
+  Dir[ENV.root_path('examples/infochimps-catalog', filename+".icss.yaml")]
+end
+
+module Icss
+  class Thing             < Icss::Entity ; end
+  class Intangible        < Icss::Entity ; end
+
+  class StructuredValue   < Icss::Intangible ;  end
+  class Rating            < Icss::StructuredValue  ; end
+
+
+  class AggregateQuantity < Icss::StructuredValue ;  end
+  class AggregateRating   < Icss::Rating ;  end
+
+  class ContactPoint      < Icss::StructuredValue  ; end
+
+  class CreativeWork      < Thing ; end
+  class Event             < Thing ; end
+  class GeoCoordinates    < Thing ; end
+  class MediaObject       < Thing ; end
+  class Organization      < Thing ; end
+  class Person            < Thing ; end
+  class Place             < Thing ; end
+  class PostalAddress     < ContactPoint ; end
+  class Product           < Thing ; end
+  class Review            < Thing ; end
+  class Photograph        < Thing ; end
+end
+
+icss_filenames = %w[
+    icss/core/*
+  ].map{|fn| example_files(fn) }.flatten
+
+icss_filenames[0..2].each do |icss_filename|
+  hsh = YAML.load(File.open(icss_filename))
+  p hsh.keys
+
+  hsh['types'].each do |schema|
+    ap schema
+    type_klass = Icss::Meta::TypeFactory.receive(schema)
+    ap type_klass
+  end
+end
+
 # module Icss
 #   class Entity
 #   end

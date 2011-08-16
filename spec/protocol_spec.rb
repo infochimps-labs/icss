@@ -1,6 +1,8 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 require 'icss'
 require 'icss/receiver_model'
+require 'icss/receiver_model/active_model_shim'
+require 'icss/message'
 require 'icss/protocol'
 
 describe Icss::Protocol do

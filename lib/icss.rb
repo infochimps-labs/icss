@@ -18,15 +18,14 @@ require 'date' # alone on a saturday night
 require 'icss/receiver_model/acts_as_hash'
 
 require 'icss/type'                   # specd
-require 'icss/type/primitive_types'   # specd
 require 'icss/type/simple_types'      # specd
+require 'icss/type/record_schema'        # specd
 #
-require 'icss/type/has_fields'
 require 'icss/type/record_type'
 require 'icss/type/type_factory'
 #
 require 'icss/type/named_schema'
-require 'icss/type/complex_types'
+require 'icss/type/structured_schemas'
 require 'icss/type/record_field'
 
 require 'icss/receiver_model'

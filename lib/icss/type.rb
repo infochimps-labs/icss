@@ -1,31 +1,39 @@
 module Icss
 
-  # full definitions in type/primitive_types.rb
+  # full definitions in type/simple_types.rb
   class ::Boolean < ::BasicObject ; end
   class ::Long    < ::Integer     ; end
   class ::Double  < ::Float       ; end
   class ::Binary  < ::String      ; end
 
-  # full definitions in type/record_type.rb and type/complex_types.rb
+  # full definitions in type/record_type.rb and type/structured_schemas.rb
   module Meta
-    module NamedSchema ; class Writer ; end ; end
-    module RecordType  ; module Schema ; class Writer < NamedSchema::Writer ; end ; end ; end
-    module ErrorType   ; module Schema ; class Writer < NamedSchema::Writer ; end ; end ; end
-    module HashSchema  ; class Writer < NamedSchema::Writer ; end ; end
-    module ArraySchema ; class Writer < NamedSchema::Writer ; end ; end
-    module FixedSchema ; class Writer < NamedSchema::Writer ; end ; end
-    module EnumSchema  ; class Writer < NamedSchema::Writer ; end ; end
-    module UnionSchema ; class Writer < NamedSchema::Writer ; end ; end
+    module NamedSchema  ; class Writer ; end ; end
+    module RecordSchema ; class Writer < NamedSchema::Writer ; end ; end
+    module ErrorSchema  ; class Writer < NamedSchema::Writer ; end ; end
+    module HashSchema   ; class Writer < NamedSchema::Writer ; end ; end
+    module ArraySchema  ; class Writer < NamedSchema::Writer ; end ; end
+    module FixedSchema  ; class Writer < NamedSchema::Writer ; end ; end
+    module EnumSchema   ; class Writer < NamedSchema::Writer ; end ; end
+    module UnionSchema  ; class Writer < NamedSchema::Writer ; end ; end
   end
 
+
+  # patron saint of Simple Types (Structured Text)
+  module St ; end
+  # pasture wherein graze MeasurementUnits
+  module Mu ; end
+
+
+
   ::Icss::SIMPLE_TYPES    = {} unless defined?( ::Icss::SIMPLE_TYPES  )
-  ::Icss::COMPLEX_TYPES   = {} unless defined?( ::Icss::COMPLEX_TYPES )
+  ::Icss::STRUCTURED_SCHEMAS   = {} unless defined?( ::Icss::STRUCTURED_SCHEMAS )
   ::Icss::RECORD_TYPES    = {} unless defined?( ::Icss::RECORD_TYPES  )
-  ::Icss::UNION_TYPES     = {} unless defined?( ::Icss::UNION_TYPES   )
+  ::Icss::UNION_SCHEMAS     = {} unless defined?( ::Icss::UNION_SCHEMAS   )
   ::Icss::FACTORY_TYPES   = {} unless defined?( ::Icss::FACTORY_TYPES )
 
-  unless defined?(::Icss::PRIMITIVE_TYPES)
-    ::Icss::PRIMITIVE_TYPES = {
+  unless defined?(::Icss::AVRO_TYPES)
+    ::Icss::AVRO_TYPES = {
       :null     => ::NilClass,
       :boolean  => ::Boolean,
       :int      => ::Integer,
@@ -36,9 +44,18 @@ module Icss
       :bytes    => ::Binary,
     }.freeze
   end
-  ::Icss::COMPLEX_TYPES.merge!({
-      :record  => Icss::Meta::RecordType::Schema::Writer,
-      :error   => Icss::Meta::ErrorType::Schema::Writer,
+
+  ::Icss::SIMPLE_TYPES.merge!(::Icss::AVRO_TYPES)
+  ::Icss::SIMPLE_TYPES.merge!({
+      :binary  => ::Binary,
+      :symbol  => ::Symbol,
+      :time    => ::Time,
+      :integer => ::Integer,
+    })
+
+  ::Icss::STRUCTURED_SCHEMAS.merge!({
+      :record  => Icss::Meta::RecordSchema::Writer,
+      :error   => Icss::Meta::ErrorSchema::Writer,
       :map     => Icss::Meta::HashSchema::Writer,
       Hash     => Icss::Meta::HashSchema::Writer,
       :array   => Icss::Meta::ArraySchema::Writer,
@@ -46,7 +63,7 @@ module Icss
       :fixed   => Icss::Meta::FixedSchema::Writer,
       :enum    => Icss::Meta::EnumSchema::Writer,
     })
-  ::Icss::UNION_TYPES.merge!({
+  ::Icss::UNION_SCHEMAS.merge!({
       :union   => Icss::Meta::UnionSchema::Writer,
     })
 
@@ -87,13 +104,9 @@ module Icss
       end
 
       # true if class is among the defined primitive types:
-      #   null boolean int long float double string bytes
-      #
-      # note this takes no account of inheritance -- a descendant of String is not primitive.
-      def self.primitive?(tt) ::Icss::PRIMITIVE_TYPES.has_value?(tt) ; end
-
-      # true if class is among the defined simple types: the primitive types, plus
-      #   text file_path regexp url epoch_time
+      #   null boolean integer long float double string binary
+      #   st.file_path st.regexp st.url st.epoch_time
+      # and so forth
       #
       # note this takes no account of inheritance -- only the types specifically
       # listed in Icss::SIMPLE_TYPES are simple

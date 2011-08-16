@@ -34,12 +34,12 @@ module Icss
       #
       #     avro type     json type   ruby type   kind        example
       #     ---------     ---------   ----------  --------    ---------
-      #     null          null        NilClass    primitive   nil
-      #     boolean       boolean     Boolean     primitive   true
-      #     int,long      integer     Integer     primitive   1
-      #     float,double  number      Float       primitive   1.1
-      #     bytes         string      String      primitive   "\u00FF"
-      #     string        string      String      primitive   "foo"
+      #     null          null        NilClass    simple   nil
+      #     boolean       boolean     Boolean     simple   true
+      #     int,long      integer     Integer     simple   1
+      #     float,double  number      Float       simple   1.1
+      #     bytes         string      String      simple   "\u00FF"
+      #     string        string      String      simple   "foo"
       #     record        object      RecordType  named       {"a": 1}
       #     enum          string      Enum        named       "FOO"
       #     array         array       Array       container  [1]
@@ -205,18 +205,6 @@ module Icss
         @field_names ||= [] ; @fields ||= {}
         @field_names << name unless respond_to?(:field_names) && field_names.include?(name)
         @fields[name] = schema.merge({ :name => name, :type => type })
-      end
-
-      def define_metatype_method(meth_name, visibility=:public, &blk)
-        metatype.class_eval do
-          define_method(meth_name, &blk) unless method_defined?(meth_name)
-          case visibility
-          when :protected then protected meth_name
-          when :private   then private   meth_name
-          when :public    then public    meth_name
-          else raise ArgumentError, "visibility must be :public, :private or :protected"
-          end
-        end
       end
 
       def add_field_accessor(field_name, schema, attr=nil)

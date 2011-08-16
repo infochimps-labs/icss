@@ -3,13 +3,10 @@ module Icss
 
     module NamedSchema
       class Writer
-        extend Icss::Meta::NamedSchema
         include Icss::Meta::RecordType
 
         def self.validates(*args) ; end unless singleton_class.method_defined?(:validates)
-        # include Icss::ReceiverModel::ActiveModelShim
 
-        #
         field     :type,     Symbol, :required => true
         field     :fullname, Symbol
         validates :type,     :presence => true
@@ -27,6 +24,7 @@ module Icss
         def self.receive_schema(schema, superklass, metatype)
           schema_obj = self.receive(schema)
           schema_obj.fullname ||= get_klass_name(schema)
+          
           type_klass = Icss::Meta::NamedSchema.get_type_klass(schema_obj.fullname, superklass)
           type_klass.class_eval{ extend(::Icss::Meta::NamedSchema) }
           type_klass.class_eval{ extend(metatype) }
@@ -36,6 +34,48 @@ module Icss
       end
     end
 
+    #
+    # Describes an Avro Fixed type.
+    #
+    # Fixed uses the type name "fixed" and supports the attributes:
+    #
+    # * name: a string naming this fixed (required).
+    # * namespace, a string that qualifies the name;
+    # * size: an integer, specifying the number of bytes per value (required).
+    #
+    #   For example, 16-byte quantity may be declared with:
+    #
+    #     {"type": "fixed", "size": 16, "name": "md5"}
+    #
+    module FixedSchema
+      class Writer < ::Icss::Meta::NamedSchema::Writer
+        field     :size,    Integer, :validates => { :numericality => { :greater_than => 0 }}
+        validates :size,    :numericality => { :greater_than => 0 }
+ 
+        # retrieve the
+        def self.receive(schema)
+          super(schema, String, ::Icss::Meta::FixedSchema)
+        end
+       
+      end
+    end # FixedSchema
+
+    module FixedType
+      class FixedValueWrongSizeError < ArgumentError
+      end
+      
+      def receive(raw)
+        return nil if raw.blank?
+        obj = raw.to_s
+        unless obj.bytesize == self.size then raise FixedValueWrongSizeError.new("Wrong size for a fixed-length type #{self.fullname}: got #{obj.bytesize}, not #{self.size}") ; end
+        obj
+      end
+
+      def to_schema()
+        { :type => self.type, :name => self.fullname, :size => self.size }
+      end      
+    end
+    
     # -------------------------------------------------------------------------
     #
     # Container Types (array, map and union)
@@ -173,42 +213,58 @@ module Icss
       end
     end # EnumSchema
 
-    #
-    # Describes an Avro Fixed type.
-    #
-    # Fixed uses the type name "fixed" and supports the attributes:
-    #
-    # * name: a string naming this fixed (required).
-    # * namespace, a string that qualifies the name;
-    # * size: an integer, specifying the number of bytes per value (required).
-    #
-    #   For example, 16-byte quantity may be declared with:
-    #
-    #     {"type": "fixed", "size": 16, "name": "md5"}
-    #
-    module FixedSchema
-      def receive(raw)
-        return nil if raw.blank?
-        raise ArgumentError, "Value for this field must be Stringlike" if not (raw.respond_to?(:to_sym))
-        obj = raw.to_s
-        unless raw.length <= size then raise ArgumentError, "Length of fixed type #{self.fullname} out of bounds: #{raw[0..30]} is too large" ; end
-        obj
-      end
-
-      def to_schema()
-        { :type => self.type, :name => self.fullname, :size => self.size }
-      end
-
-      class Writer < ::Icss::Meta::NamedSchema::Writer
-        field     :size,    Integer, :validates => { :numericality => { :greater_than => 0 }}
-        validates :size,    :numericality => { :greater_than => 0 }
-
-        # retrieve the
-        def self.receive_schema(schema)
-          super(schema, String, ::Icss::Meta::FixedSchema)
+    module RecordType
+      module Schema
+        def receive_fields(fields)
+          fields.each do |field_schema|
+            field_schema.symbolize_keys!
+            field(field_schema[:name], field_schema[:type], field_schema)
+          end
         end
-      end
-    end # FixedSchema
-  end
 
+        class Writer < ::Icss::Meta::NamedSchema::Writer
+          # true if the attr is a receiver variable and it has been set
+          def attr_set?(attr)
+            self.class.fields.has_key?(attr) && self.instance_variable_defined?("@#{attr}")
+          end
+
+          def unset!(attr)
+            self.send(:remove_instance_variable, "@#{attr}") if self.instance_variable_defined?("@#{attr}")
+          end
+          protected :unset!
+
+          # , :items => Object
+          field :fields,           :array, :default => [], :items => Object # , :items => Icss::Meta::RecordField
+          field :is_a,             :array, :default => [], :items => Icss::Meta::TypeFactory
+          field :_domain_id_field, String, :default => 'name'
+
+          def self.inscribe_schema(schema_obj, type_schema)
+            type_schema.singleton_class.class_eval{ define_method(:_schema){ schema_obj } }
+            field_names.each do |attr|
+              val = schema_obj.send(attr)
+              rcv_meth = "receive_#{attr}"
+              if type_schema.respond_to?(rcv_meth)
+                type_schema.send(rcv_meth, val)
+              end
+            end
+          end
+
+          def self.receive_schema(schema, default_superklass=Object)
+            schema_obj = self.receive(schema)
+            schema_obj.fullname ||= get_klass_name(schema)
+            superklass = schema_obj.is_a.first || default_superklass
+            warn "No multiple inheritance yet (sorry, #{schema_obj.fullname})" if schema_obj.is_a.length > 1
+            type_klass = Icss::Meta::NamedSchema.get_type_klass(schema_obj.fullname, superklass)
+            type_klass.class_eval{ include(::Icss::Meta::RecordType) }
+            #
+            inscribe_schema(schema_obj, type_klass)
+            type_klass.metatype
+            type_klass
+          end
+        end
+
+      end
+    end
+
+  end
 end
