@@ -13,6 +13,10 @@ module Icss
     # put all the things in ClassMethods at class level
     def self.included base
       base.class_eval do
+        include Icss::Meta::RecordModel
+        include Icss::ReceiverModel::ActsAsHash
+        include Gorillib::Hashlike
+        include Gorillib::Hashlike::TreeMerge
         include Icss::ReceiverModel::ActiveModelShim
       end
     end
