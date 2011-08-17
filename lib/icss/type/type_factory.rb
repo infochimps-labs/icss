@@ -34,7 +34,7 @@ module Icss
       #
       def self.receive schema
         flavor, klass = classify_schema_declaration(schema)
-        p [__FILE__, 'tf', flavor, klass, schema]
+        # p [__FILE__, 'tf', flavor, klass, schema]
         case flavor
         when :simple            then return klass
         when :factory           then return klass

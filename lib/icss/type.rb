@@ -139,7 +139,7 @@ module Icss
       CATALOG_PATH = 'examples/infochimps_catalog/core'
       def self.load_type(typename)
         filename = ENV.root_path(CATALOG_PATH, typename.to_s.gsub(/\./, '/').gsub(/(\.icss\.yaml)?$/, ".icss.yaml"))
-        p ['loading', typename]
+        # p ['loading', typename]
         protocol_hsh = YAML.load(File.open(filename))
         protocol_hsh[:types].map do |schema_hsh|
           model = Icss::Meta::TypeFactory.receive(schema_hsh)

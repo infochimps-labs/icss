@@ -112,7 +112,9 @@ module Icss
         parent_module = get_nested_module(%w[Icss] + scope_names)
         #
         if parent_module.const_defined?(klass_name)
-          parent_module.const_get(klass_name)
+          klass = parent_module.const_get(klass_name)
+          warn "+++++++++++++++++++++++++++++++ Superclass and is_a? mismatch for #{klass} (doesn't inherit from #{superklass})" unless klass.ancestors.include?(superklass)
+          klass
         else
           parent_module.const_set(klass_name, Class.new(superklass))
         end
