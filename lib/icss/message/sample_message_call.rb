@@ -5,7 +5,7 @@ module Icss
   # You may define the request parameters using an array of parameters
   # or with the corresponding URL it would render to.
   #
-  # This file also decorates Icss::Message and Icss::Protocol with helper methods for sample calls.
+  # This file also decorates Icss::Meta::Message and Icss::Meta::Protocol with helper methods for sample calls.
   #
   class SampleMessageCall
     include Receiver
@@ -97,11 +97,11 @@ module Icss
   end
 end
 
-class Icss::Message
-  rcvr_accessor :samples, Array, :of => Icss::SampleMessageCall, :default => []
+class Icss::Meta::Message
+  rcvr_accessor :samples, Array, :items => Icss::SampleMessageCall, :default => []
 end
 
-class Icss::Protocol
+class Icss::Meta::Protocol
 
   #
   # a hash for dumping to file:

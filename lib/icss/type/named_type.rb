@@ -32,8 +32,8 @@ module Icss
       def fullname
         ::Icss::Meta::Type.fullname_for(self.name)
       end
-      def typename
-        @typename  ||= fullname.to_s.gsub(/.*[\.]/, "")
+      def basename
+        @basename  ||= fullname.to_s.gsub(/.*[\.]/, "")
       end
       def namespace
         @namespace ||= fullname.to_s.gsub(/\.[^\.]+\z/so, "")

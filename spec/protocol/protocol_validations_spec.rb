@@ -77,41 +77,41 @@ types:
 EOS
 end
 
-describe "Icss::Protocol validations" do
+describe "Icss::Meta::Protocol validations" do
   before :each do
     @template = YAML.load(template_icss)
   end
 
   it "should be able to receive a correctly formatted template Icss" do
-    lambda { @icss =Icss::Protocol.receive @template }.should_not raise_error
+    lambda { @icss =Icss::Meta::Protocol.receive @template }.should_not raise_error
     @icss.errors.should be_empty
   end
 
   it "should contain only the keys that were included in the Icss file" do
-    @icss = Icss::Protocol.receive @template
+    @icss = Icss::Meta::Protocol.receive @template
     @icss.keys.map { |k| k.to_s }.should == @template.keys
   end
 
   it "should generate an error when the namespace if formatted incorrectly" do
     @template['namespace'] = '$bad_namespace'
-    Icss::Protocol.receive(@template).errors.keys.should == [:namespace]
+    Icss::Meta::Protocol.receive(@template).errors.keys.should == [:namespace]
   end
 
   it "should generate an error when the protocol if formatted incorrectly" do
     @template['protocol'] = '$bad_protocol'
-    Icss::Protocol.receive(@template).errors.keys.should == [:protocol]
+    Icss::Meta::Protocol.receive(@template).errors.keys.should == [:protocol]
   end
 
   context "Catalog Target" do
 
     it "should generate an error when an undefined data_asset is specified" do
       @template['targets']['catalog'].first['packages'].first['data_assets'] = ['fake_data_asset']
-      Icss::Protocol.receive(@template).errors.keys.should == [:catalog]
+      Icss::Meta::Protocol.receive(@template).errors.keys.should == [:catalog]
     end
 
     it "should generate an error when an undefined message name is specified" do
       @template['targets']['catalog'].first['messages'] = ['fake_message']
-      Icss::Protocol.receive(@template).errors.keys.should == [:catalog]
+      Icss::Meta::Protocol.receive(@template).errors.keys.should == [:catalog]
     end
 
   end
@@ -120,7 +120,7 @@ describe "Icss::Protocol validations" do
 
     it "should generate an error when an asset's type is undefined" do
       @template['data_assets'].first['type'] = 'fake_data_asset'
-      Icss::Protocol.receive(@template).errors.keys.should == [:data_assets]
+      Icss::Meta::Protocol.receive(@template).errors.keys.should == [:data_assets]
     end
 
   end
@@ -129,17 +129,17 @@ describe "Icss::Protocol validations" do
 
     it "should generate an error when a message's request type is undefined" do
       @template['messages']['search']['request'].first['type'] = 'fake_request_type'
-      Icss::Protocol.receive(@template).errors.keys.should == [:messages]
+      Icss::Meta::Protocol.receive(@template).errors.keys.should == [:messages]
     end
 
     it "should generate an error when a message's response type is undefined" do
       @template['messages']['search']['response'] = 'fake_response_type'
-      Icss::Protocol.receive(@template).errors.keys.should == [:messages]
+      Icss::Meta::Protocol.receive(@template).errors.keys.should == [:messages]
     end
 
     it "should generate an error when a message's sample request types do not match the request record" do
       @template['messages']['search']['samples'].first['request'] = [{ 'foo' => 'bar' }]
-      Icss::Protocol.receive(@template).errors.keys.should == [:messages]
+      Icss::Meta::Protocol.receive(@template).errors.keys.should == [:messages]
     end
 
   end
@@ -151,7 +151,7 @@ describe "Icss::Protocol validations" do
           'name' => 'fake_type_record',
           'type' => 'fake'
         })
-      Icss::Protocol.receive(@template).errors.keys.should == [:types]
+      Icss::Meta::Protocol.receive(@template).errors.keys.should == [:types]
     end
 
     it "should generate an error when an undefined type definition is given for a specific field" do
@@ -163,7 +163,7 @@ describe "Icss::Protocol validations" do
               'type' => 'fake_type'
             }]
         })
-      Icss::Protocol.receive(@template).errors.keys.should == [:types]
+      Icss::Meta::Protocol.receive(@template).errors.keys.should == [:types]
     end
 
   end

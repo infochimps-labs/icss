@@ -5,16 +5,16 @@ require 'icss/serialization/zaml'
 
 describe ZAML do
   describe '#to_zaml' do
-    # [nil, :my_sym, true, false, 69, 69.0, /my_regexp/,
-    #   ArgumentError.new('my_exception'),
-    #   'my_str',
-    #   {'simple' => :hash, :of => {2 => /pairs/}},
-    #   ['arr', :of, 4, /things/], Time.now, (3..69),
-    # ].each do |obj|
-    #   it "serializes a #{obj.class}" do
-    #     obj.to_zaml.should == obj.to_yaml
-    #   end
-    # end
+    [nil, :my_sym, true, false, 69, 69.0, /my_regexp/,
+      ArgumentError.new('my_exception'),
+      'my_str',
+      {'simple' => :hash, :items => {2 => /pairs/}},
+      ['arr', :items, 4, /things/], Time.now, (3..69),
+    ].each do |obj|
+      it "serializes a #{obj.class}" do
+        obj.to_zaml.should == obj.to_yaml
+      end
+    end
   end
 
   BASIC_HASH = {
@@ -29,7 +29,7 @@ describe ZAML do
 
   def complex_hash
     { 'complex' => :hash,
-      :of => {2 => /pairs/},
+      :items => {2 => /pairs/},
       'Iñtërnâtiônàlizætiøn' => "look out for 'funny quotes'.",
       :and => [BASIC_HASH,  { :name => 'bob' }, [], ],
     }
@@ -39,7 +39,7 @@ describe ZAML do
     {
       ZAML::Comment.new("first comment") => 1,
       'complex' => :hash,
-      :of => {2 => /pairs/},
+      :items => {2 => /pairs/},
       'Iñtërnâtiônàlizætiøn' => "look out for 'funny quotes'.",
       :and => [
         ZAML::Comment.new("informative comments"),

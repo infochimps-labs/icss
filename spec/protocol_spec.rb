@@ -1,22 +1,20 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 require 'icss'
-require 'icss/receiver_model'
-require 'icss/receiver_model/active_model_shim'
 require 'icss/message'
 require 'icss/protocol'
 
-describe Icss::Protocol do
+describe Icss::Meta::Protocol do
   let(:simple_icss) do
-    Icss::Protocol.receive_from_file(ENV.root_path('examples/chronic.icss.yaml'))
+    Icss::Meta::Protocol.receive_from_file(ENV.root_path('examples/chronic.icss.yaml'))
   end
 
   it 'loads cleanly' do
-    simple_icss.name.should == 'chronic'
+    simple_icss.basename.should == 'chronic'
     simple_icss.fullname.should == 'util.time.chronic'
   end
 
   describe '#fullname' do
-    it 'has namespace and name' do
+    it 'has namespace and basename' do
       simple_icss.fullname.should == 'util.time.chronic'
       simple_icss.namespace = nil
       simple_icss.fullname.should == 'chronic'
@@ -35,7 +33,7 @@ describe Icss::Protocol do
 
   describe 'types' do
     it 'has an array of types' do
-      simple_icss.types.map(&:name).should == ['chronic_parse_params', 'chronic_parse_response']
+      simple_icss.types.map(&:basename).should == ['chronic_parse_params', 'chronic_parse_response']
     end
   end
 
@@ -45,18 +43,18 @@ describe Icss::Protocol do
     end
 
     it 'named each message for its key' do
-      simple_icss.messages['parse'].name.should == 'parse'
+      simple_icss.messages['parse'].basename.should == 'parse'
       simple_icss.receive!({ :messages => { 'foo' => { :request => [] } }})
-      simple_icss.messages['foo'].name.should == 'foo'
+      simple_icss.messages['foo'].basename.should == 'foo'
     end
 
     it '#find_message' do
       msg = simple_icss.find_message(:parse)
-      msg.should be_a(Icss::Message) ; msg.name.should == 'parse'
+      msg.should be_a(Icss::Meta::Message) ; msg.basename.should == 'parse'
       msg = simple_icss.find_message('util.time.parse')
-      msg.should be_a(Icss::Message) ; msg.name.should == 'parse'
+      msg.should be_a(Icss::Meta::Message) ; msg.basename.should == 'parse'
       msg = simple_icss.find_message('util/time/parse')
-      msg.should be_a(Icss::Message) ; msg.name.should == 'parse'
+      msg.should be_a(Icss::Meta::Message) ; msg.basename.should == 'parse'
     end
   end
 
@@ -64,7 +62,7 @@ describe Icss::Protocol do
     it 'has a hash of targets' do
       simple_icss.targets.keys.should == ['catalog']
       simple_icss.targets['catalog'].first.should be_a(Icss::CatalogTarget)
-      simple_icss.targets['catalog'].first.name.should == 'util_time_chronic_parse'
+      simple_icss.targets['catalog'].first.basename.should == 'util_time_chronic_parse'
     end
   end
 

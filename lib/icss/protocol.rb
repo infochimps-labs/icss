@@ -1,5 +1,10 @@
 module Icss
   module Meta
+
+    # predefine so we can use below
+
+    class Message ; end
+
     #
     # Describes an Avro Protocol Declaration
     #
@@ -55,41 +60,49 @@ module Icss
       include Icss::ReceiverModel
 
       field :protocol,    String
-      alias_method  :name, :protocol
+      alias_method  :basename, :protocol
       field :namespace,   String
       field :doc,         String
       #
-      field :types,       Array, :of => Icss::Meta::TypeFactory, :default => []
-      field :messages,    Hash,  :of => Icss::Meta::Message,           :default => {}
-      #
-      # field :data_assets, Array, :of => Icss::DataAsset,   :default => []
-      # field :code_assets, Array, :of => Icss::CodeAsset,   :default => []
-      # field :targets,     Hash,  :of => Icss::TargetListFactory, :default => {}, :merge_as => :hash_of_arrays
+      field :types,       :array, :items => Icss::Meta::TypeFactory, :default => []
+
+      # field :messages,    :hash,  :values => Icss::Meta::Message,           :default => {}
+      # field :data_assets, Array, :items => Icss::DataAsset,   :default => []
+      # field :code_assets, Array, :items => Icss::CodeAsset,   :default => []
+      # field :targets,     Hash,  :items => Icss::TargetListFactory, :default => {}, :merge_as => :hash_of_arrays
       # field :under_consideration, Boolean
       # field :update_frequency, String
 
       validates :protocol,  :presence => true, :format => { :with => /\A[A-Za-z_]\w*\z/, :message => "must start with [A-Za-z_] and contain only [A-Za-z0-9_]." }
       validates :namespace, :presence => true, :format => { :with => /\A([A-Za-z_]\w*\.?)+\z/, :message => "Segments that start with [A-Za-z_] and contain only [A-Za-z0-9_], joined by '.'dots" }
-      validates :update_frequency, :format => { :with => /daily|weekly|monthly|quarterly|never/ }, :allow_blank => true
+      # validates :update_frequency, :format => { :with => /daily|weekly|monthly|quarterly|never/ }, :allow_blank => true
 
-      after_receive do |hsh|
-        # Set each message's protocol to self, and if the name wasn't given, set
-        # it using the message's hash key.
-        self.messages.each{|msg_name, msg| msg.protocol = self; msg.name ||= msg_name }
-        # Set each type's parent to self (for namespace resolution)
-        self.types.each{|type| type.parent  = self }
-        # warn if invalid
-        warn errors.inspect unless valid?
-      end
+      # after_receive do |hsh|
+      #   # Set each message's protocol to self, and if the basename wasn't given, set
+      #   # it using the message's hash key.
+      #   self.messages.each{|msg_name, msg| msg.protocol = self; msg.basename ||= msg_name }
+      #   # Set each type's parent to self (for namespace resolution)
+      #   self.types.each{|type| type.parent  = self }
+      #   # warn if invalid
+      #   warn errors.inspect unless valid?
+      # end
 
-      # String: namespace.name
+      # String: namespace.basename
       def fullname
-        [namespace, name].compact.join(".")
+        [namespace, basename].compact.join(".")
       end
 
-      # a / separated version of the name, with no / at start
+      # a / separated version of the fullname, with no / at start
       def path
         fullname.gsub('.', '/')
+      end
+
+      CATALOG_PATH = 'examples/infochimps_catalog/core' unless defined? CATALOG_PATH
+      def self.load_from_catalog(protocol_fullname)
+        filename = ENV.root_path(CATALOG_PATH, protocol_fullname.to_s.gsub(/\./, '/').gsub(/(\.icss\.yaml)?$/, ".icss.yaml"))
+        p ['loading', protocol_fullname, self]
+        protocol_hsh = YAML.load(File.open(filename))
+        self.receive(protocol_hsh)
       end
 
       def find_message nm
@@ -118,13 +131,13 @@ module Icss
           :namespace   => @namespace, # use accessor so unset namespace isn't given
           :protocol    => protocol,
           :doc         => doc,
-          :under_consideration => under_consideration,
-          :update_frequency    => update_frequency,
-          :types       => (types       && types.map(&:to_hash)),
-          :messages    => messages.inject({}){|h,(k,v)| h[k] = v.to_hash; h },
-          :data_assets => data_assets.map(&:to_hash).map(&:compact_blank),
-          :code_assets => code_assets.map(&:to_hash).map(&:compact_blank),
-          :targets     => targets_to_hash,
+          # :types       => (types       && types.map(&:to_hash)),
+          # :messages    => messages.inject({}){|h,(k,v)| h[k] = v.to_hash; h },
+          # :data_assets => data_assets.map(&:to_hash).map(&:compact_blank),
+          # :code_assets => code_assets.map(&:to_hash).map(&:compact_blank),
+          # :update_frequency    => update_frequency,
+          # :under_consideration => under_consideration,
+          # :targets     => targets_to_hash,
         }.reject{|k,v| v.nil? }
       end
 

@@ -123,7 +123,7 @@ module Icss
       # @param  [Class]   type - a
       #
       # @option [Object]  :default  - After any receive! operation, attribute is set to this value unless attr_set? is true
-      # @option [Class]   :of       - For collections (Array, Hash, etc), the type of the collection's items
+      # @option [Class]   :items       - For collections (Array, Hash, etc), the type of the collection's items
       #
       def rcvr(field_name, type, schema={}, attr_name=nil)
         return if schema[:receiver] == :none

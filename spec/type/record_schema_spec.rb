@@ -65,7 +65,7 @@ describe Icss::Meta::RecordSchema do
     it 'has accessors and receivers for the fields' do
       (@model_klass.public_methods - Class.methods).sort.should == [
         :_domain_id_field, :_schema,
-        :fullname,  :namespace, :typename, :doc, :doc=,
+        :fullname,  :namespace, :basename, :doc, :doc=,
         :fields, :field, :field_names,
         :rcvr, :rcvr_remaining, :receive, :after_receive, :after_receivers,
         :to_schema, :is_a, :metamodel,
@@ -144,7 +144,7 @@ describe Icss::Meta::RecordModel do
     #
     # it 'is not larded up with lots of extra methods' do
     #   (@klass.public_methods - Class.public_methods).sort.should == [
-    #     :doc, :doc=, :fullname, :typename, :namespace, :to_schema,
+    #     :doc, :doc=, :fullname, :basename, :namespace, :to_schema,
     #     :field, :field_names, :fields, :metamodel,
     #     :rcvr, :rcvr_remaining, :receive, :after_receive, :after_receivers,
     #     :_schema, :receive_fields,

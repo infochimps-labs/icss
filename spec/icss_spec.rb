@@ -5,15 +5,15 @@ def test_icss
   YAML.load ENV.load_path('examples/infochimps-catalog/core/thing.icss.yaml')
 end
 
-# describe Icss::Protocol do
+# describe Icss::Meta::Protocol do
 #
 #
 #   before :each do
-#     @icss = Icss::Protocol.receive test_icss
+#     @icss = Icss::Meta::Protocol.receive test_icss
 #   end
 #
 #   it "should be able to receive valid YAML files" do
-#     @icss.should be_a Icss::Protocol
+#     @icss.should be_a Icss::Meta::Protocol
 #   end
 #
 #   # context "receiving referenced types" do

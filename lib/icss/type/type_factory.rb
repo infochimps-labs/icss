@@ -27,8 +27,8 @@ module Icss
       # * A symbol or string, naming a defined type.
       # * A class that responds to +.receive+, returned as itself
       # * A hash (respond_to?(:each_pair), of the form:
-      #       {"type": "typeName" ...attributes...}
-      #   where typeName is either a simple or derived type name, as defined
+      #       {"type": "typename" ...attributes...}
+      #   where typename is either a simple or derived type name, as defined
       #   in the Icss::Type class
       # * An array, representing a union of embedded types.
       #
@@ -59,8 +59,14 @@ module Icss
       #
       #
       def self.classify_schema_declaration(schema)
-        type = (schema.respond_to?(:each_pair) ? schema[:type] : schema)
+        if schema.respond_to?(:each_pair)
+          schema.symbolize_keys!
+          type = schema[:type]
+        else type = schema
+        end
         type = type.to_sym if type.respond_to?(:to_sym)
+        p [__FILE__, 'clfy', schema, type, STRUCTURED_SCHEMAS, STRUCTURED_SCHEMAS[type]]
+
         if    ::Icss::SIMPLE_TYPES.include?(type)             then return [:simple,            SIMPLE_TYPES[type]]
         elsif ::Icss::FACTORY_TYPES.include?(type)            then return [:factory,           FACTORY_TYPES[type]]
         elsif ::Icss::STRUCTURED_SCHEMAS.include?(type)       then return [:structured_schema, STRUCTURED_SCHEMAS[type]]
@@ -75,12 +81,12 @@ module Icss
 
       def self.receive_named_type(type, schema)
         klass_name = Icss::Meta::Type.klassname_for(type.to_sym)
-        begin
+        # begin
           klass_name.constantize
-        rescue NameError => e
-          Icss::Meta::Type.load_type(type.to_sym)
-          klass_name.constantize
-        end
+        # rescue NameError => e
+        #   Icss::Meta::Protocol.load_from_catalog(type.to_sym)
+        #   klass_name.constantize
+        # end
       end
 
       def self.receive_structured_schema(schema_writer, schema)

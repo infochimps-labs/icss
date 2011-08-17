@@ -1,6 +1,8 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 require 'yaml'
 require 'icss'
+require 'icss/protocol'
+require 'icss/message'
 
 def example_files(filename)
   Dir[ENV.root_path('examples/infochimps_catalog', filename+".icss.yaml")]
@@ -44,7 +46,7 @@ core_files.each do |filename_patt|
       example_files("core/#{filename_patt.gsub(/\./, "/")}").each do |filename|
         filename = filename.gsub(%r{.*core/([^\.]+)\.icss\.yaml$}, '\1')
         p filename
-        Icss::Meta::Type.load_type(filename)
+        Icss::Meta::Protocol.load_from_catalog(filename)
         count += 1
       end
       puts "************* loaded #{count} core types **************"
@@ -90,7 +92,7 @@ end
 #   end
 #   it 'properties can find themselves in registry'
 #   it 'warns if you say "description" (should be "doc")'
-#   it 'warns if you say :of => FooFactory (should probably be :with if it is a Factory)'
+#   it 'warns if you say :items => FooFactory (should probably be :with if it is a Factory)'
 #
 #   context '' do
 #     # universe, dimension, representation,

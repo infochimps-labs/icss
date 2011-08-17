@@ -135,6 +135,11 @@ module Icss
         slug = slug.gsub(/^:*Icss:+/, '').gsub(/:+/, '_')
         "HashOf#{slug}"
       end
+      def self.receive(*args)
+        val = super(*args)
+        raise "Value Factory is no good: #{args} - #{val._schema.to_hash}" if val.value_factory.blank?
+        val
+      end
     end # HashSchema
 
     module EnumType

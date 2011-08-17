@@ -9,15 +9,15 @@ describe 'Icss::SIMPLE_TYPES' do
   it('tests all of them'){ SIMPLE_TYPES_TO_TEST.values.map(&:first).map(&:to_s).sort.should == Icss::SIMPLE_TYPES.values.map(&:to_s).sort }
   it('tests all of them'){ SIMPLE_TYPES_TO_TEST.keys.map(&:to_s).sort.should                == Icss::SIMPLE_TYPES.keys.map(&:to_s).sort   }
 
-  SIMPLE_TYPES_TO_TEST.each do |typename, (type_klass, parent_base_class, parent_instance)|
+  SIMPLE_TYPES_TO_TEST.each do |basename, (type_klass, parent_base_class, parent_instance)|
     context type_klass do
       it 'is named in Icss::SIMPLE_TYPES' do
-        typename = Icss::SIMPLE_TYPES.key(type_klass)
-        type_klass.to_schema == typename
+        basename = Icss::SIMPLE_TYPES.key(type_klass)
+        type_klass.to_schema == basename
       end
       it 'is named in Icss::SIMPLE_TYPES' do
-        typename = Icss::SIMPLE_TYPES.key(type_klass)
-        type_klass.to_schema == typename
+        basename = Icss::SIMPLE_TYPES.key(type_klass)
+        type_klass.to_schema == basename
       end
       it 'returns its type name as its schema' do
         schema = type_klass.to_schema

@@ -25,12 +25,12 @@ module Icss
       field :initial_free_qty,      Integer
       field :price_per_k_in_cents,  Integer
 
-      field :request,  :array, :items => Icss::Meta::RecordField, :default => []
+      field :request,  :array, :default => [], :items => Object # FIXME: Icss::Meta::RecordField
       field :response, Icss::Meta::TypeFactory
       field :errors,   Object # FIXME: Icss::Meta::UnionType, :default => []
       attr_accessor :protocol
       # this is defined in sample_message_call.rb -- since we don't do referenced types yet
-      # field :samples, Array, :of => Icss::SampleMessageCall, :default => []
+      field :samples,  :array, :default => [], :items => Object # FIXME: Icss::SampleMessageCall
 
       after_receive do |hsh|
         # track recursion of type references
@@ -58,7 +58,7 @@ module Icss
           :price_per_k_in_cents => price_per_k_in_cents,
           :request  => summary_of_request_attr,
           :response => summary_of_response_attr,
-          :samples  => samples.map(&:to_hash).map(&:compact_blank),
+          # :samples  => samples.map(&:to_hash).map(&:compact_blank),
           :errors   => (errors.blank? ? nil : errors),
         }.reject{|k,v| v.nil? }
       end

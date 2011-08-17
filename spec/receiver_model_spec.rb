@@ -61,7 +61,7 @@
   #
   #   context 'container types' do
   #
-  #     it 'field foo, Array, :of   => FooClass validates instances are is_a?(FooClass)'
+  #     it 'field foo, Array, :items   => FooClass validates instances are is_a?(FooClass)'
   #     it 'field foo, Array, :with => FooFactory validates instances are is_a?(FooFactory.product_klass)'
   #
   #     it ''

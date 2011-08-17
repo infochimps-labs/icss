@@ -1,7 +1,7 @@
 --- 
 # first comment
 complex:                :hash
-:of:                    
+:items:                 
   2:                    !ruby/regexp /pairs/
 Iñtërnâtiônàlizætiøn:   look out for 'funny quotes'.
 :and:                   
@@ -19,17 +19,17 @@ Iñtërnâtiônàlizætiøn:   look out for 'funny quotes'.
       strings
 
     :so:                ":what\n            :dyathink, :of, :that\n          "
-  # more informative comments, 
+  # more informative comments,
   # spread across
   #  multiple lines
   - :name:              bob
-    # comment can be in hash key, 
+    # comment can be in hash key,
     # spread across
     #  multiple lines;
   
   
   
-  - # does the right thing 
+  - # does the right thing
     # even when
     # is the only item
     []

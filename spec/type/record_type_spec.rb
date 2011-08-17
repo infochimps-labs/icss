@@ -60,7 +60,7 @@ describe Icss::Meta::RecordType do
         :after_receive, :after_receivers,
         :field, :field_names, :fields,
         :metamodel, :to_schema,
-        :fullname, :namespace, :typename, :doc, :doc=,
+        :fullname, :namespace, :basename, :doc, :doc=,
         :rcvr, :rcvr_remaining, :receive,
       ].sort
     end
@@ -116,14 +116,14 @@ describe Icss::Meta::RecordType do
   end
 
   context 'class schema' do
-    it "has .fullname, .namespace, .typename, and .doc" do
-      [:fullname, :namespace, :typename, :doc].each do |meth|
+    it "has .fullname, .namespace, .basename, and .doc" do
+      [:fullname, :namespace, :basename, :doc].each do |meth|
         Icss::Smurf::Smurfette.should         respond_to(meth)
         Icss::Smurf::Smurfette.new.should_not respond_to(meth)
       end
     end
     it "name corresponds to its class & module scope" do
-      Icss::Smurf::Smurfette.typename.should  == 'smurfette'
+      Icss::Smurf::Smurfette.basename.should  == 'smurfette'
       Icss::Smurf::Smurfette.namespace.should == 'smurf'
       Icss::Smurf::Smurfette.fullname.should  == 'smurf.smurfette'
     end
