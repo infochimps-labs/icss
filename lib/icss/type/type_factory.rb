@@ -34,7 +34,7 @@ module Icss
       #
       def self.receive schema
         flavor, klass = classify_schema_declaration(schema)
-        p [__FILE__, 'tf', schema, flavor, klass]
+        p [__FILE__, 'tf', flavor, klass, schema]
         case flavor
         when :simple            then return klass
         when :factory           then return klass
@@ -64,9 +64,9 @@ module Icss
         if    ::Icss::SIMPLE_TYPES.include?(type)             then return [:simple,            SIMPLE_TYPES[type]]
         elsif ::Icss::FACTORY_TYPES.include?(type)            then return [:factory,           FACTORY_TYPES[type]]
         elsif ::Icss::STRUCTURED_SCHEMAS.include?(type)       then return [:structured_schema, STRUCTURED_SCHEMAS[type]]
-        elsif (type == :union) || type.is_a?(Array)           then return [:union_schema,      Icss::Meta::UnionSchema::Writer]
-        elsif type.is_a?(Module)                              then return [:is_type,           type]
+        elsif (type == :union) || type.is_a?(Array)           then return [:union_schema,      Icss::Meta::UnionSchema]
         elsif type.is_a?(Symbol) && type.to_s =~ /^[\w\.\:]+/ then return [:named_type,        type]
+        elsif type.is_a?(Class) || type.is_a?(Module)         then return [:is_type,           type]
         else  raise ArgumentError, %Q{Can not classify #{schema.inspect}: should be the handle for a named type; one of #{SIMPLE_TYPES.keys.join(',')}; a schema of the form {"type": "typename" ...attributes....}; or an array (representing a union type).}
         end
       end
@@ -74,7 +74,13 @@ module Icss
    protected
 
       def self.receive_named_type(type, schema)
-        Icss::Meta::Type.klassname_for(type.to_sym).constantize
+        klass_name = Icss::Meta::Type.klassname_for(type.to_sym)
+        begin
+          klass_name.constantize
+        rescue NameError => e
+          Icss::Meta::Type.load_type(type.to_sym)
+          klass_name.constantize
+        end
       end
 
       def self.receive_structured_schema(schema_writer, schema)

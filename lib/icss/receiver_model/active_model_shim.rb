@@ -1,5 +1,4 @@
 require 'active_model'
-
 # require 'active_model/deprecated_error_methods'
 # require 'active_model/errors'
 # require 'active_model/naming'

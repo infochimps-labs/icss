@@ -1,50 +1,142 @@
-
+require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 require 'yaml'
-
-def example_files(filename)
-  Dir[ENV.root_path('examples/infochimps-catalog', filename+".icss.yaml")]
-end
+require 'icss'
 
 module Icss
-  class Thing             < Icss::Entity ; end
-  class Intangible        < Icss::Entity ; end
+  class Numeric                      ; end
 
-  class StructuredValue   < Icss::Intangible ;  end
-  class Rating            < Icss::StructuredValue  ; end
+  class Thing
+  end
 
+  module Business
+    class Organization < Thing       ; end
+  end
 
-  class AggregateQuantity < Icss::StructuredValue ;  end
-  class AggregateRating   < Icss::Rating ;  end
+  module Geo
+    class AdministrativeArea         ; end
+    class Country                    ; end
+    class Place                      ; end
+    class PostalAddress              ; end
+    class GeoCoordinates             ; end
+  end
 
-  class ContactPoint      < Icss::StructuredValue  ; end
+  module Culture
+    class AudioObject                ; end
+    class MediaObject                ; end
+    class VideoObject                ; end
+    class Review                     ; end
+    class Photograph                 ; end
+    class CreativeWork               ; end
+  end
 
-  class CreativeWork      < Thing ; end
-  class Event             < Thing ; end
-  class GeoCoordinates    < Thing ; end
-  class MediaObject       < Thing ; end
-  class Organization      < Thing ; end
-  class Person            < Thing ; end
-  class Place             < Thing ; end
-  class PostalAddress     < ContactPoint ; end
-  class Product           < Thing ; end
-  class Review            < Thing ; end
-  class Photograph        < Thing ; end
-end
+  module Ev
+    class Event           < Thing    ; end
+  end
 
-icss_filenames = %w[
-    icss/core/*
-  ].map{|fn| example_files(fn) }.flatten
+  module Mu
+    class Quantity                   ; end
+    class Rating                     ; end
+    class AggregateQuantity          ; end
+    class AggregateRating < Rating   ; end
+  end
 
-icss_filenames[0..2].each do |icss_filename|
-  hsh = YAML.load(File.open(icss_filename))
-  p hsh.keys
+  module Prod
+    class Product                    ; end
+    class ItemAvailability           ; end
+    class OfferItemCondition         ; end
+    class Offer                      ; end
+  end
 
-  hsh['types'].each do |schema|
-    ap schema
-    type_klass = Icss::Meta::TypeFactory.receive(schema)
-    ap type_klass
+  module Social
+    class Person          < Thing    ; end
+    class ContactPoint               ; end
   end
 end
+
+
+def core_files
+  %w[
+    thing
+prod.aggregate_rating prod.offer
+social.contact_point
+geo.geo_coordinates
+geo.postal_address
+geo.place
+ev/event
+geo.country
+culture.creative_work
+culture.media_object culture.audio_object culture.photograph
+culture.article
+
+  ]   #.map{|filename| Dir[ ENV.root_path('examples/infochimps_catalog/core', filename.gsub(/\./, '/')+".icss.yaml") ] }.flatten
+end
+
+def example_files(filename)
+  Dir[ENV.root_path('examples/infochimps_catalog', filename+".icss.yaml")]
+end
+
+example_files('core/*/*').each do |filename|
+  describe filename do
+    it "loads #{filename}" do
+      filename = filename.gsub(%r{.*core/([^\.]+)\.icss\.yaml$}, '\1')
+
+      Icss::Meta::Type.load_type(filename)
+
+      # protocol_hsh = YAML.load(File.open(filename))
+      # protocol_hsh[:types].each do |schema_hsh|
+      #
+      #   schema_hsh[:is_a] && schema_hsh[:is_a].reject!{|x| x.to_s =~ /meta\.record_type/}
+      #
+      #   p schema_hsh
+      #
+      #   model = Icss::Meta::TypeFactory.receive(schema_hsh)
+      #   p model
+      # end
+    end
+  end
+end
+
+
+# module Icss
+#   class Thing             < Icss::Entity ; end
+#   class Intangible        < Icss::Entity ; end
+#
+#   class StructuredValue   < Icss::Intangible ; end
+#   class Rating            < Icss::StructuredValue  ; end
+#
+#
+#   class AggregateQuantity < Icss::StructuredValue ; end
+#   class AggregateRating   < Icss::Rating ; end
+#
+#   class ContactPoint      < Icss::StructuredValue  ; end
+#
+#   class CreativeWork      < Thing ; end
+#   class Event             < Thing ; end
+#   class GeoCoordinates    < Thing ; end
+#   class MediaObject       < Thing ; end
+#   class Organization      < Thing ; end
+#   class Person            < Thing ; end
+#   class Place             < Thing ; end
+#   class PostalAddress     < ContactPoint ; end
+#   class Product           < Thing ; end
+#   class Review            < Thing ; end
+#   class Photograph        < Thing ; end
+# end
+#
+# icss_filenames = %w[
+#     icss/core/*
+#   ].map{|fn| example_files(fn) }.flatten
+#
+# icss_filenames[0..2].each do |icss_filename|
+#   hsh = YAML.load(File.open(icss_filename))
+#   p hsh.keys
+#
+#   hsh['types'].each do |schema|
+#     ap schema
+#     type_klass = Icss::Meta::TypeFactory.receive(schema)
+#     ap type_klass
+#   end
+# end
 
 # module Icss
 #   class Entity

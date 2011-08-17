@@ -21,4 +21,20 @@ module IcssTestHelper
     :'mu.epoch_time'    => [::Icss::Mu::EpochTime,    Integer, Time.now.to_i],
   }
 
+
+  def remove_icss_constants(parent_mods, const_names)
+    parent_mods.each do |parent_mod|
+      const_names.each do |const_name|
+        remove_potential_constant(parent_mod, const_name)
+      end
+    end
+  end
+
+  def remove_potential_constant(parent_mod, const_name)
+    begin
+      parent_mod = (parent_mod.is_a?(Module) ? parent_mod : parent_mod.to_s.constantize)
+    rescue ; return ; end
+    parent_mod.send(:remove_const, const_name) if parent_mod.const_defined?(const_name)
+  end
+
 end

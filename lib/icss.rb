@@ -30,8 +30,8 @@ require 'icss/type/union_schema'      # factory for instances based on type
 require 'icss/type/record_schema'
 
 require 'icss/receiver_model'
-require 'icss/receiver_model/active_model_shim'
 require 'icss/receiver_model/acts_as_loadable'
+# require 'icss/receiver_model/active_model_shim'
 
 # require 'icss/message'
 # # require 'icss/message/sample_message_call'

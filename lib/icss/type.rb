@@ -38,13 +38,14 @@ module Icss
   module Meta
     # full definitions in type/structured_schema.rb and type/union_schema.rb
     class NamedSchema  ; end
-    class RecordSchema < NamedSchema ; end
-    class ErrorSchema  < NamedSchema ; end
-    class HashSchema   < NamedSchema ; end
-    class ArraySchema  < NamedSchema ; end
-    class FixedSchema  < NamedSchema ; end
-    class EnumSchema   < NamedSchema ; end
-    class UnionSchema  < NamedSchema ; end
+    class StructuredSchema < NamedSchema  ; end
+    class HashSchema       < StructuredSchema ; end
+    class ArraySchema      < StructuredSchema ; end
+    class FixedSchema      < StructuredSchema ; end
+    class EnumSchema       < StructuredSchema ; end
+    class UnionSchema      < NamedSchema ; end
+    class RecordSchema     < NamedSchema ; end
+    class ErrorSchema      < RecordSchema ; end
   end
 
   ::Icss::SIMPLE_TYPES       = {} unless defined?( ::Icss::SIMPLE_TYPES       )
@@ -134,8 +135,16 @@ module Icss
       def self.union?(tt)     false     ; end
 
       def self.record?(tt)    false     ; end
+
+      CATALOG_PATH = 'examples/infochimps_catalog/core'
+      def self.load_type(typename)
+        filename = ENV.root_path(CATALOG_PATH, typename.to_s.gsub(/\./, '/').gsub(/(\.icss\.yaml)?$/, ".icss.yaml"))
+        protocol_hsh = YAML.load(File.open(filename))
+        protocol_hsh[:types].map do |schema_hsh|
+          schema_hsh[:is_a] && schema_hsh[:is_a].reject!{|x| x.to_s =~ /meta\.record_type/}
+          model = Icss::Meta::TypeFactory.receive(schema_hsh)
+        end
+      end
     end
   end
 end
-
-

@@ -5,7 +5,6 @@ require 'icss/type/named_type'        # class methods for a named type: .metamod
 require 'icss/type/record_type'       # class methods for a record model: .field, .receive,
 require 'icss/type/record_model'      # instance methods for a record model
 require 'icss/type/type_factory'      #
-#
 require ENV.root_path('spec/support/icss_test_helper')
 include IcssTestHelper
 

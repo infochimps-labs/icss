@@ -15,9 +15,7 @@ module Icss
     #
     # Unions may not immediately contain other unions.
     #
-    module UnionSchema
-      class Writer < ::Icss::Meta::NamedSchema::Writer
-      end
+    class UnionSchema
       #   extend Icss::Meta::ContainerType
       #   #
       #   attr_accessor :embedded_types
