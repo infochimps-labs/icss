@@ -18,23 +18,27 @@ describe Icss::Meta::NamedType do
   context '.make' do
     it 'succeeds when the class already exists' do
       mock_class = mock("does not use superklass")
-      klass, meta_module = Icss::Meta::NamedType.make('this.that.the_other', mock_class)
+      klass, klass_metamodel = Icss::Meta::NamedType.make('this.that.the_other', mock_class)
       klass.should be_a(Class)
       klass.name.should == 'Icss::This::That::TheOther'
-      meta_module.should be_a(Module)
-      meta_module.name.should == 'Icss::Meta::This::That::TheOtherType'
+      klass_metamodel.should be_a(Module)
+      klass_metamodel.name.should == 'Icss::Meta::This::That::TheOtherModel'
     end
     it 'succeeds when the class does not already exist' do
       Icss.should_not be_const_defined(:YourMom)
-      klass, meta_module = Icss::Meta::NamedType.make('your_mom.wears.combat_boots', Hash)
+      klass, klass_metamodel = Icss::Meta::NamedType.make('your_mom.wears.combat_boots', Hash)
       klass.name.should == 'Icss::YourMom::Wears::CombatBoots'
       klass.should < Hash
-      Icss::Meta::YourMom::Wears::CombatBootsType.class.should == Module
+      Icss::Meta::YourMom::Wears::CombatBootsModel.class.should == Module
       Icss::Meta::YourMom::Wears.class.should                  == Module
       Icss::YourMom::Wears::CombatBoots.class.should           == Class
       Icss::YourMom::Wears.class.should                        == Module
       Icss::Meta.send(:remove_const, :YourMom)
       Icss.send(:remove_const, :YourMom)
+    end
+    it 'creates a klass which inherits (includes) its metatype' do
+      klass, klass_metamodel = Icss::Meta::NamedType.make('this.that.the_other', :unused)
+      klass.metamodel.should == Icss::Meta::This::That::TheOtherModel
     end
   end
 

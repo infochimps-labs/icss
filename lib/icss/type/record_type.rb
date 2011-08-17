@@ -130,7 +130,7 @@ module Icss
         attr_name ||= field_name
 
         klass = Icss::Meta::TypeFactory.receive(schema.merge( :type => type ))
-        define_metatype_method("receive_#{field_name}") do |val|
+        define_metamodel_method("receive_#{field_name}") do |val|
           return nil if val.nil?
           result = klass.receive(val)
           _set_field_val(attr_name, result)
@@ -211,8 +211,8 @@ module Icss
         visibility = schema[:accessor] || :public
         reader_meth = field_name ; writer_meth = "#{field_name}=" ; attr_name = "@#{attr || field_name}"
         unless (visibility == :none)
-          define_metatype_method(reader_meth, visibility){    instance_variable_get(attr_name)    }
-          define_metatype_method(writer_meth, visibility){|v| instance_variable_set(attr_name, v) }
+          define_metamodel_method(reader_meth, visibility){    instance_variable_get(attr_name)    }
+          define_metamodel_method(writer_meth, visibility){|v| instance_variable_set(attr_name, v) }
         end
       end
 

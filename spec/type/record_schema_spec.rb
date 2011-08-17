@@ -1,4 +1,5 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
+require 'yaml'
 require 'icss/type'                   #
 require 'icss/type/simple_types'      # Boolean, Integer, ...
 require 'icss/type/named_type'        # class methods for a named type: .metamodel .doc, .fullname, &c
@@ -21,6 +22,7 @@ module Icss
       end
     end
   end
+  class ::Icss::Numeric < ::Numeric ; end
 end
 
 include IcssTestHelper
@@ -66,7 +68,7 @@ describe Icss::Meta::RecordSchema do
         :fullname,  :namespace, :typename, :doc, :doc=,
         :fields, :field, :field_names,
         :rcvr, :rcvr_remaining, :receive, :after_receive, :after_receivers,
-        :to_schema, :is_a, :metatype,
+        :to_schema, :is_a, :metamodel,
       ].sort.uniq
       (@model_klass.public_instance_methods - Object.public_instance_methods).sort.should == [
         :attr_set?, :name, :name=, :receive!, :receive_name
@@ -76,14 +78,18 @@ describe Icss::Meta::RecordSchema do
 
   describe '#is_a' do
     [
-      [Icss::This::That::TheOther],
-      ['this.that.the_other'],
-    ].each do |given_is_a|
+      [ [Icss::This::That::TheOther], ['Icss::This::That::TheOther']],
+      [ ['this.that.the_other'], ['Icss::This::That::TheOther'] ],
+      [ ['geo.place'], ['Icss::Meta::ThingModel'] ],
+      [ ['this.that.the_other', 'geo.place'], ['Icss::This::That::TheOther', 'Icss::Meta::Geo::PlaceModel', 'Icss::Meta::ThingModel'] ],
+    ].each do |given_is_a, expected_superklasses|
       it "sets a superclass from #{given_is_a}" do
         schema_hsh = BASIC_RECORD_SCHEMA.merge(:is_a => given_is_a)
         @model_klass = Icss::Meta::RecordSchema.receive(schema_hsh)
-        p ['hi', given_is_a, given_is_a.first.is_a?(Module), @model_klass.ancestors]
-        @model_klass.should < Icss::This::That::TheOther
+        p [@model_klass.ancestors, @model_klass._schema]
+        expected_superklasses.each do |superklass|
+          @model_klass.should < superklass.constantize
+        end
       end
     end
 
@@ -139,7 +145,7 @@ describe Icss::Meta::RecordModel do
     # it 'is not larded up with lots of extra methods' do
     #   (@klass.public_methods - Class.public_methods).sort.should == [
     #     :doc, :doc=, :fullname, :typename, :namespace, :to_schema,
-    #     :field, :field_names, :fields, :metatype,
+    #     :field, :field_names, :fields, :metamodel,
     #     :rcvr, :rcvr_remaining, :receive, :after_receive, :after_receivers,
     #     :_schema, :receive_fields,
     #   ].sort
@@ -165,7 +171,7 @@ describe Icss::Meta::RecordModel do
     #         { 'name' => 'day_of_week', 'type' => 'enum', 'symbols' => [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday] },
     #       ] })
     #   p [klass.ancestors]
-    #   p [klass.metatype]
+    #   p [klass.metamodel]
     #   p [klass.ancestors]
     #   p [klass.singleton_class.ancestors]
     #
@@ -174,8 +180,8 @@ describe Icss::Meta::RecordModel do
     #   p [klass, klass.fullname, klass.fields, klass.field_names, klass.public_methods - Class.public_methods]
     #   p [klass.singleton_class.public_methods - Class.public_methods]
     #   p [klass.singleton_class.public_instance_methods - Class.public_instance_methods]
-    #   p [klass.metatype.public_methods - Module.public_methods]
-    #   p [klass.metatype.public_instance_methods - Module.public_methods]
+    #   p [klass.metamodel.public_methods - Module.public_methods]
+    #   p [klass.metamodel.public_instance_methods - Module.public_methods]
     #
     #   puts '!!!!!!!!!'
     #

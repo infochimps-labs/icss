@@ -59,17 +59,20 @@ describe Icss::Meta::RecordType do
       (Icss::Smurf::Smurfette.public_methods - Class.public_methods).sort.should == [
         :after_receive, :after_receivers,
         :field, :field_names, :fields,
-        :metatype, :to_schema,
+        :metamodel, :to_schema,
         :fullname, :namespace, :typename, :doc, :doc=,
         :rcvr, :rcvr_remaining, :receive,
       ].sort
     end
     it 'adds few methods' do
-      (Icss::Smurf::Smurfette.new.public_methods - Object.public_methods).sort.should == [
+      (Icss::Smurf::Smurfette.new.public_methods -
+        Object.public_methods -
+        [ :attr_set?, :receive!, ] # maybe added later by record_model, they're OK
+        ).sort.should == [
         :blondness, :blondness=, :doing_it, :doing_it=,
         :receive_blondness,:receive_doing_it,
         :receive_smurfiness, :smurfiness, :smurfiness=,
-      ]
+      ].sort
     end
   end
 

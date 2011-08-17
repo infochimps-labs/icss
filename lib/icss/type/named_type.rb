@@ -52,19 +52,19 @@ module Icss
       #
 
       #
-      # Returns the metatype -- a module extending the type, on which all the
+      # Returns the metamodel -- a module extending the type, on which all the
       # accessors and receive methods are inscribed. (This allows you to call
       # +super()+ from within receive_foo)
       #
-      def metatype
-        return @metatype if @metatype
-        @metatype = Icss::Meta::NamedType.get_meta_module(self.to_s)
-        self.class_eval{ include(@metatype) }
-        @metatype
+      def metamodel
+        return @metamodel if @metamodel
+        @metamodel = Icss::Meta::NamedType.get_meta_module(self.to_s)
+        self.class_eval{ include(@metamodel) }
+        @metamodel
       end
 
       #
-      # Manufactures klass and metatype
+      # Manufactures klass and metamodel
       #
       # for type science.astronomy.ufo_sighting, we synthesize
       # * a module, ::Icss::Meta::Science::Astronomy::UfoSightingType
@@ -73,15 +73,16 @@ module Icss
       # If no superklass is given, Icss::Entity is used.
       def self.make(fullname, superklass)
         klass    = get_model_klass(fullname, superklass)
-        metatype = get_meta_module(klass.to_s)
-        klass.class_eval{ include(metatype) }
-        [klass, metatype]
+        metamodel = get_meta_module(klass.to_s)
+        klass.class_eval{ extend(::Icss::Meta::NamedType) }
+        klass.class_eval{ include(metamodel) }
+        [klass, metamodel]
       end
 
       protected
 
-      def define_metatype_method(meth_name, visibility=:public, &blk)
-        metatype.class_eval do
+      def define_metamodel_method(meth_name, visibility=:public, &blk)
+        metamodel.class_eval do
           define_method(meth_name, &blk) unless method_defined?(meth_name)
           case visibility
           when :protected then protected meth_name
@@ -130,7 +131,7 @@ module Icss
         return Module.new if fullname.nil?
         #
         scope_names      = scope_names_for(fullname)
-        scope_names[-1] += "Type"
+        scope_names[-1] += "Model"
         get_nested_module(%w[Icss Meta] + scope_names)
       end
 

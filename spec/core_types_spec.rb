@@ -2,92 +2,58 @@ require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 require 'yaml'
 require 'icss'
 
-module Icss
-  class Numeric              < Numeric              ; end
-
-  class Thing
-  end
-
-  module Business
-    class Organization       < Thing                ; end
-  end
-
-  module Social
-    class Person             < Thing                ; end
-    class ContactPoint                              ; end
-  end
-
-  module Geo
-    class Place              < Thing                ; end
-    class AdministrativeArea < Place                ; end
-    class Country            < AdministrativeArea   ; end
-    class PostalAddress      < Social::ContactPoint ; end
-    class GeoCoordinates                            ; end
-  end
-
-  module Culture
-    class CreativeWork       < Thing                ; end
-    class MediaObject        < CreativeWork         ; end
-    class AudioObject        < MediaObject          ; end
-    class VideoObject        < MediaObject          ; end
-    class Review             < CreativeWork         ; end
-    class Photograph         < CreativeWork         ; end
-    class MusicRecording     < CreativeWork         ; end
-    class MusicPlaylist      < CreativeWork         ; end
-    class MusicAlbum         < MusicPlaylist        ; end
-  end
-
-  module Ev
-    class Event              < Thing                ; end
-  end
-
-  module Mu
-    class Quantity           < Numeric              ; end
-    class Rating                                    ; end
-    class AggregateQuantity                         ; end
-  end
-
-  module Prod
-    class Product            < Thing                ; end
-    class ItemAvailability                          ; end
-    class OfferItemCondition                        ; end
-    class Offer                                     ; end
-    class AggregateRating    < Icss::Mu::Rating     ; end
-  end
-end
-
-
-def core_files
-  %w[
-    thing
-prod.aggregate_rating prod.offer
-social.contact_point
-geo.geo_coordinates
-geo.postal_address
-geo.place
-ev/event
-geo.country
-culture.creative_work
-culture.media_object culture.audio_object culture.photograph
-culture.article
-
-  ]   #.map{|filename| Dir[ ENV.root_path('examples/infochimps_catalog/core', filename.gsub(/\./, '/')+".icss.yaml") ] }.flatten
-end
-
 def example_files(filename)
   Dir[ENV.root_path('examples/infochimps_catalog', filename+".icss.yaml")]
 end
 
-example_files('core/*/*').each do |filename|
-  describe filename do
-    it "loads #{filename}" do
 
-      filename = filename.gsub(%r{.*core/([^\.]+)\.icss\.yaml$}, '\1')
-      Icss::Meta::Type.load_type(filename)
+module Icss
+  class Numeric              < Numeric              ; end
+end
 
+def core_files
+  %w[
+   business.educational_organization
+    */*
+
+  ]   #.map{|filename| Dir[ ENV.root_path('examples/infochimps_catalog/core', filename.gsub(/\./, '/')+".icss.yaml") ] }.flatten
+end
+
+    # thing
+    # numeric
+    # mu.quantity mu.rating
+    # prod.offer
+    #
+    #
+    # culture.creative_work
+    # culture.media_object
+    #
+    # ev.event
+    #
+    # social.contact_point geo.geo_coordinates geo.postal_address
+    # geo.place geo.country
+
+ # culture.photograph mu.aggregate_quantity prod.aggregate_rating
+ #    culture.audio_object
+
+# example_files('core/*/*')
+count = 0
+core_files.each do |filename_patt|
+  describe filename_patt do
+    it "loads #{filename_patt}" do
+      example_files("core/#{filename_patt.gsub(/\./, "/")}").each do |filename|
+        filename = filename.gsub(%r{.*core/([^\.]+)\.icss\.yaml$}, '\1')
+        p filename
+        Icss::Meta::Type.load_type(filename)
+        count += 1
+      end
+      puts "************* loaded #{count} core types **************"
     end
   end
 end
+
+
+
 
 #
 # describe 'instances' do
