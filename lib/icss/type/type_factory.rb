@@ -13,6 +13,22 @@ module Icss
       end
     end
 
+    class IdenticalHashFactory
+      def self.to_schema() { :type => 'map' } ; end
+      def self.receive(obj)
+        unless obj.nil? || obj.respond_to?(:each_pair) then raise(ArgumentError, "Must supply a hashlike value, got #{obj.to_s[0..100]}") ; end
+        obj
+      end
+    end
+
+    class IdenticalArrayFactory
+      def self.to_schema() { :type => 'array' } ; end
+      def self.receive(obj)
+        unless obj.nil? || obj.respond_to?(:each) then raise(ArgumentError, "Must supply an arraylike value, got #{obj.to_s[0..100]}") ; end
+        obj
+      end
+    end
+
     module TypeFactory
 
       ::Icss::FACTORY_TYPES.merge!({
@@ -65,14 +81,17 @@ module Icss
         else type = schema
         end
         type = type.to_sym if type.respond_to?(:to_sym)
-        p [__FILE__, 'clfy', schema, type, STRUCTURED_SCHEMAS, STRUCTURED_SCHEMAS[type]]
+        # p [__FILE__, 'clfy', schema, type, STRUCTURED_SCHEMAS]
 
         if    ::Icss::SIMPLE_TYPES.include?(type)             then return [:simple,            SIMPLE_TYPES[type]]
+        elsif (type == Array) && schema[:items].blank?        then return [:factory,           IdenticalArrayFactory]
+        elsif (type == Hash)  && schema[:values].blank?       then return [:factory,           IdenticalHashFactory]
         elsif ::Icss::FACTORY_TYPES.include?(type)            then return [:factory,           FACTORY_TYPES[type]]
         elsif ::Icss::STRUCTURED_SCHEMAS.include?(type)       then return [:structured_schema, STRUCTURED_SCHEMAS[type]]
         elsif (type == :union) || type.is_a?(Array)           then return [:union_schema,      Icss::Meta::UnionSchema]
         elsif type.is_a?(Symbol) && type.to_s =~ /^[\w\.\:]+/ then return [:named_type,        type]
         elsif type.is_a?(Class) || type.is_a?(Module)         then return [:is_type,           type]
+        elsif type.respond_to?(:each_pair)                    then return [:is_type,           receive(type)]
         else  raise ArgumentError, %Q{Can not classify #{schema.inspect}: should be the handle for a named type; one of #{SIMPLE_TYPES.keys.join(',')}; a schema of the form {"type": "typename" ...attributes....}; or an array (representing a union type).}
         end
       end
@@ -81,12 +100,13 @@ module Icss
 
       def self.receive_named_type(type, schema)
         klass_name = Icss::Meta::Type.klassname_for(type.to_sym)
-        # begin
+        begin
           klass_name.constantize
-        # rescue NameError => e
-        #   Icss::Meta::Protocol.load_from_catalog(type.to_sym)
-        #   klass_name.constantize
-        # end
+        rescue NameError => e
+          p "loading! #{type} - #{schema}"
+          Icss::Meta::Protocol.load_from_catalog(type.to_sym)
+          klass_name.constantize
+        end
       end
 
       def self.receive_structured_schema(schema_writer, schema)

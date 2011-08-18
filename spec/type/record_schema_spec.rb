@@ -1,5 +1,7 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 require 'yaml'
+require 'gorillib/object/try_dup'
+require 'icss/receiver_model/acts_as_hash'
 require 'icss/type'                   #
 require 'icss/type/simple_types'      # Boolean, Integer, ...
 require 'icss/type/named_type'        # class methods for a named type: .metamodel .doc, .fullname, &c
@@ -21,6 +23,13 @@ module Icss
         end
       end
     end
+    module Right
+      class Here
+        include Icss::Meta::RecordModel
+      end
+      class OverThere < Here
+      end
+    end
   end
   class ::Icss::Numeric < ::Numeric ; end
 end
@@ -34,18 +43,11 @@ describe Icss::Meta::RecordSchema do
     :fields => [ { :name => 'name', :type => 'string' } ] }
   before do
     remove_icss_constants(['Icss::Business', 'Icss::Meta::Business'], [:Restaurant, :RestaurantType])
+    remove_icss_constants(['Icss', 'Icss::Meta'], [:LabExperiment, :LabExperimentType, :DayOfWeek, :DayOfWeekType, :GeoCoordinates, :GeoCoordinatesType ])
   end
 
   describe "With basic schema" do
     before do
-      @model_klass = Icss::Meta::RecordSchema.receive(BASIC_RECORD_SCHEMA)
-      @schema_writer = @model_klass._schema
-    end
-
-    it 'hi' do
-      p BASIC_RECORD_SCHEMA
-      p Icss::Meta::RecordSchema.ancestors
-
       @model_klass = Icss::Meta::RecordSchema.receive(BASIC_RECORD_SCHEMA)
       @schema_writer = @model_klass._schema
     end
@@ -78,136 +80,81 @@ describe Icss::Meta::RecordSchema do
 
   describe '#is_a' do
     [
-      [ [Icss::This::That::TheOther], ['Icss::This::That::TheOther']],
-      [ ['this.that.the_other'], ['Icss::This::That::TheOther'] ],
-      [ ['geo.place'], ['Icss::Meta::ThingModel'] ],
-      [ ['this.that.the_other', 'geo.place'], ['Icss::This::That::TheOther', 'Icss::Meta::Geo::PlaceModel', 'Icss::Meta::ThingModel'] ],
+      [ [Icss::This::That::TheOther],               ['Icss::This::That::TheOther']],
+      [ ['this.that.the_other'],                    ['Icss::This::That::TheOther'] ],
+      [ ['this.right.here'],                        ['Icss::This::Right::Here',    'Icss::Meta::This::Right::HereModel'] ],
+      [ ['this.that.the_other', 'this.right.here'], ['Icss::This::That::TheOther', 'Icss::Meta::This::Right::HereModel'] ],
     ].each do |given_is_a, expected_superklasses|
       it "sets a superclass from #{given_is_a}" do
         schema_hsh = BASIC_RECORD_SCHEMA.merge(:is_a => given_is_a)
         @model_klass = Icss::Meta::RecordSchema.receive(schema_hsh)
-        p [@model_klass.ancestors, @model_klass._schema]
         expected_superklasses.each do |superklass|
           @model_klass.should < superklass.constantize
         end
       end
     end
 
+    it 'does NOT follow superclasses of multiple inheritance parents' do
+      schema_hsh = BASIC_RECORD_SCHEMA.merge(:is_a => ['this.that.the_other', 'this.right.over_there'])
+      @model_klass = Icss::Meta::RecordSchema.receive(schema_hsh)
+      @model_klass.should     <  Icss::This::That::TheOther
+      @model_klass.should_not <  Icss::This::Right::OverThere
+      @model_klass.should     <  Icss::This::Right::OverThere.metamodel
+      @model_klass.should_not <  Icss::This::Right::Here
+      @model_klass.should_not <  Icss::This::Right::Here.metamodel
+    end
+
+    it 'does allow explicitly-listed superclasses of multiple inheritance parents' do
+      schema_hsh = BASIC_RECORD_SCHEMA.merge(:is_a => ['this.that.the_other', 'this.right.over_there', 'this.right.here'])
+      @model_klass = Icss::Meta::RecordSchema.receive(schema_hsh)
+      @model_klass.should     <  Icss::This::That::TheOther
+      @model_klass.should_not <  Icss::This::Right::OverThere
+      @model_klass.should     <  Icss::This::Right::OverThere.metamodel
+      @model_klass.should_not <  Icss::This::Right::Here
+      @model_klass.should     <  Icss::This::Right::Here.metamodel
+    end
   end
 end
 
 describe Icss::Meta::RecordModel do
-  # context 'enum schema' do
-  #   it 'handles array of record of ...' do
-  #     @klass = Icss::Meta::TypeFactory.receive({
-  #         'name' => 'day_of_week', 'type' => 'enum', 'symbols' => [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday]
-  #         })
-  #     @obj = @klass.receive('tuesday')
-  #     @klass.to_s.should == 'Icss::DayOfWeek'
-  #   end
-  # end
-
-
-  # context '.receive' do
-  #   it '' do
-  #     Icss::Meta::RecordSchema.receive({:type => :record, :name => 'sixteen_bytes_long', :size => 16})
-  #     Icss::SixteenBytesLong.receive('123456789_123456').should == '123456789_123456'
-  #   end
-  #   it 'raises an error on too-long value' do
-  #     Icss::Meta::RecordSchema.receive({:type => :record, :name => 'sixteen_bytes_long', :size => 16})
-  #     lambda{ Icss::SixteenBytesLong.receive('123456789_1234567') }.should raise_error(ArgumentError, /Wrong size for a record-length type sixteen_bytes_long: got 17, not 16/)
-  #   end
-  #   it 'returns nil on nil/empty string value' do
-  #     Icss::Meta::RecordSchema.receive({:type => :record, :name => 'sixteen_bytes_long', :size => 16})
-  #     Icss::SixteenBytesLong.receive(nil).should be_nil
-  #     Icss::SixteenBytesLong.receive('').should be_nil
-  #     Icss::SixteenBytesLong.receive(:"").should be_nil
-  #   end
-  # end
-
   context 'record schema' do
-
-    # before do
-    #   @klass = Icss::Meta::TypeFactory.receive({
-    #       'type'   => 'record',
-    #       'name'   => 'lab_experiment',
-    #       'is_a'   => ['this.that.the_other'],
-    #       'fields' => [
-    #         { 'name' => 'temperature', 'type' => 'float' },
-    #         { 'name' => 'day_of_week', 'type' => 'enum', 'symbols' => [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday] },
-    #       ] })
-    #   @obj = @klass.receive({ :temperature => 97.4, :day_of_week => 'tuesday' })
-    # end
-    # it 'handles array of record of ...' do
-    #   @klass.to_s.should == 'Icss::LabExperiment'
-    # end
-    #
-    # it 'is not larded up with lots of extra methods' do
-    #   (@klass.public_methods - Class.public_methods).sort.should == [
-    #     :doc, :doc=, :fullname, :basename, :namespace, :to_schema,
-    #     :field, :field_names, :fields, :metamodel,
-    #     :rcvr, :rcvr_remaining, :receive, :after_receive, :after_receivers,
-    #     :_schema, :receive_fields,
-    #   ].sort
-    #   (@obj.public_methods - Object.new.public_methods).sort.should == [
-    #     :bob,
-    #     :day_of_week, :day_of_week=, :receive_day_of_week,
-    #     :receive_temperature, :temperature, :temperature=,
-    #     :receive!,
-    #   ].sort
-    # end
-    #
-    # it 'inherits with is_a' do
-    #   @klass.should < Icss::This::That::TheOther
-    #   @obj.bob.should == 'hi bob'
-    # end
-
-    # it 'handles array of record of ...' do
-    #   klass = Icss::Meta::TypeFactory.receive({
-    #       'type'   => 'record',
-    #       'name'   => 'lab_experiment',
-    #       'fields' => [
-    #         { 'name' => 'temperature', 'type' => 'float' },
-    #         { 'name' => 'day_of_week', 'type' => 'enum', 'symbols' => [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday] },
-    #       ] })
-    #   p [klass.ancestors]
-    #   p [klass.metamodel]
-    #   p [klass.ancestors]
-    #   p [klass.singleton_class.ancestors]
-    #
-    #   puts '!!!!!!!!!'
-    #
-    #   p [klass, klass.fullname, klass.fields, klass.field_names, klass.public_methods - Class.public_methods]
-    #   p [klass.singleton_class.public_methods - Class.public_methods]
-    #   p [klass.singleton_class.public_instance_methods - Class.public_instance_methods]
-    #   p [klass.metamodel.public_methods - Module.public_methods]
-    #   p [klass.metamodel.public_instance_methods - Module.public_methods]
-    #
-    #   puts '!!!!!!!!!'
-    #
-    #   ap obj
-    #
-    #   puts '!!!!!!!!!'
-    #   obj.temperature.should == 97.4
-    #   obj.day_of_week.should == :tuesday
-    #
-    #   p [obj.respond_to?(:type), klass.respond_to?(:type)]
-    # end
-
+    before do
+      @klass = Icss::Meta::TypeFactory.receive({
+          'type'   => 'record',
+          'name'   => 'lab_experiment',
+          'is_a'   => ['this.that.the_other', 'this.right.here'],
+          'fields' => [
+            { 'name' => 'temperature', 'type' => 'float' },
+            { 'name' => 'day_of_week', 'type' => 'enum',
+              'symbols' => [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday] },
+            { 'name' => 'geo_coordinates', 'type' => 'record',
+              'fields' => [
+                { 'name' => 'latitude',  'type' => 'float' },
+                { 'name' => 'longitude', 'type' => 'float' },
+                { 'name' => 'spatial_extent', 'type' =>
+                  { 'type' => 'array', 'items' => {
+                      'type' => 'array', 'items' => 'float' }}},
+              ]},
+          ] })
+      @obj = @klass.receive({ :temperature => 97.4, :day_of_week => 'tuesday',
+          :geo_coordinates => {
+            'longitude' => '-97.75', :latitude => "30.03",
+            'spatial_extent' => [ ['-97.75', '30.03'], ['-97.70', '30.1'], ['-97.90', '30.1'] ]
+          } })
+    end
+    it 'handles array of record of ...' do
+      @klass.to_s.should == 'Icss::LabExperiment'
+      @obj.should be_a(@klass)
+      @obj.should be_a(Icss::This::That::TheOther)
+      @obj.should be_a(Icss::This::Right::Here.metamodel)
+    end
+    it 'receives data' do
+      @obj.temperature.should == 97.4
+      @obj.day_of_week.should == :tuesday
+      @obj.geo_coordinates.latitude.should == 30.03
+      @obj.geo_coordinates.longitude.should == -97.75
+      @obj.geo_coordinates.should be_a(Icss::GeoCoordinates)
+      @obj.geo_coordinates.spatial_extent.should == [ [-97.75, 30.03], [-97.70, 30.1], [-97.90, 30.1] ]
+    end
   end
-
-  # describe Icss::Meta::RecordField do
-  #   context 'attributes' do
-  #     it 'accepts name, type, doc, default, required and order' do
-  #       hsh = { :name => :height, :type => 'int', :doc => 'How High',
-  #         :default  => 3, :required => false, :order => 'ascending', }
-  #       foo = Icss::Meta::RecordField.receive(hsh)
-  #       foo.required.should be_false
-  #       foo.default.should == 3
-  #       foo.receive_order('descending')
-  #       foo.order.should == 'descending'
-  #     end
-  #   end
-  # end
-
 end

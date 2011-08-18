@@ -3,7 +3,10 @@ module Icss
 
     class NamedSchema
       include Icss::Meta::RecordModel
-      field     :type,     Symbol, :required => true
+      include Icss::ReceiverModel::ActsAsHash
+      include Gorillib::Hashlike
+      include Gorillib::Hashlike::TreeMerge
+      field     :type,     String, :required => true
       field     :fullname, Symbol, :required => true
       alias_method :receive_name, :receive_fullname
 
@@ -22,6 +25,7 @@ module Icss
       # * inscribe
       #
       def self.receive(schema)
+        p [__FILE__, self, fields] ;
         schema_obj = super(schema)
         schema_obj.fullname ||= get_klass_name(schema)
         model_klass = Icss::Meta::NamedType.get_model_klass(schema_obj.fullname, superclass_for_klasses)

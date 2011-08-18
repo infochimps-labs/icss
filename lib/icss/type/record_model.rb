@@ -2,7 +2,10 @@ module Icss
   module Meta
 
     module RecordModel
-      def self.included(base) base.extend(Icss::Meta::RecordType) ; end
+      def self.included(base)
+        base.extend(Icss::Meta::RecordType)
+        base.metamodel
+      end
 
       #
       # modify object in place with new typecast values.

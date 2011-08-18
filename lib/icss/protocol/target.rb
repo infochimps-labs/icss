@@ -11,58 +11,58 @@ module Icss
   end
 
   class Target
-    include Gorillib::ReceiverModel
-    rcvr_accessor :name, String
-
+    include Icss::ReceiverModel
+    field :name, String
+    alias_method :basename, :name
   end
 
   class MysqlTarget < Target
-    rcvr_accessor :data_assets, Array, :items => String
-    rcvr_accessor :database,    String
-    rcvr_accessor :table_name,  String
+    field :data_assets,     Array, :items => String
+    field :database,        String
+    field :table_name,      String
   end
 
   class ApeyeyeTarget < Target
-    rcvr_accessor :code_assets, Array, :items => String
+    field :code_assets,     Array, :items => String
   end
 
   class HbaseTarget < Target
-    rcvr_accessor :data_assets,     Array, :items => String
-    rcvr_accessor :table_name,      String
-    rcvr_accessor :column_families, Array, :items => String
-    rcvr_accessor :column_family,   String
-    rcvr_accessor :loader,          String
-    rcvr_accessor :id_field,        String
+    field :data_assets,     Array, :items => String
+    field :table_name,      String
+    field :column_families, Array, :items => String
+    field :column_family,   String
+    field :loader,          String
+    field :id_field,        String
   end
 
   class ElasticSearchTarget < Target
-    rcvr_accessor :data_assets, Array, :items => String
-    rcvr_accessor :index_name,  String
-    rcvr_accessor :id_field,    String
-    rcvr_accessor :object_type, String
-    rcvr_accessor :loader,      String
+    field :data_assets,     Array, :items => String
+    field :index_name,      String
+    field :id_field,        String
+    field :object_type,     String
+    field :loader,          String
   end
 
   class GeoIndexTarget < Target
-    rcvr_accessor :data_assets,    Array, :items => String
-    rcvr_accessor :table_name,     String
-    rcvr_accessor :min_zoom,       Integer
-    rcvr_accessor :max_zoom,       Integer
-    rcvr_accessor :chars_per_page, Integer
-    rcvr_accessor :sort_field,     String
+    field :data_assets,     Array, :items => String
+    field :table_name,      String
+    field :min_zoom,        Integer
+    field :max_zoom,        Integer
+    field :chars_per_page,  Integer
+    field :sort_field,      String
   end
 
   class CatalogTarget < Target
-    rcvr_accessor :name,        String
-    rcvr_accessor :license,     String
-    rcvr_accessor :title,       String
-    rcvr_accessor :link,        String
-    rcvr_accessor :description, String
-    rcvr_accessor :owner,       String
-    rcvr_accessor :price,       Float
-    rcvr_accessor :tags,        Array, :items => String
-    rcvr_accessor :messages,    Array, :items => String
-    rcvr_accessor :packages,    Array, :items => Hash
+    field :name,            String
+    field :license,         String
+    field :title,           String
+    field :link,            String
+    field :description,     String
+    field :owner,           String
+    field :price,           Float
+    field :tags,            Array, :items => String
+    field :messages,        Array, :items => String
+    field :packages,        Array, :items => { :type => Hash, :values => Object }
   end
 
 end

@@ -64,28 +64,26 @@ module Icss
       field :namespace,   String
       field :doc,         String
       #
-      field :types,       :array, :items => Icss::Meta::TypeFactory, :default => []
+      field :types,       Array, :items => Icss::Meta::TypeFactory, :default => []
 
-      # field :messages,    :hash,  :values => Icss::Meta::Message,           :default => {}
-      # field :data_assets, Array, :items => Icss::DataAsset,   :default => []
-      # field :code_assets, Array, :items => Icss::CodeAsset,   :default => []
-      # field :targets,     Hash,  :items => Icss::TargetListFactory, :default => {}, :merge_as => :hash_of_arrays
-      # field :under_consideration, Boolean
-      # field :update_frequency, String
+      field :messages,    Hash,  :values => Icss::Meta::Message,     :default => {}
+      field :data_assets, Array, :items  => Icss::Meta::DataAsset,   :default => []
+      field :code_assets, Array, :items  => Icss::Meta::CodeAsset,   :default => []
+      field :targets,     Hash,  :values => Icss::TargetListFactory, :default => {}, :merge_as => :hash_of_arrays
+      field :under_consideration, Boolean
+      field :update_frequency, String
 
       validates :protocol,  :presence => true, :format => { :with => /\A[A-Za-z_]\w*\z/, :message => "must start with [A-Za-z_] and contain only [A-Za-z0-9_]." }
       validates :namespace, :presence => true, :format => { :with => /\A([A-Za-z_]\w*\.?)+\z/, :message => "Segments that start with [A-Za-z_] and contain only [A-Za-z0-9_], joined by '.'dots" }
-      # validates :update_frequency, :format => { :with => /daily|weekly|monthly|quarterly|never/ }, :allow_blank => true
+      validates :update_frequency, :format => { :with => /daily|weekly|monthly|quarterly|never/ }, :allow_blank => true
 
-      # after_receive do |hsh|
-      #   # Set each message's protocol to self, and if the basename wasn't given, set
-      #   # it using the message's hash key.
-      #   self.messages.each{|msg_name, msg| msg.protocol = self; msg.basename ||= msg_name }
-      #   # Set each type's parent to self (for namespace resolution)
-      #   self.types.each{|type| type.parent  = self }
-      #   # warn if invalid
-      #   warn errors.inspect unless valid?
-      # end
+      after_receive do |hsh|
+        # Set each message's protocol to self, and if the basename wasn't given, set
+        # it using the message's hash key.
+        self.messages.each{|msg_name, msg| msg.protocol = self; msg.basename ||= msg_name }
+        # warn if invalid
+        warn errors.inspect unless valid?
+      end
 
       # String: namespace.basename
       def fullname
@@ -131,13 +129,13 @@ module Icss
           :namespace   => @namespace, # use accessor so unset namespace isn't given
           :protocol    => protocol,
           :doc         => doc,
-          # :types       => (types       && types.map(&:to_hash)),
-          # :messages    => messages.inject({}){|h,(k,v)| h[k] = v.to_hash; h },
-          # :data_assets => data_assets.map(&:to_hash).map(&:compact_blank),
-          # :code_assets => code_assets.map(&:to_hash).map(&:compact_blank),
-          # :update_frequency    => update_frequency,
-          # :under_consideration => under_consideration,
-          # :targets     => targets_to_hash,
+          :types       => (types       && types.map(&:to_schema)),
+          :messages    => messages.inject({}){|h,(k,v)| h[k] = v.to_hash; h },
+          :data_assets => data_assets.map(&:to_hash).map(&:compact_blank),
+          :code_assets => code_assets.map(&:to_hash).map(&:compact_blank),
+          :update_frequency    => update_frequency,
+          :under_consideration => under_consideration,
+          :targets     => targets_to_hash,
         }.reject{|k,v| v.nil? }
       end
 

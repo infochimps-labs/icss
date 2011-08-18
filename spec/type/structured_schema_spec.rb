@@ -1,4 +1,6 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
+require 'gorillib/object/try_dup'
+require 'icss/receiver_model/acts_as_hash'
 require 'icss/type'                   #
 require 'icss/type/simple_types'      # Boolean, Integer, ...
 require 'icss/type/named_type'        # class methods for a named type: .metamodel .doc, .fullname, &c
@@ -6,8 +8,6 @@ require 'icss/type/record_type'       # class methods for a record model: .field
 require 'icss/type/record_model'      # instance methods for a record model
 #
 require 'icss/type/type_factory'      #
-require 'icss/receiver_model/acts_as_hash'
-require 'gorillib/object/try_dup'
 require 'icss/type/structured_schema'
 
 module Icss
@@ -30,9 +30,9 @@ describe 'complex types' do
 
   describe Icss::Meta::ArraySchema do
     [
-      [{:type => :array, :items => :'this.that.the_other'}, Icss::This::That::TheOther, ],
-      [{:type => :array, :items => :'int'     },            Integer, ],
-      [{:type => :array, :items => :'core.thing'},          Icss::Core::Thing, ],
+      [{:type => :array, :items => 'this.that.the_other'}, Icss::This::That::TheOther, ],
+      [{:type => :array, :items => 'int'     },            Integer, ],
+      [{:type => :array, :items => 'core.thing'},          Icss::Core::Thing, ],
     ].each do |schema, expected_item_factory|
       describe "With #{schema}" do
         before do
@@ -50,7 +50,7 @@ describe 'complex types' do
           @model_klass.item_factory.should == expected_item_factory
         end
         it 'has schema_writer' do
-          @schema_writer.type.should  == :array
+          @schema_writer.type.should  == 'array'
           @schema_writer.items.should == schema[:items]
           # @schema_writer.should be_valid
           @schema_writer.items = nil
@@ -108,7 +108,7 @@ describe 'complex types' do
           @model_klass.value_factory.should == expected_value_factory
         end
         it 'has schema_writer' do
-          @schema_writer.type.should  == :map
+          @schema_writer.type.should   == 'map'
           @schema_writer.values.should == schema[:values]
           # @schema_writer.should be_valid
           @schema_writer.values = nil
@@ -165,7 +165,7 @@ describe 'complex types' do
           @schema_writer.symbols.should == schema[:symbols].map(&:to_sym)
         end
         it 'has schema_writer' do
-          @schema_writer.type.should  == :enum
+          @schema_writer.type.should  == 'enum'
           # @schema_writer.should be_valid
           @schema_writer.symbols = []
           # @schema_writer.should_not be_valid
@@ -184,17 +184,17 @@ describe 'complex types' do
         inst.should == :sideways ; inst.should be_a(Symbol)
       end
       it 'raises an error on non-included value' do
-        Icss::Meta::EnumSchema.receive({:type => :enum, :name => 'games.coin_outcomes', :symbols => %w[heads tails sideways]})
+        Icss::Meta::EnumSchema.receive({:type => 'enum', :name => 'games.coin_outcomes', :symbols => %w[heads tails sideways]})
         lambda{ Icss::Games::CoinOutcomes.receive('ace_of_spades') }.should raise_error(ArgumentError, /Cannot receive ace_of_spades: must be one of heads,tails,sideways/)
-        Icss::Meta::EnumSchema.receive({:type => :enum, :name => 'herb.caen', :symbols => %w[parseley sage rosemary thyme]})
+        Icss::Meta::EnumSchema.receive({:type => 'enum', :name => 'herb.caen', :symbols => %w[parseley sage rosemary thyme]})
         lambda{ Icss::Herb::Caen.receive('weed') }.should raise_error(ArgumentError, /Cannot receive weed: must be one of parseley,sage,rosemary,.../)
       end
       it 'raises an error on non-symbolizable value' do
-        Icss::Meta::EnumSchema.receive({:type => :enum, :name => 'games.coin_outcomes', :symbols => %w[heads tails sideways]})
+        Icss::Meta::EnumSchema.receive({:type => 'enum', :name => 'games.coin_outcomes', :symbols => %w[heads tails sideways]})
         lambda{ Icss::Games::CoinOutcomes.receive(77) }.should raise_error(NoMethodError, /undefined method .to_sym/)
       end
       it 'returns nil on nil/empty string value' do
-        Icss::Meta::EnumSchema.receive({:type => :enum, :name => 'games.coin_outcomes', :symbols => %w[heads tails sideways]})
+        Icss::Meta::EnumSchema.receive({:type => 'enum', :name => 'games.coin_outcomes', :symbols => %w[heads tails sideways]})
         Icss::Games::CoinOutcomes.receive(nil).should be_nil
         Icss::Games::CoinOutcomes.receive('').should be_nil
         Icss::Games::CoinOutcomes.receive(:"").should be_nil
@@ -213,7 +213,7 @@ describe 'complex types' do
           @schema_writer = @model_klass._schema
         end
         it 'has schema_writer' do
-          @schema_writer.type.should  == :fixed
+          @schema_writer.type.should  == 'fixed'
           # @schema_writer.should be_valid
           @schema_writer.size = nil
           # @schema_writer.should_not be_valid
@@ -223,15 +223,15 @@ describe 'complex types' do
 
     context '.receive' do
       it 'applies the value_factory' do
-        Icss::Meta::FixedSchema.receive({:type => :fixed, :name => 'sixteen_bytes_long', :size => 16})
+        Icss::Meta::FixedSchema.receive({:type => 'fixed', :name => 'sixteen_bytes_long', :size => 16})
         Icss::SixteenBytesLong.receive('123456789_123456').should == '123456789_123456'
       end
       it 'raises an error on too-long value' do
-        Icss::Meta::FixedSchema.receive({:type => :fixed, :name => 'sixteen_bytes_long', :size => 16})
+        Icss::Meta::FixedSchema.receive({:type => 'fixed', :name => 'sixteen_bytes_long', :size => 16})
         lambda{ Icss::SixteenBytesLong.receive('123456789_1234567') }.should raise_error(ArgumentError, /Wrong size for a fixed-length type sixteen_bytes_long: got 17, not 16/)
       end
       it 'returns nil on nil/empty string value' do
-        Icss::Meta::FixedSchema.receive({:type => :fixed, :name => 'sixteen_bytes_long', :size => 16})
+        Icss::Meta::FixedSchema.receive({:type => 'fixed', :name => 'sixteen_bytes_long', :size => 16})
         Icss::SixteenBytesLong.receive(nil).should be_nil
         Icss::SixteenBytesLong.receive('').should be_nil
         Icss::SixteenBytesLong.receive(:"").should be_nil

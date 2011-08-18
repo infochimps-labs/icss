@@ -1,25 +1,23 @@
 module Icss
-  class DataAsset
-    include Receiver
-    include Receiver::ActsAsHash
-    include Receiver::ActiveModelShim
+  module Meta
+    class DataAsset
+      include Icss::ReceiverModel
 
-    rcvr_accessor :name,      String
-    rcvr_accessor :location,  String
-    # overriding ruby's deprecated but still present type attr on objects
-    attr_accessor :type
-    rcvr_accessor :type,      String
-    rcvr_accessor :doc,       String
+      field :name,      String
+      field :location,  String
+      # overriding ruby's deprecated but still present type attr on objects
+      attr_accessor :type
+      field :type,      String
+      field :doc,       String
 
-    validates :type, :inclusion => Icss::Type::DERIVED_TYPES.keys.map(&:to_s)
+      def named? nm
+        name == nm
+      end
 
-    def named? nm
-      name == nm
+      def to_hash()
+        { :name => name, :location => location, :type => type, :doc => doc }
+      end
+      def to_json() to_hash.to_json ; end
     end
-
-    def to_hash()
-      { :name => name, :location => location, :type => type, :doc => doc }
-    end
-    def to_json() to_hash.to_json ; end
   end
 end
