@@ -27,7 +27,7 @@ module Icss
       field :initial_free_qty,      Integer
       field :price_per_k_in_cents,  Integer
 
-      field :request,  :array, :default => [], :items => Icss::Meta::RecordField
+      field :request,  Array, :type => :array, :default => [], :items => Icss::Meta::RecordField
       field :response, Icss::Meta::TypeFactory
       field :errors,   Object # FIXME: Icss::Meta::UnionType, :default => []
       attr_accessor :protocol
