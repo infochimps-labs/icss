@@ -1,4 +1,5 @@
 require 'gorillib/object/blank'
+require 'gorillib/object/try_dup'
 require 'gorillib/string/inflections'
 require 'gorillib/string/constantize'
 require 'gorillib/array/compact_blank'
