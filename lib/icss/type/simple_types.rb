@@ -13,15 +13,15 @@ module Icss
       end
       def to_schema() :boolean ; end
     end
-    module IntegerSchema  ; def to_schema() :int    ; end ; def receive(val=nil) val.blank? ? nil : val.to_i                            ; end ; end
-    module LongSchema     ; def to_schema() :long                                                                                       ; end ; end
-    module FloatSchema    ; def to_schema() :float  ; end ; def receive(val=nil) val.blank? ? nil : val.to_f                            ; end ; end
-    module DoubleSchema   ; def to_schema() :double                                                                                     ; end ; end
-    module StringSchema   ; def to_schema() :string ; end ; def receive(val=nil) self.new(val.to_s)                                     ; end ; end
-    module BinarySchema   ; def to_schema() :bytes                                                                                      ; end ; end
+    module IntegerSchema  ; def to_schema() fullname ; end ; def fullname() :int    ; end ; def receive(val=nil) val.blank? ? nil : val.to_i                            ; end ; end
+    module LongSchema     ; def to_schema() fullname ; end ; def fullname() :long                                                                                       ; end ; end
+    module FloatSchema    ; def to_schema() fullname ; end ; def fullname() :float  ; end ; def receive(val=nil) val.blank? ? nil : val.to_f                            ; end ; end
+    module DoubleSchema   ; def to_schema() fullname ; end ; def fullname() :double                                                                                     ; end ; end
+    module StringSchema   ; def to_schema() fullname ; end ; def fullname() :string ; end ; def receive(val=nil) self.new(val.to_s)                                     ; end ; end
+    module BinarySchema   ; def to_schema() fullname ; end ; def fullname() :bytes                                                                                      ; end ; end
     #
-    module SymbolSchema   ; def to_schema() :symbol ; end ; def receive(val=nil) val.blank? ? nil : val.to_sym                          ; end ; end
-    module TimeSchema     ; def to_schema() :time   ; end ; def receive(val=nil) val.blank? ? nil : self.parse(val.to_s).utc rescue nil ; end ; end
+    module SymbolSchema   ; def to_schema() fullname ; end ; def fullname() :symbol ; end ; def receive(val=nil) val.blank? ? nil : val.to_sym                          ; end ; end
+    module TimeSchema     ; def to_schema() fullname ; end ; def fullname() :time   ; end ; def receive(val=nil) val.blank? ? nil : self.parse(val.to_s).utc rescue nil ; end ; end
 
     # patron saint of Simple Types (Structured Text)
     module St

@@ -76,7 +76,7 @@ module Icss
       def summary_of_response_attr
         case
         when response.blank?        then response
-        when @response_is_reference then response.basename
+        when @response_is_reference then response.fullname
         else response.to_schema.compact_blank
         end
       end
