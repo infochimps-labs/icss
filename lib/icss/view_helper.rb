@@ -1,28 +1,34 @@
+puts "!!!!!!!!!"
+p __FILE__
+puts "!!!!!!!!!"
+
 module Icss
-  Message.class_eval do
+  module Meta
+    Message.class_eval do
 
-    def query_string
-      fields = request.first.type.fields     rescue nil ; return unless fields
-      fields.map do |field|
-        "#{field.name}=#{first_sample_request_param[field.name.to_s]}"
-      end.join("&")
+      def query_string
+        fields = request.first.type.fields     rescue nil ; return unless fields
+        fields.map do |field_name, field|
+          "#{field[:name]}=#{first_sample_request_param[field[:name].to_s]}"
+        end.join("&")
+      end
+
+      def api_url
+        # all calls accept xml or json
+        "http://api.infochimps.com/#{path}?#{query_string}"
+      end
     end
 
-    def api_url
-      # all calls accept xml or json
-      "http://api.infochimps.com/#{path}?#{query_string}"
+    RecordField.class_eval do
+      def title
+        return "!!missing!!" if type.blank?
+        # case type
+        # when ArrayType then "array of #{type.title} #{type.to_hash.inspect}"
+        # else type.title
+        # end
+        type.title
+      end
     end
+
   end
-
-  RecordField.class_eval do
-    def title
-      return "!!missing!!" if type.blank?
-      # case type
-      # when ArrayType then "array of #{type.title} #{type.to_hash.inspect}"
-      # else type.title
-      # end
-      type.title
-    end
-  end
-
 end
