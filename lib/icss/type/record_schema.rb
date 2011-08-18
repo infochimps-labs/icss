@@ -53,7 +53,10 @@ module Icss
       end
 
       def parent_klass()      is_a.first ; end
-      def parent_metamodels() ( (is_a.length <= 1) ? [] : is_a[1 .. -1].map(&:metamodel) ) ; end
+      def parent_metamodels()
+        return [] if is_a.length <= 1
+        is_a[1 .. -1].map{|pk| pk.metamodel if pk.respond_to?(:metamodel) }.compact
+    end
 
       def decorate_with_superclass_models(model_klass)
         parent_metamodels.each do |parent_metamodel|

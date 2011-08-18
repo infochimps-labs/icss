@@ -16,7 +16,15 @@ end
 def core_files
   %w[
    business.educational_organization
-    */*
+  mu/*
+  st/*
+  business/*
+  culture/*
+  ev/*
+  geo/*
+  social/*
+  prod/*
+  */*
 
   ]   #.map{|filename| Dir[ ENV.root_path('examples/infochimps_catalog/core', filename.gsub(/\./, '/')+".icss.yaml") ] }.flatten
 end

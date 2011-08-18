@@ -1,10 +1,5 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 require 'icss'
-require 'icss/message'
-require 'icss/protocol/data_asset'
-require 'icss/protocol/code_asset'
-require 'icss/protocol/target'
-require 'icss/protocol'
 
 describe Icss::Meta::Protocol do
   let(:simple_icss) do
