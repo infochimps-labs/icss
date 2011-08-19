@@ -50,7 +50,7 @@ module Icss
       #
       def self.receive schema
         flavor, klass = classify_schema_declaration(schema)
-        # p [__FILE__, 'tf', flavor, klass, schema]
+        # p ['tfr', __FILE__, flavor, klass, schema]
         case flavor
         when :simple            then return klass
         when :factory           then return klass
@@ -81,7 +81,7 @@ module Icss
         else type = schema
         end
         type = type.to_sym if type.respond_to?(:to_sym)
-        # p [__FILE__, 'clfy', schema, type, STRUCTURED_SCHEMAS]
+        # p ['clfy', __FILE__, schema, type]
 
         if    ::Icss::SIMPLE_TYPES.include?(type)             then return [:simple,            SIMPLE_TYPES[type]]
         elsif (type == Array) && schema[:items].blank?        then return [:factory,           IdenticalArrayFactory]

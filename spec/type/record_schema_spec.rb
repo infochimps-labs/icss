@@ -11,6 +11,7 @@ require 'icss/type/type_factory'      # factory for instances based on type
 require 'icss/type/structured_schema' # generate type from array, hash, &c schema
 require 'icss/receiver_model'
 require 'icss/type/record_schema'
+require 'icss/type/record_field'
 require ENV.root_path('spec/support/icss_test_helper')
 include IcssTestHelper
 

@@ -24,6 +24,7 @@ require 'icss/type/type_factory'      #
 require 'icss/type/structured_schema' # generate type from array, hash, &c schema
 require 'icss/type/union_schema'      # factory for instances based on type
 require 'icss/type/record_schema'
+require 'icss/type/record_field'
 #
 require 'icss/receiver_model'
 require 'icss/receiver_model/acts_as_loadable'
