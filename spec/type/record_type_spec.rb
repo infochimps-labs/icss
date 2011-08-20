@@ -27,21 +27,40 @@ describe Icss::Meta::RecordType do
   let(:poppa          ){ Icss::Smurf::Poppa.new() }
   let(:smurfette      ){ Icss::Smurf::Smurfette.new() }
 
+  it 'adds few class methods' do
+    (Icss::Smurf::Smurfette.public_methods - Class.public_methods).sort.should == [
+      :after_receive, :after_receivers,
+      :field, :field_names, :fields, :has_field?, :field_named,
+      :metamodel, :to_schema,
+      :fullname, :namespace, :basename, :doc, :doc=,
+      :rcvr, :rcvr_alias, :rcvr_remaining, :receive,
+    ].sort
+  end
+  it 'adds few methods' do
+    (Icss::Smurf::Smurfette.new.public_methods -
+      Object.public_methods -
+      [ :attr_set?, :receive!, ] # maybe added later by record_model, they're OK
+      ).sort.should == [
+      :blondness, :blondness=, :doing_it, :doing_it=,
+      :receive_blondness,:receive_doing_it,
+      :receive_smurfiness, :smurfiness, :smurfiness=,
+    ].sort
+  end
+
   context '.field' do
     it 'adds field names' do
       Icss::Smurf::Base.field_names.should == [:smurfiness]
     end
     it 'adds field info' do
-      Icss::Smurf::Base.fields[:smurfiness].to_hash.should == {:name => :smurfiness, :type => Integer}
+      Icss::Smurf::Base.field_named(:smurfiness).to_hash.should == {:name => :smurfiness, :type => Integer}
     end
     it 'inherits parent fields' do
       new_smurf_klass.field(:birthday, Date)
       Icss::Smurf::Poppa.field_names.should == [:smurfiness]
-      Icss::Smurf::Poppa.fields.keys.should == [:smurfiness]
-      Icss::Smurf::Poppa.fields[:smurfiness].to_hash.should == {:name => :smurfiness, :type => Integer}
+      Icss::Smurf::Poppa.field_named(:smurfiness).to_hash.should == {:name => :smurfiness, :type => Integer}
       new_smurf_klass.field_names.should == [:smurfiness, :birthday]
-      new_smurf_klass.fields[:smurfiness].to_hash.should == {:name => :smurfiness, :type => Integer}
-      new_smurf_klass.fields[:birthday  ].to_hash.should == {:name => :birthday,   :type => Date}
+      new_smurf_klass.field_named(:smurfiness).to_hash.should == {:name => :smurfiness, :type => Integer}
+      new_smurf_klass.field_named(:birthday  ).to_hash.should == {:name => :birthday,   :type => Date}
     end
     it 'sets accessor visibility' do
       new_smurf_klass.field(:field_1, Integer, :accessor => :none)
@@ -54,25 +73,6 @@ describe Icss::Meta::RecordType do
       lambda{ new_smurf.field_2       }.should raise_error(NoMethodError, /private method \`field_2/)
       lambda{ new_smurf.field_3 = :yo }.should raise_error(NoMethodError, /protected method \`field_3=/)
       lambda{ new_smurf.field_3       }.should raise_error(NoMethodError, /protected method \`field_3/)
-    end
-    it 'adds few methods' do
-      (Icss::Smurf::Smurfette.public_methods - Class.public_methods).sort.should == [
-        :after_receive, :after_receivers,
-        :field, :field_names, :fields,
-        :metamodel, :to_schema,
-        :fullname, :namespace, :basename, :doc, :doc=,
-        :rcvr, :rcvr_remaining, :receive,
-      ].sort
-    end
-    it 'adds few methods' do
-      (Icss::Smurf::Smurfette.new.public_methods -
-        Object.public_methods -
-        [ :attr_set?, :receive!, ] # maybe added later by record_model, they're OK
-        ).sort.should == [
-        :blondness, :blondness=, :doing_it, :doing_it=,
-        :receive_blondness,:receive_doing_it,
-        :receive_smurfiness, :smurfiness, :smurfiness=,
-      ].sort
     end
   end
 
@@ -96,17 +96,17 @@ describe Icss::Meta::RecordType do
       new_smurf_klass.field_names.should    == [:smurfiness, :smurfberries, :smurfberry_crunch, :singing]
     end
     #
-    it 're-announcing a field modifies its info hash downstream, but not its order' do
+    it 're-announcing a field modifies its info hash downstream without rearranging' do
       uncle_smurf = Class.new(Icss::Smurf::Poppa)
       baby_smurf  = Class.new(uncle_smurf)
       baby_smurf.field_names.should == [:smurfiness]
-      uncle_smurf.fields[:smurfiness].to_hash.should == {:name => :smurfiness, :type => Integer}
-      baby_smurf.fields[:smurfiness ].to_hash.should == {:name => :smurfiness, :type => Integer}
+      uncle_smurf.field_named(:smurfiness).to_hash.should == {:name => :smurfiness, :type => Integer}
+      baby_smurf.field_named( :smurfiness).to_hash.should == {:name => :smurfiness, :type => Integer}
       #
       uncle_smurf.field(:smurfiness, Float, :validates => :numericality)
-      Icss::Smurf::Poppa.fields[:smurfiness].to_hash.should == {:name => :smurfiness, :type => Integer}
-      uncle_smurf.fields[:smurfiness].to_hash.should == {:name => :smurfiness, :type => Float, :validates => :numericality}
-      baby_smurf.fields[:smurfiness ].to_hash.should == {:name => :smurfiness, :type => Float, :validates => :numericality}
+      Icss::Smurf::Poppa.field_named(:smurfiness).to_hash.should == {:name => :smurfiness, :type => Integer}
+      uncle_smurf.field_named(:smurfiness).to_hash.should == {:name => :smurfiness, :type => Float, :validates => :numericality}
+      baby_smurf.field_named(:smurfiness ).to_hash.should == {:name => :smurfiness, :type => Float, :validates => :numericality}
     end
     it 'does not override an existing method' do
       new_smurf_klass.class_eval{ def foo() "hello!" end }

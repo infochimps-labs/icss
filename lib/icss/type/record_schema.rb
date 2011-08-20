@@ -5,7 +5,7 @@ module Icss
       include Icss::Meta::RecordModel
       include Icss::ReceiverModel::ActsAsHash
       include Gorillib::Hashlike
-      include Gorillib::Hashlike::TreeMerge
+      include Gorillib::Hashlike::Keys
       field :fullname,         Symbol, :required => true
       alias_method :receive_name, :receive_fullname
       field :type,             Symbol, :required => true
@@ -42,7 +42,7 @@ module Icss
       def parent_metamodels()
         return [] if is_a.length <= 1
         is_a[1 .. -1].map{|pk| pk.metamodel if pk.respond_to?(:metamodel) }.compact
-    end
+      end
 
       def decorate_with_superclass_models(model_klass)
         parent_metamodels.each do |parent_metamodel|
@@ -65,9 +65,12 @@ module Icss
 
       def inscribe_fields(model_klass)
         self.fields.each do |field_schema|
-          field_schema.symbolize_keys!
           model_klass.field(field_schema[:name], field_schema[:type], field_schema)
         end
+      end
+
+      def receive_fields(flds)
+        super(flds.map(&:symbolize_keys!))
       end
 
       def inscribe_is_a(model_klass)

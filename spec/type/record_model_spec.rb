@@ -30,8 +30,8 @@ describe Icss::Meta::RecordModel do
 
   context '#receive!' do
     it 'sets values' do
-      smurfette.receive!({ :smurfiness => '99', :blondness => 12.7 })
-      smurfette.smurfiness.should == 99
+      smurfette.receive!({ :smurfiness => '98', :blondness => 12.7 })
+      smurfette.smurfiness.should == 98
       smurfette.blondness.should == 12
     end
     it 'handles values with #receive_foo methods' do
@@ -39,8 +39,8 @@ describe Icss::Meta::RecordModel do
       smurfette.receive!({ :smurfiness => '99' })
     end
     it 'which goes through _set_field_val' do
-      smurfette.should_receive(:_set_field_val).with(:smurfiness, 99)
-      smurfette.receive!({ :smurfiness => '99' })
+      smurfette.should_receive(:_set_field_val).with(:smurfiness, 100)
+      smurfette.receive!({ :smurfiness => '100' })
     end
   end
 

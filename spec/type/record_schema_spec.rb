@@ -41,7 +41,7 @@ describe Icss::Meta::RecordSchema do
 
   BASIC_RECORD_SCHEMA = {:type => :record, :name => 'business.restaurant',
     :doc => "y'know, for food and stuff",
-    :fields => [ { :name => 'name', :type => 'string' } ] }
+    :fields => [ { :name => 'menu', :type => 'string' } ] }
   before do
     remove_icss_constants(['Icss::Business', 'Icss::Meta::Business'], [:Restaurant, :RestaurantType])
     remove_icss_constants(['Icss', 'Icss::Meta'], [:LabExperiment, :LabExperimentType, :DayOfWeek, :DayOfWeekType, :GeoCoordinates, :GeoCoordinatesType ])
@@ -66,15 +66,12 @@ describe Icss::Meta::RecordSchema do
     end
 
     it 'has accessors and receivers for the fields' do
-      (@model_klass.public_methods - Class.methods).sort.should == [
-        :_domain_id_field, :_schema,
-        :fullname,  :namespace, :basename, :doc, :doc=,
-        :fields, :field, :field_names,
-        :rcvr, :rcvr_remaining, :receive, :after_receive, :after_receivers,
-        :to_schema, :is_a, :metamodel,
+      blank_model = Class.new{ include Icss::Meta::RecordModel }
+      (@model_klass.public_methods - blank_model.public_methods).sort.should == [
+        :_domain_id_field, :_schema, :is_a
       ].sort.uniq
       (@model_klass.public_instance_methods - Object.public_instance_methods).sort.should == [
-        :attr_set?, :name, :name=, :receive!, :receive_name
+        :attr_set?, :menu, :menu=, :receive!, :receive_menu
       ].sort.uniq
     end
   end

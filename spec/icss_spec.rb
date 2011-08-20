@@ -20,7 +20,7 @@ end
 #   #
 #   #   it "should be able to identify the referenced type specified" do
 #   #     ref_type  = @icss.types.select{ |t| t.name == 'test_ref_type' }.first
-#   #     ref_field = ref_type.fields.select{ |f| f.name == 'ref_field' }.first
+#   #     ref_field = ref_type.field_schemas[:ref_field].first
 #   #     ref_field.to_hash.should == {
 #   #       :name => "ref_field",
 #   #       :doc  => "A field that references a type.",

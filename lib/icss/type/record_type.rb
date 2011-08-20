@@ -2,6 +2,18 @@ require 'icss/type/type_factory'
 
 module Icss
   module Meta
+
+    #
+    # RecordType -- class methods for a RecordModel
+    #
+    # Endows the model class with
+    # * klass.field  -- adds a field
+    # * klass.fields -- list of record_fields
+    #
+    # * klass.after_receive(&blk) -- blocks to execute after .receive is called
+    # * klass.after_receivers     -- list of after_receivers
+    # * klass.metamodel           -- overlay module that actually carries the model's instance methods
+    # * klass.to_schema           --
     module RecordType
       include Icss::Meta::NamedType
 
@@ -104,16 +116,22 @@ module Icss
         rcvr(field_name, type, schema)
       end
 
-      def fields
-        all_f = @fields || {}
-        call_ancestor_chain(:fields){|anc_f| all_f = anc_f.merge(all_f) }
-        all_f
-      end
-
       def field_names
         all_f = @field_names || []
         call_ancestor_chain(:field_names){|anc_f| all_f = anc_f | all_f }
         all_f
+      end
+
+      def fields
+        field_schemas.values_at(*field_names)
+      end
+
+      def field_named(fn)
+        field_schemas[fn]
+      end
+
+      def has_field?(fn)
+        !! field_schemas.has_key?(fn.to_sym)
       end
 
       #
@@ -125,18 +143,31 @@ module Icss
       # @option [Object]  :default  - After any receive! operation, attribute is set to this value unless attr_set? is true
       # @option [Class]   :items       - For collections (Array, Hash, etc), the type of the collection's items
       #
-      def rcvr(field_name, type, schema={}, attr_name=nil)
+      def rcvr(field_name, type, schema={})
         return if schema[:receiver] == :none
-        attr_name ||= field_name
-
         klass = Icss::Meta::TypeFactory.receive(schema.merge( :type => type ))
-        define_metamodel_method("receive_#{field_name}") do |val|
-          return nil if val.nil?
-          result = klass.receive(val)
-          _set_field_val(attr_name, result)
-          result
+        rcvr_meth = "receive_#{field_name}"
+        define_metamodel_method(rcvr_meth) do |val|
+          _set_field_val(field_name, klass.receive(val))
         end
+        _register_rcvr_for(field_name, rcvr_meth)
         add_after_receivers(field_name, type, schema)
+      end
+
+      def rcvr_alias(fake_attr, field_name)
+        _register_rcvr_for(fake_attr, "receive_#{field_name}")
+      end
+
+      #
+      def to_schema
+        #(defined?(super) ? super() : {}).merge(
+        ({
+          :name   => fullname,
+          :type   => :record,
+          :doc    => doc,
+          :fields => fields,
+          :is_a   => _schema.is_a,
+         }).compact_blank
       end
 
       #
@@ -155,7 +186,7 @@ module Icss
         field(field_name, Hash, schema)
         after_receive do |hsh|
           hsh.symbolize_keys!
-          remaining_vals_hsh = hsh.reject{|k,v| (self.class.fields.include?(k)) || (k.to_s =~ /^_/) }
+          remaining_vals_hsh = hsh.reject{|k,v| (self.class.has_field?(k)) || (k.to_s =~ /^_/) }
           self.send("receive_#{field_name}", remaining_vals_hsh)
         end
         add_after_receivers(field_name, type, schema)
@@ -201,19 +232,43 @@ module Icss
         end
       end
 
-      def add_field_schema(name, type, schema)
-        @field_names ||= [] ; @fields ||= {}
-        @field_names << name unless respond_to?(:field_names) && field_names.include?(name)
-        @fields[name] = schema.merge({ :name => name, :type => type })
+      def empty_field_schema
+        Hash.new
       end
 
-      def add_field_accessor(field_name, schema, attr=nil)
+      def field_schemas
+        all_f = @field_schemas || {}
+        call_ancestor_chain(:field_schemas){|anc_f| all_f = anc_f.merge(all_f) }
+        all_f
+      end
+
+      # register the field schema internally.
+      # To preserve field order for 1.8.7, we track field names as an array
+      def add_field_schema(name, type, schema)
+        @field_names ||= [] ; @field_schemas ||= {}
+        schema = schema.symbolize_keys.merge({ :name => name, :type => type })
+        @field_names         = @field_names | [name]
+        @field_schemas[name] = (field_schemas[name] || empty_field_schema).merge(schema)
+      end
+
+      def add_field_accessor(field_name, schema)
         visibility = schema[:accessor] || :public
-        reader_meth = field_name ; writer_meth = "#{field_name}=" ; attr_name = "@#{attr || field_name}"
+        reader_meth = field_name ; writer_meth = "#{field_name}=" ; attr_name = "@#{field_name}"
         unless (visibility == :none)
           define_metamodel_method(reader_meth, visibility){    instance_variable_get(attr_name)    }
           define_metamodel_method(writer_meth, visibility){|v| instance_variable_set(attr_name, v) }
         end
+      end
+
+      def _rcvr_methods
+        all_f = @_rcvr_methods || {}
+        call_ancestor_chain(:_rcvr_methods){|anc_f| all_f = anc_f.merge(all_f) }
+        all_f
+      end
+
+      def _register_rcvr_for(attr_name, rcvr_meth)
+        @_rcvr_methods ||= {}
+        @_rcvr_methods[attr_name.to_sym] = rcvr_meth.to_sym
       end
 
       # Adds after_receivers to implement some of the options to .field

@@ -25,7 +25,6 @@ module Icss
       # * inscribe
       #
       def self.receive(schema)
-        p [__FILE__, self, fields] ;
         schema_obj = super(schema)
         schema_obj.fullname ||= get_klass_name(schema)
         model_klass = Icss::Meta::NamedType.get_model_klass(schema_obj.fullname, superclass_for_klasses)

@@ -12,13 +12,11 @@ module Icss
       #
       def receive!(hsh={})
         raise ArgumentError, "Can't receive (it isn't hashlike): {#{hsh.inspect}}" unless hsh.respond_to?(:[]) && hsh.respond_to?(:has_key?)
-        self.class.fields.each do |attr, field_schema|
-          rcv_method = "receive_#{attr}"
-          next unless self.respond_to?(rcv_method)
-          if    hsh.has_key?(attr.to_sym) then val = hsh[attr.to_sym]
-          elsif hsh.has_key?(attr.to_s)   then val = hsh[attr.to_s]
-          else  next ; end
-          self.send(rcv_method, val)
+        self.class.send(:_rcvr_methods).each do |attr, meth|
+          if    hsh.has_key?(attr)      then val = hsh[attr]
+          elsif hsh.has_key?(attr.to_s) then val = hsh[attr.to_s]
+          else next ; end
+          self.send(meth, val)
         end
         run_after_receivers(hsh)
         self
@@ -26,7 +24,7 @@ module Icss
 
       # true if the attr is a receiver variable and it has been set
       def attr_set?(attr)
-        self.class.fields.has_key?(attr) && self.instance_variable_defined?("@#{attr}")
+        self.class.has_field?(attr) && self.instance_variable_defined?("@#{attr}")
       end
 
       def unset!(attr)
