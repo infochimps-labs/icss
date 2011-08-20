@@ -1,7 +1,3 @@
-puts "!!!!!!!!!"
-p __FILE__
-puts "!!!!!!!!!"
-
 module Icss
   module Meta
     Message.class_eval do

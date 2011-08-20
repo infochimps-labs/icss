@@ -92,7 +92,7 @@ module Icss
   module Meta
     module Type
       #:nodoc:
-      NORMAL_NAMED_CONSTANT_RE = /\A[\w\:\.]+\z/
+      NORMAL_NAMED_CONSTANT_RE = /\A[\w\:\.]+\z/ unless defined?(NORMAL_NAMED_CONSTANT_RE)
 
       # Turns a type name into its dotted (avro-style) name, regardless of its
       # current form.
