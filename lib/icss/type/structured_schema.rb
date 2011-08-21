@@ -5,7 +5,6 @@ module Icss
       include Icss::Meta::RecordModel
       include Icss::ReceiverModel::ActsAsHash
       include Gorillib::Hashlike
-      include Gorillib::Hashlike::TreeMerge
       field     :type,     Symbol, :required => true
       field     :fullname, Symbol, :required => true
       rcvr_alias :name, :fullname

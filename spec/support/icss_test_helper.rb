@@ -14,6 +14,7 @@ module IcssTestHelper
     :integer            => [ ::Integer,               Integer,      1],
     :symbol             => [::Symbol,                 Symbol,  :bob  ],
     :time               => [::Time,                   Time,    Time.now],
+    :numeric            => [::Numeric,                ::Numeric,    1.0],
     :'st.file_path'     => [::Icss::St::FilePath,     String,  "/tmp"],
     :'st.regexp'        => [::Icss::St::Regexp,       String,  "hel*o"],
     :'st.url'           => [::Icss::St::Url,          String,  "bit.ly"],

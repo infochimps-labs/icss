@@ -18,6 +18,7 @@ module Icss
       field :accessor,  Hash
       field :receiver,  Hash
       field :validates, Hash, :values => Object
+      field :indexed_on,  Symbol
       attr_reader   :parent
       attr_accessor :is_reference
 

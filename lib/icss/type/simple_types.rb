@@ -70,6 +70,7 @@ module Icss
   class Mu::EpochTime    < ::Integer     ; self.extend ::Icss::Meta::Mu::EpochTimeSchema    ; end
 
   ::Icss::SIMPLE_TYPES.merge!({
+      :numeric            => ::Numeric,
       :'st.file_path'     => ::Icss::St::FilePath,
       :'st.regexp'        => ::Icss::St::Regexp,
       :'st.url'           => ::Icss::St::Url,
