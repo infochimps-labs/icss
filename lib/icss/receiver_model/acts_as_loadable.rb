@@ -1,3 +1,6 @@
+require 'yaml'
+require 'json' unless defined?(JSON)
+
 module Icss
   module ReceiverModel
 
@@ -9,6 +12,10 @@ module Icss
     #
     module ActsAsLoadable
       module ClassMethods
+
+        module ::Icss::ReceiverModel::ClassMethods
+          include Icss::ReceiverModel::ActsAsLoadable::ClassMethods
+        end
 
         def receive_json stream
           receive(JSON.load(stream))
@@ -32,13 +39,6 @@ module Icss
       def merge_from_file! filename
         other_obj = self.class.receive_from_file(filename)
         tree_merge! other_obj
-      end
-
-      # put all the things in ClassMethods at class level
-      def self.included base
-        require 'yaml'
-        require 'json' unless defined?(JSON)
-        base.extend ClassMethods
       end
     end
 
