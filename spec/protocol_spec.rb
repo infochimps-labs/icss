@@ -89,23 +89,23 @@ describe Icss::Meta::Protocol do
         :namespace=>"util.time", :protocol=>"chronic",
         :doc=>"A series of calls hooking into the Chronic ruby gem",
         :types => [
-          {:name=>'chronic_parse_params',   :type=>:record, :doc=>"Query API parameters for the /util/time/chronic/parse call",
+          {:name=>:chronic_parse_params,   :type=>:record, :doc=>"Query API parameters for the /util/time/chronic/parse call",
             :fields=>[
-              {:name=>:time_str,             :type=>'string', :doc=>"The string to parse."},
-              {:name=>:context,              :type=>'symbol', :doc=>"<tt>past</tt> or <tt>future</tt> (defaults to <tt>future</tt>)\nIf your string represents a birthday, you can set <tt>context</tt> to <tt>past</tt> and if an ambiguous string is given, it will assume it is in the past. Specify <tt>future</tt> or omit to set a future context."},
-              {:name=>:now,                  :type=>'time',   :doc=>"Time (defaults to Time.now)\nBy setting <tt>:now</tt> to a Time, all computations will be based off of that time instead of Time.now. If set to nil, Chronic will use the current time in UTC. You must supply a date that unambiguously parses with the much-less-generous ruby Time.parse()"},
-              {:name=>:ambiguous_time_range, :type=>'int',    :doc=>"Integer or <tt>:none</tt> (defaults to <tt>6</tt> (6am-6pm))\nIf an Integer is given, ambiguous times (like 5:00) will be assumed to be within the range of that time in the AM to that time in the PM. For example, if you set it to <tt>7</tt>, then the parser will look for the time between 7am and 7pm. In the case of 5:00, it would assume that means 5:00pm. If <tt>:none</tt> is given, no assumption will be made, and the first matching instance of that time will be used."}
+              {:name=>:time_str,             :type=>:string, :doc=>"The string to parse."},
+              {:name=>:context,              :type=>:symbol, :doc=>"<tt>past</tt> or <tt>future</tt> (defaults to <tt>future</tt>)\nIf your string represents a birthday, you can set <tt>context</tt> to <tt>past</tt> and if an ambiguous string is given, it will assume it is in the past. Specify <tt>future</tt> or omit to set a future context."},
+              {:name=>:now,                  :type=>:time,   :doc=>"Time (defaults to Time.now)\nBy setting <tt>:now</tt> to a Time, all computations will be based off of that time instead of Time.now. If set to nil, Chronic will use the current time in UTC. You must supply a date that unambiguously parses with the much-less-generous ruby Time.parse()"},
+              {:name=>:ambiguous_time_range, :type=>:int,    :doc=>"Integer or <tt>:none</tt> (defaults to <tt>6</tt> (6am-6pm))\nIf an Integer is given, ambiguous times (like 5:00) will be assumed to be within the range of that time in the AM to that time in the PM. For example, if you set it to <tt>7</tt>, then the parser will look for the time between 7am and 7pm. In the case of 5:00, it would assume that means 5:00pm. If <tt>:none</tt> is given, no assumption will be made, and the first matching instance of that time will be used."}
             ]},
-          {:name=>'chronic_parse_response', :type=>:record, :doc=>"Query API response for the /util/time/chronic/parse call",
+          {:name=>:chronic_parse_response, :type=>:record, :doc=>"Query API response for the /util/time/chronic/parse call",
             :fields=>[
-              {:name=>:time,                 :type=>'string', :doc=>"The UTC parsed time, as a \"ISO 8601 combined date time\":http://en.wikipedia.org/wiki/ISO_8601 string."},
-              {:name=>:epoch_seconds,        :type=>'int',    :doc=>"The UTC parsed time, as \"epoch seconds\":http://en.wikipedia.org/wiki/Epoch_seconds integer."}
+              {:name=>:time,                 :type=>:string, :doc=>"The UTC parsed time, as a \"ISO 8601 combined date time\":http://en.wikipedia.org/wiki/ISO_8601 string."},
+              {:name=>:epoch_seconds,        :type=>:int,    :doc=>"The UTC parsed time, as \"epoch seconds\":http://en.wikipedia.org/wiki/Epoch_seconds integer."}
             ]}
         ],
         :messages => {
-          'parse' => {
-            :request  =>[{:name=>'chronic_parse_params', :type=>'chronic_parse_params'}],
-            :response =>'chronic_parse_response',
+          :parse => {
+            :request  =>[{:name=>:chronic_parse_params, :type=>:chronic_parse_params}],
+            :response =>:chronic_parse_response,
             :doc=>"\nChronic is a natural language date/time parser written in pure Ruby. See below\nfor the wide variety of formats Chronic will parse.",
             # :samples  =>[{
             #     :request=>[{"time_str"=>"one hour ago", "now"=>"2007-03-16T12:09:08Z"}],

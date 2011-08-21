@@ -8,7 +8,7 @@ module Icss
       include Gorillib::Hashlike::Keys
       remove_possible_method(:type)
 
-      field :name,      String,                  :required => true
+      field :name,      Symbol,                  :required => true
       field :type,      Icss::Meta::TypeFactory, :required => true
       field :doc,       String
       field :default,   Object
@@ -47,9 +47,9 @@ module Icss
         case order when 'ascending' then 1 when 'descending' then -1 else 0 ; end
       end
 
-      # def to_hash()
-      #   super.merge({ :type => (is_reference? ? type.fullname : type.to_schema) })
-      # end
+      def to_hash()
+        super.merge({ :type => (is_reference? ? type.fullname : Type.schema_for(type)) })
+      end
     end
 
     module RecordType

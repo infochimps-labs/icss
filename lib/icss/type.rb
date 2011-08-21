@@ -116,12 +116,19 @@ module Icss
       #    Icss::Meta::Type.fullname_for(Icss::This::That::TheOther)   # "Icss::This::That::TheOther"
       #    Icss::Meta::Type.fullname_for("Icss::This::That::TheOther") # "Icss::This::That::TheOther"
       #
-      def self.klassname_for(fullname)
-        return nil unless fullname.present? && (fullname.to_s =~ NORMAL_NAMED_CONSTANT_RE)
-        nm = fullname.to_s.gsub(/^:*Icss:+/, '').
+      def self.klassname_for(obj)
+        return nil unless obj.present? && (obj.to_s =~ NORMAL_NAMED_CONSTANT_RE)
+        nm = obj.to_s.gsub(/^:*Icss:+/, '').
           gsub(%r{::},'.').
           split('.').map(&:camelize).join('::')
         "::Icss::#{nm}"
+      end
+
+      def self.schema_for(obj)
+        case
+        when obj.respond_to?(:to_schema) then obj.to_schema
+        when str = fullname_for(obj)     then str.to_sym
+        else nil ; end
       end
 
       # true if class is among the defined primitive types:

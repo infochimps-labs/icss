@@ -130,7 +130,7 @@ module Icss
           :protocol    => protocol,
           :doc         => doc,
           :types       => (types       && types.map(&:to_schema)),
-          :messages    => messages.inject({}){|h,(k,v)| h[k] = v.to_hash; h },
+          :messages    => messages.inject({}){|h,(k,v)| h[k.to_sym] = v.to_hash; h },
           :data_assets => data_assets.map(&:to_hash).map(&:compact_blank),
           :code_assets => code_assets.map(&:to_hash).map(&:compact_blank),
           :update_frequency    => update_frequency,

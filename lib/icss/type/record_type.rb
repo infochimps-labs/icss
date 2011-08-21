@@ -165,8 +165,8 @@ module Icss
           :name   => fullname,
           :type   => :record,
           :doc    => doc,
-          :fields => fields,
-          :is_a   => _schema.is_a,
+          :fields => fields.map(&:to_hash),
+          :is_a   => (respond_to?(:is_a) ? is_a : []),
          }).compact_blank
       end
 
@@ -183,13 +183,13 @@ module Icss
       #     foo_obj = Foo.receive(:bob => 'hi, bob", :joe => 'hi, joe')
       #     # => <Foo @bob='hi, bob' @other_params={ :joe => 'hi, joe' }>
       def rcvr_remaining(field_name, schema={})
-        field(field_name, Hash, schema)
+        field(field_name, Hash, schema )
         after_receive do |hsh|
           hsh.symbolize_keys!
           remaining_vals_hsh = hsh.reject{|k,v| (self.class.has_field?(k)) || (k.to_s =~ /^_/) }
           self.send("receive_#{field_name}", remaining_vals_hsh)
         end
-        add_after_receivers(field_name, type, schema)
+        add_after_receivers(field_name, Hash, schema)
       end
 
       # make a block to run after each time  .receive! is invoked

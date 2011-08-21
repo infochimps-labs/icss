@@ -55,13 +55,13 @@ describe Icss::Meta::RecordSchema do
 
     it 'has schema_writer' do
       @schema_writer.type.should  == :record
-      @schema_writer.fullname.should == 'business.restaurant'
+      @schema_writer.fullname.should == :'business.restaurant'
       @schema_writer.fields.length.should == 1
     end
 
     it 'creates a named class' do
       @model_klass.name.to_s.should == 'Icss::Business::Restaurant'
-      Icss::Business::Restaurant.fullname.should == "business.restaurant"
+      Icss::Business::Restaurant.fullname.should == :"business.restaurant"
       Icss::Business::Restaurant.doc.should == "y'know, for food and stuff"
     end
 

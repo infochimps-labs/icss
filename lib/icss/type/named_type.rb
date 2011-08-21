@@ -79,7 +79,7 @@ module Icss
         [klass, metamodel]
       end
 
-      protected
+    protected
 
       def define_metamodel_method(meth_name, visibility=:public, &blk)
         metamodel.class_eval do
