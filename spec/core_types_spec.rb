@@ -4,47 +4,38 @@ require 'icss'
 require 'icss/protocol'
 require 'icss/message'
 
-Settings = {} unless defined?(Settings)
-Settings[:catalog_root] ||= ENV.root_path('examples/infochimps_catalog')
-
-def example_files(filename)
-  Dir[File.join(Settings[:catalog_root], filename+".icss.yaml")]
-end
-
 def core_files
-  %w[
-   st/url*
-   thing*
-   integer*
-   binary*
-   st/url*
-   st/quantity*
-]
-
-  #  business.educational_organization
-  # mu/*
-  # st/*
-  # business/*
-  # culture/*
-  # ev/*
-  # geo/*
-  # social/*
-  # prod/*
-  # */*
-  # ]
+  %w[ core datasets ].map do |section|
+    Dir[File.join(Settings[:catalog_root], section, '**/*.icss.yaml')].map do |fn|
+      fn.gsub(%r{.*#{section}/([^\.]+)\.icss\.yaml$}, '\1')
+    end
+  end.flatten.sort_by(&:reverse)
 end
 
-count = 0
-core_files.each do |filename_patt|
-  describe filename_patt do
+unless defined?(Log)
+  if defined?(Rails)
+    Log = Rails.logger
+  else
+    require 'logger'
+    Log = Logger.new($stderr)
+  end
+end
+
+Log.level = 1
+
+describe 'loads all catalog types' do
+
+  #
+  # So that we can kinda have random load order,
+  # but have it be deterministic,
+  # sort by the reversed string
+  #
+  count = 0
+  core_files.each do |filename_patt|
     it "loads #{filename_patt}" do
-      example_files("core/#{filename_patt.gsub(/\./, "/")}").each do |filename|
-        filename = filename.gsub(%r{.*core/([^\.]+)\.icss\.yaml$}, '\1')
-        pro = Icss::Meta::Protocol.load_from_catalog(filename)
-        p pro
-        count += 1
-      end
-      puts "************* loaded #{count} core types **************"
+      pro = Icss::Meta::Protocol.load_from_catalog(filename_patt)
+      count += pro.length
+      Log.debug "************* loaded #{count} core types **************"
     end
   end
 end
