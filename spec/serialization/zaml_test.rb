@@ -43,7 +43,6 @@ class ZamlDumpTest < Test::Unit::TestCase
       new.test(a,b)
     end
     def test(a,b)
-      #       p [a == b, a, b]
       @result = equivalent(a,b)
       self
     end

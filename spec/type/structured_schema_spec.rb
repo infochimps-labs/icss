@@ -50,7 +50,6 @@ describe 'complex types' do
         end
         it 'has schema_writer' do
           @schema_writer.type.should  == :array
-          p [@schema_writer, @schema_writer.to_hash, @schema_writer.fullname ]
           @schema_writer.to_hash.should == schema
           # @schema_writer.should be_valid
           @schema_writer.items = nil

@@ -11,8 +11,6 @@ describe Icss::Meta::RecordType do
   before{ class Brawny < Icss::Smurf::Handy ; end }
 
   context '.field' do
-    it 'adds RecordFields' do
-      p [Brawny, ]
-    end
+    it 'adds RecordFields'
   end
 end

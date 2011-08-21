@@ -53,7 +53,6 @@ core_files.each do |filename_patt|
     it "loads #{filename_patt}" do
       example_files("core/#{filename_patt.gsub(/\./, "/")}").each do |filename|
         filename = filename.gsub(%r{.*core/([^\.]+)\.icss\.yaml$}, '\1')
-        p filename
         Icss::Meta::Protocol.load_from_catalog(filename)
         count += 1
       end

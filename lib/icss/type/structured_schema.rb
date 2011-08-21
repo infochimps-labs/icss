@@ -116,7 +116,6 @@ module Icss
       def self.receive(hsh)
         hsh.symbolize_keys!
         warn "Suspicious key :values - array schema takes :items (#{hsh})" if hsh.has_key?(:values)
-        p hsh
         val = super(hsh)
         raise ArgumentError, "Items Factory is no good: #{hsh} - #{val._schema.to_hash}" if val.items.blank?
         val
