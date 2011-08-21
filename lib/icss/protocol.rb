@@ -1,3 +1,6 @@
+Settings = {} unless defined?(Settings)
+Settings[:catalog_root] ||= ENV.root_path('examples/infochimps_catalog')
+
 module Icss
   module Meta
 
@@ -77,11 +80,12 @@ module Icss
       validates :namespace, :presence => true, :format => { :with => /\A([A-Za-z_]\w*\.?)+\z/, :message => "Segments that start with [A-Za-z_] and contain only [A-Za-z0-9_], joined by '.'dots" }
       validates :update_frequency, :format => { :with => /daily|weekly|monthly|quarterly|never/ }, :allow_blank => true
 
-      after_receive do |hsh|
+      after_receive(:parent_my_messages) do |hsh|
         # Set each message's protocol to self, and if the basename wasn't given, set
         # it using the message's hash key.
         self.messages.each{|msg_name, msg| msg.protocol = self; msg.basename ||= msg_name }
-        # warn if invalid
+      end
+      after_receive(:warn_if_invalid) do |hsh|
         warn errors.inspect unless valid?
       end
 
@@ -97,9 +101,14 @@ module Icss
 
       CATALOG_PATH = 'examples/infochimps_catalog/core' unless defined? CATALOG_PATH
       def self.load_from_catalog(protocol_fullname)
-        filename = File.join(CATALOG_PATH, protocol_fullname.to_s.gsub(/\./, '/').gsub(/(\.icss\.yaml)?$/, ".icss.yaml"))
-        protocol_hsh = YAML.load(File.open(filename))
-        self.receive(protocol_hsh)
+        filepath = protocol_fullname.to_s.gsub(/(\.icss\.yaml)?$/,'').gsub(/\./, '/')+".icss.yaml"
+        filepath = File.join(Settings[:catalog_root],'*',filepath)
+        Dir[filepath].sort.map do |filename|
+          protocol_hsh = YAML.load(File.open(filename))
+          proto = self.receive(protocol_hsh)
+          Log.debug(['Loaded', filepath, proto].join("\t")) if defined?(Log)
+          proto
+        end
       end
 
       def find_message nm

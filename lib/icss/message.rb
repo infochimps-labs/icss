@@ -27,23 +27,21 @@ module Icss
       field :initial_free_qty,      Integer
       field :price_per_k_in_cents,  Integer
 
-      field :request,  Array, :default => [], :items => Icss::Meta::RecordField
+      field :request,  Array, :items => Icss::Meta::RecordField, :default => []
       field :response, Icss::Meta::TypeFactory
       field :errors,   Object # FIXME: Icss::Meta::UnionType, :default => []
       attr_accessor :protocol
       # this is defined in sample_message_call.rb -- since we don't do referenced types yet
-      field :samples,  :array, :default => [], :items => Object # FIXME: Icss::SampleMessageCall
+      field :samples,  Array, :default => [], :items => Object # FIXME: Icss::SampleMessageCall
 
-      after_receive do |hsh|
+      after_receive(:are_my_types_references) do |hsh|
         # track recursion of type references
         @response_is_reference = true if hsh['response'].is_a?(String) || hsh['response'].is_a?(Symbol)
-
 
         # FIXME: !!! reenable
 
         # # tie each sample back to this, its parent message
         # (self.samples ||= []).each{|sample| sample.message = self }
-
 
       end
 

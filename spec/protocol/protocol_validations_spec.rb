@@ -151,7 +151,7 @@ describe "Icss::Meta::Protocol validations" do
           'name' => 'fake_type_record',
           'type' => 'fake'
         })
-      lambda{ Icss::Meta::Protocol.receive(@template) }.should raise_error(Errno::ENOENT, /No such file.*fake\.icss\.yaml/)
+      lambda{ Icss::Meta::Protocol.receive(@template) }.should raise_error(NameError, /uninitialized.*Fake/)
     end
 
     it "should generate an error when an undefined type definition is given for a specific field" do
@@ -163,7 +163,7 @@ describe "Icss::Meta::Protocol validations" do
               'type' => 'fake_type'
             }]
         })
-      lambda{ Icss::Meta::Protocol.receive(@template) }.should raise_error(Errno::ENOENT, /No such file.*fake_type\.icss\.yaml/)
+      lambda{ Icss::Meta::Protocol.receive(@template) }.should raise_error(NameError, /uninitialized.*FakeType/)
     end
 
   end

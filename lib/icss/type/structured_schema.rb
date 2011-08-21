@@ -5,7 +5,6 @@ module Icss
       include Icss::Meta::RecordModel
       include Icss::ReceiverModel::ActsAsHash
       include Gorillib::Hashlike
-      field     :type,     Symbol, :required => true
       field     :fullname, Symbol, :required => true
       rcvr_alias :name, :fullname
       #
@@ -53,23 +52,6 @@ module Icss
         schema.delete(:type)
         super(schema)
       end
-
-      # def model_klass
-      #   return @model_klass if @model_klass
-      #   mk = Icss::Meta::NamedType.get_model_klass(fullname, parent_klass||Object)
-      #   model_type = mk.singleton_class
-      #   schema_writer = self
-      #   #
-      #   mk.extend ::Icss::Meta::NamedType
-      #   mk.extend metatype_for_klasses
-      #   #
-      #   model_type.class_eval{ define_method(:_schema){ schema_writer } }
-      #   self.class.field_names.each do |attr|
-      #     val = self.send(attr)
-      #     model_type.class_eval{ define_method(attr){ val } }
-      #   end
-      #   @model_klass = mk
-      # end
     end
 
     # An array of objects with a specified type.
@@ -136,7 +118,7 @@ module Icss
       self.parent_klass     = Array
       self.klass_metatypes += [::Icss::Meta::ArrayType]
       field     :items,        Icss::Meta::TypeFactory, :required => true
-      after_receive do |hsh|
+      after_receive(:klassname_from_contents_type) do |hsh|
         if not self.fullname
           slug = (Type.klassname_for(items) || object_id.to_s).gsub(/^:*Icss:+/, '').gsub(/:+/, 'Dot')
           self.fullname = "ArrayOf#{slug}"
@@ -176,7 +158,7 @@ module Icss
       self.klass_metatypes += [::Icss::Meta::HashType]
       field :values, Icss::Meta::TypeFactory, :required => true
       #
-      after_receive do |hsh|
+      after_receive(:klassname_from_contents_type) do |hsh|
         if not self.fullname
           slug = (Type.klassname_for(values) || object_id.to_s).gsub(/^:*Icss:+/, '').gsub(/:+/, 'Dot')
           self.fullname = "HashOf#{slug}"
@@ -220,7 +202,7 @@ module Icss
     class EnumSchema < ::Icss::Meta::StructuredSchema
       self.parent_klass     = Symbol
       self.klass_metatypes += [::Icss::Meta::EnumType]
-      field     :symbols, :array,  :items => Symbol, :required => true
+      field     :symbols, Array,  :items => Symbol, :required => true
       def type() :enum ; end
     end # EnumSchema
 
@@ -254,7 +236,7 @@ module Icss
     #
     class SimpleSchema < ::Icss::Meta::NamedSchema
       field :fullname,         Symbol, :required => true
-      field :is_a,             :array, :default => [], :items => Icss::Meta::TypeFactory
+      field :is_a,             Array, :default => [], :items => Icss::Meta::TypeFactory
       field :doc,              String, :required => true
       rcvr_alias :name, :fullname
       def type() :simple ; end
