@@ -54,14 +54,13 @@ module Icss
         #
         def consume_tuple(tuple)
           obj = self.new
-          fields.each do |attr, field_info|
-            if field_info[:type].respond_to?(:consume_tuple)
-              val = field_info[:type].consume_tuple(tuple)
+          fields.each do |field|
+            if field[:type].respond_to?(:consume_tuple)
+              val = field[:type].consume_tuple(tuple)
             else
               val = tuple.shift
             end
-            # obj.send("#{attr}=", val)
-            obj.send("receive_#{attr}", val)
+            obj.send("receive_#{field[:name]}", val) if val
           end
           obj.send(:run_after_receivers, {})
           obj

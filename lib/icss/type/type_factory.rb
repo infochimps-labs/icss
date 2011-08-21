@@ -88,6 +88,9 @@ module Icss
         elsif (type == Hash)  && schema[:values].blank?       then return [:factory,           IdenticalHashFactory]
         elsif ::Icss::FACTORY_TYPES.include?(type)            then return [:factory,           FACTORY_TYPES[type]]
         elsif ::Icss::STRUCTURED_SCHEMAS.include?(type)       then return [:structured_schema, STRUCTURED_SCHEMAS[type]]
+        elsif (type == :base)
+          p ['clfy-base', __FILE__, schema, type]
+          schema[:name].camelize.constantize
         elsif (type == :union) || type.is_a?(Array)           then return [:union_schema,      Icss::Meta::UnionSchema]
         elsif type.is_a?(Symbol) && type.to_s =~ /^[\w\.\:]+/ then return [:named_type,        type]
         elsif type.is_a?(Class) || type.is_a?(Module)         then return [:is_type,           type]
@@ -103,7 +106,7 @@ module Icss
         begin
           klass_name.constantize
         rescue NameError => e
-          p "loading! #{type} - #{schema}"
+          # p "loading! #{type} - #{schema}"
           Icss::Meta::Protocol.load_from_catalog(type.to_sym)
           klass_name.constantize
         end

@@ -4,64 +4,50 @@ require 'icss'
 require 'icss/protocol'
 require 'icss/message'
 
+Settings = {} unless defined?(Settings)
+Settings[:catalog_root] ||= ENV.root_path('examples/infochimps_catalog')
+
 def example_files(filename)
-  Dir[ENV.root_path('examples/infochimps_catalog', filename+".icss.yaml")]
-end
-
-
-module Icss
-  class Numeric              < Numeric              ; end
+  Dir[File.join(Settings[:catalog_root], filename+".icss.yaml")]
 end
 
 def core_files
   %w[
-   business.educational_organization
-  mu/*
-  st/*
-  business/*
-  culture/*
-  ev/*
-  geo/*
-  social/*
-  prod/*
-  */*
+   st/url*
+   thing*
+   integer*
+   binary*
+   st/url*
+   st/quantity*
+]
 
-  ]   #.map{|filename| Dir[ ENV.root_path('examples/infochimps_catalog/core', filename.gsub(/\./, '/')+".icss.yaml") ] }.flatten
+  #  business.educational_organization
+  # mu/*
+  # st/*
+  # business/*
+  # culture/*
+  # ev/*
+  # geo/*
+  # social/*
+  # prod/*
+  # */*
+  # ]
 end
 
-    # thing
-    # numeric
-    # mu.quantity mu.rating
-    # prod.offer
-    #
-    #
-    # culture.creative_work
-    # culture.media_object
-    #
-    # ev.event
-    #
-    # social.contact_point geo.geo_coordinates geo.postal_address
-    # geo.place geo.country
-
- # culture.photograph mu.aggregate_quantity prod.aggregate_rating
- #    culture.audio_object
-
-# example_files('core/*/*')
 count = 0
 core_files.each do |filename_patt|
   describe filename_patt do
     it "loads #{filename_patt}" do
       example_files("core/#{filename_patt.gsub(/\./, "/")}").each do |filename|
         filename = filename.gsub(%r{.*core/([^\.]+)\.icss\.yaml$}, '\1')
-        Icss::Meta::Protocol.load_from_catalog(filename)
+        pro = Icss::Meta::Protocol.load_from_catalog(filename)
+        p pro
         count += 1
       end
       puts "************* loaded #{count} core types **************"
     end
   end
 end
-
-
 
 
 #

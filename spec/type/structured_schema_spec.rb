@@ -28,6 +28,13 @@ end
 
 describe 'complex types' do
 
+  describe Icss::Meta::SimpleSchema do
+    it 'is ' do
+      kl = Icss::Meta::SimpleSchema.receive({ :name => 'st.bob', :type => :simple, :is_a => [Binary] })
+      p [kl, kl.ancestors]
+    end
+  end
+
   describe Icss::Meta::ArraySchema do
     [
       [{:type => :array, :items => :'test_str_sch.foo.bar'}, Icss::TestStrSch::Foo::Bar, ],

@@ -17,8 +17,7 @@ describe Icss::Meta::NamedType do
 
   context '.make' do
     it 'succeeds when the class already exists' do
-      mock_class = mock("does not use superklass")
-      klass, klass_metamodel = Icss::Meta::NamedType.make('this.that.the_other', mock_class)
+      klass, klass_metamodel = Icss::Meta::NamedType.make('this.that.the_other', Object)
       klass.should be_a(Class)
       klass.name.should == 'Icss::This::That::TheOther'
       klass_metamodel.should be_a(Module)
@@ -37,7 +36,7 @@ describe Icss::Meta::NamedType do
       Icss.send(:remove_const, :YourMom)
     end
     it 'creates a klass which inherits (includes) its metatype' do
-      klass, klass_metamodel = Icss::Meta::NamedType.make('this.that.the_other', :unused)
+      klass, klass_metamodel = Icss::Meta::NamedType.make('this.that.the_other', Object)
       klass.metamodel.should == Icss::Meta::This::That::TheOtherModel
     end
   end

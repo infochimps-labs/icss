@@ -38,14 +38,16 @@ module Icss
   module Meta
     # full definitions in type/structured_schema.rb and type/union_schema.rb
     class NamedSchema  ; end
-    class StructuredSchema < NamedSchema  ; end
+    class SimpleSchema < NamedSchema      ; end
+    class UnionSchema      < NamedSchema      ; end
+    class RecordSchema     < SimpleSchema     ; end
+    class ErrorSchema      < RecordSchema     ; end
+    #
+    class StructuredSchema < NamedSchema      ; end
     class HashSchema       < StructuredSchema ; end
     class ArraySchema      < StructuredSchema ; end
     class FixedSchema      < StructuredSchema ; end
     class EnumSchema       < StructuredSchema ; end
-    class UnionSchema      < NamedSchema ; end
-    class RecordSchema     < NamedSchema ; end
-    class ErrorSchema      < RecordSchema ; end
   end
 
   ::Icss::SIMPLE_TYPES       = {} unless defined?( ::Icss::SIMPLE_TYPES       )
@@ -75,6 +77,7 @@ module Icss
     })
 
   ::Icss::STRUCTURED_SCHEMAS.merge!({
+      :simple  => Icss::Meta::SimpleSchema,
       :record  => Icss::Meta::RecordSchema,
       :error   => Icss::Meta::ErrorSchema,
       :map     => Icss::Meta::HashSchema,

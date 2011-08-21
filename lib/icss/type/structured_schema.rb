@@ -9,11 +9,41 @@ module Icss
       field     :type,     Symbol, :required => true
       field     :fullname, Symbol, :required => true
       rcvr_alias :name, :fullname
+      #
+      class_attribute :klass_metatypes   ; self.klass_metatypes   = []
+      class_attribute :parent_metamodels ; self.parent_metamodels = []
+
+      def attrs_to_inscribe
+        self.class.field_names
+      end
+
+      def model_klass
+        return @model_klass if @model_klass
+        @model_klass = Icss::Meta::NamedType.get_model_klass(fullname, parent_klass||Object)
+        model_type = @model_klass.singleton_class
+        # module inclusions
+        parent_metamodels.each do |parent_metamodel|
+          @model_klass.class_eval{ include parent_metamodel }
+        end
+        klass_metatypes.each{|mt| @model_klass.extend(mt) }
+        # inscribe attributes
+        attrs_to_inscribe.each do |attr|
+          val = self.send(attr)
+          model_type.class_eval{ define_method(attr){ val } }
+        end
+        schema_writer = self
+        model_type.class_eval{ define_method(:_schema){ schema_writer } }
+        @model_klass
+      end
+      #
+      def self.receive(schema)
+        super(schema).model_klass
+      end
     end
 
     class StructuredSchema < NamedSchema
-      class_attribute :superclass_for_klasses
-      class_attribute :metatype_for_klasses
+      class_attribute :parent_klass
+      self.klass_metatypes = [::Icss::Meta::NamedType]
 
       # * create a schema writer object.
       # * generate a named class to represent the type
@@ -22,24 +52,25 @@ module Icss
       #
       def self.receive(schema)
         schema.delete(:type)
-        schema_obj = super(schema)
-        model_klass = Icss::Meta::NamedType.get_model_klass(schema_obj.fullname, superclass_for_klasses)
-        #
-        model_klass.extend ::Icss::Meta::NamedType
-        model_klass.extend metatype_for_klasses
-        schema_obj.inscribe_schema(model_klass)
-        model_klass
+        super(schema)
       end
 
-      def inscribe_schema(model_klass)
-        schema_writer = self
-        model_type = model_klass.singleton_class
-        model_type.class_eval{ define_method(:_schema){ schema_writer } }
-        self.class.field_names.each do |attr|
-          val = self.send(attr)
-          model_type.class_eval{ define_method(attr){ val } }
-        end
-      end
+      # def model_klass
+      #   return @model_klass if @model_klass
+      #   mk = Icss::Meta::NamedType.get_model_klass(fullname, parent_klass||Object)
+      #   model_type = mk.singleton_class
+      #   schema_writer = self
+      #   #
+      #   mk.extend ::Icss::Meta::NamedType
+      #   mk.extend metatype_for_klasses
+      #   #
+      #   model_type.class_eval{ define_method(:_schema){ schema_writer } }
+      #   self.class.field_names.each do |attr|
+      #     val = self.send(attr)
+      #     model_type.class_eval{ define_method(attr){ val } }
+      #   end
+      #   @model_klass = mk
+      # end
     end
 
     # An array of objects with a specified type.
@@ -103,8 +134,8 @@ module Icss
     #     {"type": "array", "items": "string"}
     #
     class ArraySchema < ::Icss::Meta::StructuredSchema
-      self.superclass_for_klasses = Array
-      self.metatype_for_klasses   = ::Icss::Meta::ArrayType
+      self.parent_klass     = Array
+      self.klass_metatypes += [::Icss::Meta::ArrayType]
       field     :items,        Icss::Meta::TypeFactory, :required => true
       after_receive do |hsh|
         if not self.fullname
@@ -142,8 +173,8 @@ module Icss
     #     {"type": "map", "values": "long"}
     #
     class HashSchema < ::Icss::Meta::StructuredSchema
-      self.superclass_for_klasses = Hash
-      self.metatype_for_klasses   = ::Icss::Meta::HashType
+      self.parent_klass     = Hash
+      self.klass_metatypes += [::Icss::Meta::HashType]
       field :values, Icss::Meta::TypeFactory, :required => true
       #
       after_receive do |hsh|
@@ -188,8 +219,8 @@ module Icss
     # }
     #
     class EnumSchema < ::Icss::Meta::StructuredSchema
-      self.superclass_for_klasses = Symbol
-      self.metatype_for_klasses   = ::Icss::Meta::EnumType
+      self.parent_klass     = Symbol
+      self.klass_metatypes += [::Icss::Meta::EnumType]
       field     :symbols, :array,  :items => Symbol, :required => true
       def type() :enum ; end
     end # EnumSchema
@@ -208,11 +239,34 @@ module Icss
     #     {"type": "fixed", "size": 16, "name": "md5"}
     #
     class FixedSchema < ::Icss::Meta::StructuredSchema
-      self.superclass_for_klasses = String
-      self.metatype_for_klasses   = ::Icss::Meta::FixedType
+      self.parent_klass     = String
+      self.klass_metatypes += [::Icss::Meta::FixedType]
       field     :size,    Integer, :validates => { :numericality => { :greater_than => 0 }}
       def type() :fixed ; end
     end # FixedSchema
+
+    #
+    # Description of a simple type (derived from one of the base classes)
+    #
+    # Simple uses the type name "simple" and supports the attributes:
+    #
+    # * name: a string naming this fixed (required).
+    # * namespace, a string that qualifies the name;
+    #
+    class SimpleSchema < ::Icss::Meta::NamedSchema
+      field :fullname,         Symbol, :required => true
+      field :is_a,             :array, :default => [], :items => Icss::Meta::TypeFactory
+      field :doc,              String, :required => true
+      rcvr_alias :name, :fullname
+      def type() :simple ; end
+      #
+      def parent_klass()      is_a.first ; end
+      def parent_metamodels()
+        return [] if is_a.length <= 1
+        is_a[1 .. -1].map{|pk| pk.metamodel if pk.respond_to?(:metamodel) }.compact
+      end
+      #
+    end # SimpleSchema
 
   end
 end

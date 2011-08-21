@@ -98,7 +98,6 @@ module Icss
       CATALOG_PATH = 'examples/infochimps_catalog/core' unless defined? CATALOG_PATH
       def self.load_from_catalog(protocol_fullname)
         filename = File.join(CATALOG_PATH, protocol_fullname.to_s.gsub(/\./, '/').gsub(/(\.icss\.yaml)?$/, ".icss.yaml"))
-        p ['loading', protocol_fullname, self]
         protocol_hsh = YAML.load(File.open(filename))
         self.receive(protocol_hsh)
       end
