@@ -111,9 +111,9 @@ module Icss
       def field(field_name, type, schema={})
         field_name = field_name.to_sym
         #
-        add_field_schema(field_name, type, schema)
+        schema = add_field_schema(field_name, type, schema)
         add_field_accessor(field_name, schema)
-        rcvr(field_name, type, schema)
+        rcvr(field_name, schema)
       end
 
       def field_names
@@ -143,15 +143,14 @@ module Icss
       # @option [Object]  :default  - After any receive! operation, attribute is set to this value unless attr_set? is true
       # @option [Class]   :items       - For collections (Array, Hash, etc), the type of the collection's items
       #
-      def rcvr(field_name, type, schema={})
+      def rcvr(field_name, schema={})
         return if schema[:receiver] == :none
-        klass = Icss::Meta::TypeFactory.receive(schema.merge( :type => type ))
-        rcvr_meth = "receive_#{field_name}"
-        define_metamodel_method(rcvr_meth) do |val|
+        klass = schema[:type]
+        define_metamodel_method("receive_#{field_name}") do |val|
           _set_field_val(field_name, klass.receive(val))
         end
-        _register_rcvr_for(field_name, rcvr_meth)
-        add_after_receivers(field_name, type, schema)
+        _register_rcvr_for(field_name, "receive_#{field_name}")
+        add_after_receivers(field_name)
       end
 
       def rcvr_alias(fake_attr, field_name)
@@ -183,24 +182,25 @@ module Icss
       #     foo_obj = Foo.receive(:bob => 'hi, bob", :joe => 'hi, joe')
       #     # => <Foo @bob='hi, bob' @other_params={ :joe => 'hi, joe' }>
       def rcvr_remaining(field_name, schema={})
-        field(field_name, Hash, schema )
-        after_receive do |hsh|
-          hsh.symbolize_keys!
+        schema[:values] ||= Object
+        field(field_name, Hash, schema)
+        after_receive(:rcvr_remaining) do |hsh|
           remaining_vals_hsh = hsh.reject{|k,v| (self.class.has_field?(k)) || (k.to_s =~ /^_/) }
           self.send("receive_#{field_name}", remaining_vals_hsh)
         end
-        add_after_receivers(field_name, Hash, schema)
+        add_after_receivers(field_name)
       end
 
       # make a block to run after each time  .receive! is invoked
-      def after_receive &block
-        @after_receivers = (@after_receivers || []) | [block]
+      def after_receive(after_hook_name, &after_hook)
+        @after_receivers ||= {}
+        @after_receivers[after_hook_name] = after_hook
       end
 
       # after_receive blocks for self and all ancestors
       def after_receivers
-        all_f = @after_receivers || []
-        call_ancestor_chain(:after_receivers){|anc_f| all_f = anc_f | all_f }
+        all_f = @after_receivers || {}
+        call_ancestor_chain(:after_receivers){|anc_f| all_f = anc_f.merge(all_f) }
         all_f
       end
 
@@ -232,7 +232,7 @@ module Icss
         end
       end
 
-      def empty_field_schema
+      def make_field_schema
         Hash.new
       end
 
@@ -246,9 +246,21 @@ module Icss
       # To preserve field order for 1.8.7, we track field names as an array
       def add_field_schema(name, type, schema)
         @field_names ||= [] ; @field_schemas ||= {}
-        schema = schema.symbolize_keys.merge({ :name => name, :type => type })
         @field_names         = @field_names | [name]
-        @field_schemas[name] = (field_schemas[name] || empty_field_schema).merge(schema)
+        schema = schema.symbolize_keys.merge({ :name => name })
+        #
+        # FIXME: this is terrible, especially given what's in TypeFactory anyway.
+        #
+        schema[:type] =
+        case
+        when type == Hash  && schema.has_key?(:values) then Icss::Meta::TypeFactory.receive({ :type => :hash,  :values => schema.delete(:values)})
+        when type == Array && schema.has_key?(:items)  then Icss::Meta::TypeFactory.receive({ :type => :array, :items  => schema.delete(:items) })
+        when type == Hash  then IdenticalHashFactory
+        when type == Array then IdenticalArrayFactory
+        else
+          Icss::Meta::TypeFactory.receive(type)
+        end
+        @field_schemas[name] = (field_schemas[name] || make_field_schema).merge(schema)
       end
 
       def add_field_accessor(field_name, schema)
@@ -283,23 +295,34 @@ module Icss
       #   f = Foo.receive({:temperature => 9999})
       #   # #<Foo:0x10156c820 @temperature=nil>
       #
-      def add_after_receivers(field_name, type, schema)
-        if schema.has_key?(:default)
-          def_val = schema[:default]
-          after_receive do
-            self._set_field_val(field_name, def_val.try_dup) unless attr_set?(field_name)
-          end
-        end
+      def add_after_receivers(field_name)
+        schema = field_named(field_name)
+        set_field_default(field_name, schema[:default]) if schema.has_key?(:default)
         if schema.has_key?(:replace)
           repl = schema[:replace]
-          after_receive do
+          after_receive(:"replace_#{field_name}") do
             val = self.send(field_name)
             if repl.has_key?(val)
               self._set_field_val(field_name, repl[val])
             end
           end
         end
-        super(field_name, type, schema) if defined?(super)
+        super(field_name) if defined?(super)
+      end
+
+      def set_field_default(field_name, default_val=nil, &blk)
+        blk = default_val if default_val.is_a?(Proc)
+        if blk
+          after_receive(:"default_#{field_name}") do
+            val = instance_exec(&blk)
+            self._set_field_val(field_name, val) unless attr_set?(field_name)
+          end
+        else
+          after_receive(:"default_#{field_name}") do
+            val = default_val.try_dup
+            self._set_field_val(field_name, val) unless attr_set?(field_name)
+          end
+        end
       end
 
     end # RecordType

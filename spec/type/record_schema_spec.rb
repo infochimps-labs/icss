@@ -42,13 +42,13 @@ describe Icss::Meta::RecordSchema do
   BASIC_RECORD_SCHEMA = {:type => :record, :name => 'business.restaurant',
     :doc => "y'know, for food and stuff",
     :fields => [ { :name => 'menu', :type => 'string' } ] }
-  before do
-    remove_icss_constants(['Icss::Business', 'Icss::Meta::Business'], [:Restaurant, :RestaurantType])
-    remove_icss_constants(['Icss', 'Icss::Meta'], [:LabExperiment, :LabExperimentType, :DayOfWeek, :DayOfWeekType, :GeoCoordinates, :GeoCoordinatesType ])
+  before(:each) do
+    remove_icss_constants('Business::Restaurant')
+    remove_icss_constants(:LabExperiment, :DayOfWeek, :GeoCoordinates)
   end
 
   describe "With basic schema" do
-    before do
+    before(:each) do
       @model_klass = Icss::Meta::RecordSchema.receive(BASIC_RECORD_SCHEMA)
       @schema_writer = @model_klass._schema
     end
@@ -123,19 +123,21 @@ describe Icss::Meta::RecordModel do
           'is_a'   => ['this.that.the_other', 'this.right.here'],
           'fields' => [
             { 'name' => 'temperature', 'type' => 'float' },
-            { 'name' => 'day_of_week', 'type' => 'enum',
-              'symbols' => [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday] },
-            { 'name' => 'geo_coordinates', 'type' => 'record',
-              'fields' => [
-                { 'name' => 'latitude',  'type' => 'float' },
-                { 'name' => 'longitude', 'type' => 'float' },
-                { 'name' => 'spatial_extent', 'type' =>
-                  { 'type' => 'array', 'items' => {
-                      'type' => 'array', 'items' => 'float' }}},
-              ]},
+            { 'name' => 'day', 'type' => {
+                'name' => 'day_of_week', :type => 'enum',
+                'symbols' => [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday] }},
+            { 'name' => 'geo', 'type' => {
+                :type => 'record', 'name' => 'geo_coordinates',
+                'fields' => [
+                  { 'name' => 'latitude',  'type' => 'float' },
+                  { 'name' => 'longitude', 'type' => 'float' },
+                  { 'name' => 'spatial_extent', 'type' =>
+                    { 'type' => 'array', 'items' => {
+                        'type' => 'array', 'items' => 'float' }}},
+              ]}},
           ] })
-      @obj = @klass.receive({ :temperature => 97.4, :day_of_week => 'tuesday',
-          :geo_coordinates => {
+      @obj = @klass.receive({ :temperature => 97.4, :day => 'tuesday',
+          :geo => {
             'longitude' => '-97.75', :latitude => "30.03",
             'spatial_extent' => [ ['-97.75', '30.03'], ['-97.70', '30.1'], ['-97.90', '30.1'] ]
           } })
@@ -148,11 +150,11 @@ describe Icss::Meta::RecordModel do
     end
     it 'receives data' do
       @obj.temperature.should == 97.4
-      @obj.day_of_week.should == :tuesday
-      @obj.geo_coordinates.latitude.should == 30.03
-      @obj.geo_coordinates.longitude.should == -97.75
-      @obj.geo_coordinates.should be_a(Icss::GeoCoordinates)
-      @obj.geo_coordinates.spatial_extent.should == [ [-97.75, 30.03], [-97.70, 30.1], [-97.90, 30.1] ]
+      @obj.day.should == :tuesday
+      @obj.geo.latitude.should == 30.03
+      @obj.geo.longitude.should == -97.75
+      @obj.geo.should be_a(Icss::GeoCoordinates)
+      @obj.geo.spatial_extent.should == [ [-97.75, 30.03], [-97.70, 30.1], [-97.90, 30.1] ]
     end
   end
 end

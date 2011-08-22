@@ -1,27 +1,40 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
+require 'gorillib/object/try_dup'
+require 'icss/receiver_model/acts_as_hash'
 require 'icss/type'
 require 'icss/type/simple_types'
 require 'icss/type/named_type'
 require 'icss/type/record_type'
+require 'icss/type/record_model'      # instance methods for a record model
+require 'icss/type/type_factory'      #
+require 'icss/type/structured_schema'
 
-module Icss::Smurf
-  class Base
-    extend Icss::Meta::RecordType
-    field :smurfiness, :int
-  end
-  class Poppa < Base
-  end
-  module Brainy
-    extend Icss::Meta::RecordType
-    field :has_glasses, Boolean
-  end
-  class Smurfette < Poppa
-    include Brainy
-    field :blondness, Integer
-  end
-end
+require 'icss'
+
+require ENV.root_path('spec/support/icss_test_helper')
+include IcssTestHelper
 
 describe Icss::Meta::RecordType do
+
+  before(:each) do
+    IcssTestHelper.remove_icss_constants('Smurf::Poppa', 'Smurf::Brainy', 'Smurf::Smurfette')
+    module Icss
+      module Smurf
+        class Poppa < Icss::SmurfRecord
+          field :smurfiness, :int
+        end
+        module Brainy
+          include Icss::Meta::RecordModel
+          field :has_glasses, Boolean
+        end
+        class Smurfette < Poppa
+          include Brainy
+          field :blondness, Integer
+        end
+      end
+    end
+  end
+
   let(:new_smurf_klass){ k = Class.new(Icss::Smurf::Poppa)  }
   let(:module_smurf   ){ m = Module.new; m.send(:extend, Icss::Meta::RecordType) ; m }
   let(:poppa          ){ Icss::Smurf::Poppa.new() }
@@ -49,10 +62,10 @@ describe Icss::Meta::RecordType do
 
   context '.field' do
     it 'adds field names' do
-      Icss::Smurf::Base.field_names.should == [:smurfiness]
+      Icss::Smurf::Poppa.field_names.should == [:smurfiness]
     end
     it 'adds field info' do
-      Icss::Smurf::Base.field_named(:smurfiness).to_hash.should == {:name => :smurfiness, :type => :int}
+      Icss::Smurf::Poppa.field_named(:smurfiness).to_hash.should == {:name => :smurfiness, :type => :int}
     end
     it 'inherits parent fields' do
       new_smurf_klass.field(:birthday, :time)
@@ -103,10 +116,10 @@ describe Icss::Meta::RecordType do
       uncle_smurf.field_named(:smurfiness).to_hash.should == {:name => :smurfiness, :type => :int}
       baby_smurf.field_named( :smurfiness).to_hash.should == {:name => :smurfiness, :type => :int}
       #
-      uncle_smurf.field(:smurfiness, :float, :validates => :numericality)
+      uncle_smurf.field(:smurfiness, :float, :validates => { :numericality => true })
       Icss::Smurf::Poppa.field_named(:smurfiness).to_hash.should == {:name => :smurfiness, :type => :int}
-      uncle_smurf.field_named(:smurfiness).to_hash.should == {:name => :smurfiness, :type => :float, :validates => :numericality}
-      baby_smurf.field_named(:smurfiness ).to_hash.should == {:name => :smurfiness, :type => :float, :validates => :numericality}
+      uncle_smurf.field_named(:smurfiness).to_hash.should == {:name => :smurfiness, :type => :float, :validates => { :numericality => true }}
+      baby_smurf.field_named(:smurfiness ).to_hash.should == {:name => :smurfiness, :type => :float, :validates => { :numericality => true }}
     end
     it 'does not override an existing method' do
       new_smurf_klass.class_eval{ def foo() "hello!" end }
