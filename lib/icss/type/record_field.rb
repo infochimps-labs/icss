@@ -6,57 +6,61 @@ module Icss
       include Icss::ReceiverModel::ActsAsHash
       include Gorillib::Hashlike
       include Gorillib::Hashlike::Keys
+      include Icss::ReceiverModel
+      include Icss::ReceiverModel::ActiveModelShim
       remove_possible_method(:type)
+
+      ALLOWED_ORDERS = %w[ascending descending ignore].freeze unless defined?(ALLOWED_ORDERS)
 
       field :name,      Symbol,                  :required => true
       field :type,      Icss::Meta::TypeFactory, :required => true
       field :doc,       String
-      field :default,   Object
+      field :default,   Icss::Meta::IdenticalFactory
       field :required,  Boolean
       field :aliases,   Array,   :items => Symbol
-      field :order,     String
-      field :accessor,  Hash
-      field :receiver,  Hash
-      field :validates, Hash, :values => Object
+      field :order,     String,  :validates => { :inclusion => { :in => ALLOWED_ORDERS } }
+      field :accessor,  Symbol
+      field :receiver,  Symbol
+      field :validates, Hash
       field :indexed_on,  Symbol
+      rcvr_remaining :_extra_params
       attr_reader   :parent
       attr_accessor :is_reference
 
-      ALLOWED_ORDERS = %w[ascending descending ignore].freeze unless defined?(ALLOWED_ORDERS)
-      validates :order, :inclusion => { :in => ALLOWED_ORDERS } if respond_to?(:validates)
-
-      after_receive do |hsh|
-        # track recursion of type references
+      # track recursion of type references
+      after_receive(:am_i_a_reference) do |hsh|
         @is_reference = true if hsh['type'].is_a?(String) || hsh['type'].is_a?(Symbol)
       end
 
-      def receive_type(tp)
-        if Icss::STRUCTURED_SCHEMAS.include?(tp)
-          self.type = tp
-        else
-          super(tp)
-        end
+      after_receive(:warnings) do |hsh|
+        warn "Extra params given to field #{self}: #{_extra_params.inspect}" if _extra_params.present?
+        warn "Validation failed for field #{self}: #{errors.inspect}" if respond_to?(:errors) && (not valid?)
+      end
+
+      # Hack hack -- makes it so fields go thru the receiver door when merged in RecordType
+      def merge(hsh)
+        dup.receive!(hsh)
+      end
+
+      def to_hash()
+        hsh = super
+        hsh = hsh.merge({ :type => (is_reference? ? type.fullname : Type.schema_for(type)) })
+        hsh.delete(:_extra_params)
+        hsh
       end
 
       # is the field a reference to a named type (true), or an inline schema (false)?
       def is_reference?() is_reference ; end
 
-      def order
-        @order || 'ascending'
-      end
-      def order_direction
-        case order when 'ascending' then 1 when 'descending' then -1 else 0 ; end
-      end
-
-      def to_hash()
-        super.merge({ :type => (is_reference? ? type.fullname : Type.schema_for(type)) })
-      end
+      # Order is defined by the avro spec
+      def order()           @order || 'ascending' ; end
+      def order_direction() case order when 'ascending' then 1 when 'descending' then -1 else 0 ; end ; end
     end
 
     module RecordType
-      #
     protected
-      def empty_field_schema
+      # create new field_schema as a RecordField object, not Hash
+      def make_field_schema
         RecordField.new
       end
     end
