@@ -9,28 +9,37 @@ require 'icss/type/record_model'      # instance methods for a record model
 #
 require 'icss/type/type_factory'      #
 require 'icss/type/structured_schema'
+require 'icss/type/record_schema'
+require 'icss/type/record_field'
 
-module Icss::Smurf
-  class Base
-    include Icss::Meta::RecordModel
-    field :smurfiness, Integer
-  end
-  class Poppa < Base
-  end
-  module Brainy
-    include Icss::Meta::RecordModel
-    field :has_glasses, Boolean
-  end
-  class Smurfette < Poppa
-    include Brainy
-    field :blondness, Integer
-  end
-end
+require ENV.root_path('spec/support/icss_test_helper')
+include IcssTestHelper
 
 describe Icss::Meta::RecordModel do
-  let(:new_smurf_klass){ k = Class.new(Icss::Smurf::Poppa)  }
-  let(:poppa          ){ Icss::Smurf::Poppa.new() }
-  let(:smurfette      ){ Icss::Smurf::Smurfette.new() }
+
+  before(:each) do
+    IcssTestHelper.remove_icss_constants('Poppa', 'Brainy', 'Smurfette', 'Hefty', 'Glad')
+    module Icss
+      class Poppa < Icss::SmurfRecord
+        field :smurfiness, Integer
+      end
+      module Brainy
+        include Icss::Meta::RecordModel
+        field :has_glasses, Boolean
+      end
+      class Smurfette < Poppa
+        include Brainy
+        field :blondness, Integer
+      end
+      class Hefty < Icss::SmurfRecord
+      end
+      class Glad  < Hefty
+      end
+    end
+  end
+
+  let(:poppa          ){ Icss::Poppa.new() }
+  let(:smurfette      ){ Icss::Smurfette.new() }
 
   context '#receive!' do
     it 'sets values' do
@@ -49,10 +58,10 @@ describe Icss::Meta::RecordModel do
     it 'sends to field type klass .receive method' do
       dummy = mock
       foo_type = Class.new
-      new_smurf_klass.field :foo, foo_type
+      Icss::Poppa.field :foo, foo_type
       #
       foo_type.should_receive(:receive).with(dummy)
-      new_smurf_klass.receive({ :foo => dummy })
+      Icss::Poppa.receive({ :foo => dummy })
     end
   end
 
@@ -65,7 +74,7 @@ describe Icss::Meta::RecordModel do
       smurfette.should respond_to(:receive_smurfiness)
       smurfette.should respond_to(:receive_blondness)
       smurfette.blondness.should == nil
-      smurfette.blondness = 77
+       smurfette.blondness = 77
       smurfette.blondness.should == 77
       smurfette.receive_blondness(99)
       smurfette.blondness.should == 99
@@ -74,49 +83,122 @@ describe Icss::Meta::RecordModel do
 
   context '.after_receive' do
     it 'adds an after_receiver' do
-      proc = lambda{ 1 }
-      new_smurf_klass.after_receive(&proc)
-      new_smurf_klass.after_receivers.should == [proc]
+      blk = lambda{ 1 }
+      Icss::Poppa.after_receive(:foo, &blk)
+      Icss::Poppa.after_receivers[:foo].should == blk
     end
   end
 
   context '.after_receivers' do
     it 'is run after receive' do
       dummy = mock ; hsh = { :smurfiness => 9 }
-      new_smurf_klass.after_receive{|hsh| dummy.hello("hello!", smurfiness) }
+      Icss::Poppa.after_receive(:howdy){|hsh| dummy.hello("hello!", smurfiness) }
       dummy.should_receive(:hello).with("hello!", 9)
-      new_smurf_klass.receive(hsh)
+      Icss::Poppa.receive(hsh)
     end
     it 'gets received hash as args' do
       dummy = mock ; hsh = { :smurfiness => 10 }
-      new_smurf_klass.after_receive{|hsh| dummy.hello("hello!", hsh) }
+      Icss::Poppa.after_receive(:howdy){|hsh| dummy.hello("hello!", hsh) }
       dummy.should_receive(:hello).with("hello!", hsh)
-      new_smurf_klass.receive(hsh)
+      Icss::Poppa.receive(hsh)
     end
   end
 
   context '.rcvr_remaining' do
     it 'adds a new field' do
-      new_smurf_klass.rcvr_remaining(:bob)
-      new_smurf_klass.field_names.should == [:smurfiness, :bob]
-      new_smurf_klass.field_named(:bob)[:type].should == Hash
+      Icss::Poppa.rcvr_remaining(:bob)
+      Icss::Poppa.field_names.should == [:smurfiness, :bob]
+      Icss::Poppa.field_named(:bob)[:type].to_s.should == 'Icss::HashOfMetaDotIdenticalFactory'
     end
     it 'receives leftover attrs' do
-      new_smurf_klass.rcvr_remaining(:bob)
-      obj = new_smurf_klass.receive(:smurfiness => 12, :bogosity => 97)
+      Icss::Poppa.rcvr_remaining(:bob)
+      obj = Icss::Poppa.receive(:smurfiness => 12, :bogosity => 97)
       obj.bob.should == {:bogosity => 97}
     end
     it 'applies schema to leftover attrs' do
-      new_smurf_klass.rcvr_remaining(:bob, :values => :int)
-      obj = new_smurf_klass.receive(:smurfiness => 12, :bogosity => "11", :converts => 31.2)
+      Icss::Poppa.rcvr_remaining(:bob, :values => :int)
+      obj = Icss::Poppa.receive({:smurfiness => 12, :bogosity => "11", :converts => 31.2})
       obj.bob.should == {:bogosity => 11, :converts => 31}
     end
     it 'is {} when no leftover attrs' do
-      new_smurf_klass.rcvr_remaining(:bob)
-      obj = new_smurf_klass.receive({:smurfiness => 12})
+      Icss::Poppa.rcvr_remaining(:bob)
+      obj = Icss::Poppa.receive({:smurfiness => 12})
       obj.bob.should == {}
-      obj = new_smurf_klass.receive({})
+      obj = Icss::Poppa.receive({})
       obj.bob.should == {}
+    end
+  end
+
+  context ':default =>' do
+    before do
+      Icss::Hefty.field :tool,    Symbol, :default => :pipesmurf
+      Icss::Hefty.field :weapon,  Symbol, :default => :smurfthrower
+      Icss::Hefty.field :no_default, Symbol
+    end
+    let(:hefty_smurf){  Icss::Hefty.receive({ :tool => :smurfwrench }) }
+    let(:glad_smurf ){  Icss::Glad.receive({  :tool => :smurfwrench }) }
+
+    it 'sets default' do
+      hefty_smurf.tool.should   == :smurfwrench
+      hefty_smurf.weapon.should == :smurfthrower
+      hefty_smurf.no_default.should be_nil
+      hefty_smurf.attr_set?(:no_default).should be_false
+    end
+
+    it 'does not set default if explicitly nil' do
+      hefty_smurf = Icss::Hefty.receive({ :tool => :smurfwrench, :weapon => nil })
+      hefty_smurf.weapon.should == nil
+      hefty_smurf.attr_set?(:weapon).should be_true
+    end
+
+    it 'uses an after_receiver with a predictable name' do
+      Icss::Hefty.after_receivers[:default_tool].should be_a(Proc)
+    end
+
+    it 'is overridable' do
+      proc_before = Icss::Hefty.after_receivers[:default_weapon]
+      Icss::Hefty.field :weapon, Symbol, :default => :flamesmurf
+      Icss::Hefty.after_receivers[:default_weapon].should_not == proc_before
+      hefty_smurf.weapon.should == :flamesmurf
+    end
+
+    it 'is overridable in subclass without affecting parent' do
+      hefty_proc = Icss::Hefty.after_receivers[:default_weapon]
+      Icss::Glad.field :weapon, Symbol, :default => :flamesmurf
+      Icss::Hefty.after_receivers[:default_weapon].should     == hefty_proc
+      Icss::Glad.after_receivers[ :default_weapon].should_not == hefty_proc
+      hefty_smurf.weapon.should == :smurfthrower
+      glad_smurf.weapon.should  == :flamesmurf
+    end
+
+    it 'try_dups the object when setting default' do
+      smurfed_cheese = mock
+      Icss::Hefty.field :food, Symbol, :default => smurfed_cheese
+      smurfed_cheese.should_receive(:try_dup).with()
+      hefty_smurf
+    end
+
+    it 'accepts a proc' do
+      dummy = mock
+      Icss::Glad.field :weapon, Symbol, :default => lambda{ [dummy, tool, self] }
+      glad_smurf.weapon.should == [dummy, :smurfwrench, glad_smurf]
+    end
+
+    context 'can also be set with set_field_default' do
+      it 'with a value' do
+        dummy = mock
+        Icss::Glad.class_eval do
+          set_field_default :weapon, :gatlingsmurf
+        end
+        glad_smurf.weapon.should == :gatlingsmurf
+      end
+      it 'with a proc' do
+        dummy = mock
+        Icss::Glad.class_eval do
+          set_field_default :weapon, lambda{ [dummy, tool, self] }
+        end
+        glad_smurf.weapon.should == [dummy, :smurfwrench, glad_smurf]
+      end
     end
   end
 

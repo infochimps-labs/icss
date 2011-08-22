@@ -35,8 +35,8 @@ module Icss
     protected
 
       def run_after_receivers(hsh)
-        self.class.after_receivers.each do |after_receiver|
-          self.instance_exec(hsh, &after_receiver)
+        self.class.after_receivers.each do |after_hook_name, after_hook|
+          self.instance_exec(hsh, &after_hook)
         end
       end
 
