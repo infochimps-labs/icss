@@ -10,8 +10,9 @@ require 'gorillib/hash/compact'
 require 'gorillib/hash/keys'
 require 'gorillib/hash/tree_merge'
 require 'gorillib/metaprogramming/class_attribute'
-#
 require 'gorillib/hashlike'
+#
+require 'icss/error'
 require 'icss/receiver_model/acts_as_hash'
 require 'icss/receiver_model/acts_as_loadable'
 require 'icss/receiver_model/active_model_shim'
