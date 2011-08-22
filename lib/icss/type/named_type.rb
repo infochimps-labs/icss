@@ -38,6 +38,9 @@ module Icss
       def namespace
         @namespace ||= fullname.to_s.include?('.') ? fullname.to_s.gsub(/\.[^\.]+\z/so, '') : ''
       end
+      def pathname
+        fullname.to_s.gsub(/\./, '/')
+      end
       #
       def to_schema
         if respond_to?(:_schema) then return _schema.to_hash ; end
