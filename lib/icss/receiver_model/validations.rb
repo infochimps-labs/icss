@@ -2,7 +2,7 @@ module Icss
   module ReceiverModel
     module Validations
       module ::Icss::ReceiverModel::ClassMethods
-        include Icss::ReceiverModel::Validations
+        include ::Icss::ReceiverModel::Validations
       end
 
       #
