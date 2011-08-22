@@ -82,6 +82,7 @@ module Icss
       :symbol  => ::Symbol,
       :time    => ::Time,
       :integer => ::Integer,
+      :numeric => ::Numeric,
     })
 
   ::Icss::STRUCTURED_SCHEMAS.merge!({
@@ -144,7 +145,6 @@ module Icss
 
       # true if class is among the defined primitive types:
       #   null boolean integer long float double string binary
-      #   st.file_path st.regexp st.url st.epoch_time
       # and so forth
       #
       # note this takes no account of inheritance -- only the types specifically

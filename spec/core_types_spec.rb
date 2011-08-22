@@ -10,7 +10,7 @@ def core_files
       fn.gsub(%r{.*(#{section}/[^\.]+)\.icss\.yaml$}, '\1')
     end
     # So that we can kinda have random load order, but have it be deterministic, sort by the reversed string
-  end.flatten.sort_by(&:reverse)
+  end.flatten.sort # _by(&:reverse)
 end
 
 unless defined?(Log)
@@ -25,13 +25,22 @@ end
 Log.level = 1
 
 describe 'loads all catalog types' do
+  start_time = Time.now
+  last_time  = Time.now
   [
+    %w[ mu.rating prod.aggregate_rating mu.quantity mu.distance mu.duration
+        social.contact_point prod.item_availability prod.offer_item_condition
+        geo.geo_coordinates
+        culture.creative_work ev.event geo.place business.organization web.web_page_element
+        core/web/web_page
+         ].map{|s| "core/#{s}" },
+    'datasets/science.astronomy.ufo_sighting',
     core_files,
-    # 'datasets/science.astronomy.ufo_sighting',
   ].flatten.each do |filename_patt|
     it "loads #{filename_patt}" do
       Icss::Meta::Protocol.load_from_catalog(filename_patt)
-      Log.debug "************* loaded #{Icss::Meta::Type.registry.size} core types **************"
+      Log.debug "************* loaded #{Icss::Meta::Type.registry.size} core types in #{((Time.now-last_time).to_f * 1000).round} **************"
+      last_time = Time.now
     end
   end
 end

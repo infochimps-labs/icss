@@ -1,22 +1,19 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
+require 'gorillib/object/try_dup'
+require 'icss/receiver_model/acts_as_hash'
 require 'icss/type'                   #
 require 'icss/type/simple_types'      # Boolean, Integer, ...
 require 'icss/type/named_type'        # class methods for a named type: .metamodel .doc, .fullname, &c
 require 'icss/type/record_type'       # class methods for a record model: .field, .receive,
 require 'icss/type/record_model'      # instance methods for a record model
-require 'icss/type/type_factory'      #
+require 'icss/type/type_factory'      # turn schema into types
+require 'icss/type/structured_schema' # loads array, hash, enum, fixed and simple schema
+require 'icss/receiver_model'
+require 'icss/type/record_schema'     # loads array, hash, enum, fixed and simple schema
+require 'icss/type/record_field'
+
 require ENV.root_path('spec/support/icss_test_helper')
 include IcssTestHelper
-
-module Icss
-  module This
-    module That
-      class TheOther
-      end
-    end
-    Blinken = 7
-  end
-end
 
 describe Icss::Meta::TypeFactory do
 
@@ -38,7 +35,6 @@ describe Icss::Meta::TypeFactory do
       end
     end
   end
-
   TEST_SCHEMA_FLAVORS = {
     :is_type => {
       Icss::This::That::TheOther => Icss::This::That::TheOther,
@@ -47,29 +43,25 @@ describe Icss::Meta::TypeFactory do
       'this.that.the_other' => ['this.that.the_other', Icss::This::That::TheOther],
       'this.blinken'        => ['this.blinken',        Icss::This::Blinken],
     },
-    # :structured_schema => {
-    #   # Complex Container Types: map, array, enum, fixed
-    #   { 'type' => 'array',  'items' => 'string'  }                         => [Icss::Meta::ArraySchema::Writer, 'Icss::ArrayOfString'],
-    #   { 'type' => 'map',    'values' => 'string' }                         => [Icss::Meta::HashSchema::Writer, 'Icss::HashOfString'],
-    #
-    #   { 'type' => 'map',    'values' =>
-    #
-    #     {'type' => 'array', 'items' => 'int' } }                           => [Icss::Meta::HashSchema::Writer, false],
-    #
-    #   { 'type' => 'enum',   'name'  => 'Kind', 'symbols' => ['A','B','C']} => [Icss::Meta::EnumSchema::Writer, 'Icss::Kind'],
-    #   { 'type' => 'fixed',  'name' => 'MD5',  'size' => 16}                => [Icss::Meta::FixedSchema::Writer, 'Icss::Md5'],
-    #   { 'type' => 'record', 'name'  => 'bob'      }                        => [Icss::Meta::RecordType::Writer, 'Icss::Bob'],
-    #   # { 'type' => 'record','name' => 'Node', 'fields' => [
-    #   #     { 'name' => 'label',    'type' => 'string'},
-    #   #     { 'name' => 'children', 'type' => {'type' => 'array', 'items' => 'Node'}}]} => Icss::Meta::RecordModel,
-    #   # { 'type' => 'map', 'values' => { 'name' => 'Foo', 'type' => 'record', 'fields' => [{'name' => 'label', 'type' => 'string'}]} } => Icss::HashType,
-    # },
-    # :union_type => {
-    #   # [ 'boolean', 'double', {'type' => 'array', 'items' => 'bytes'}] => nil,
-    #   # [ 'int', 'string' ]            => nil,
-    # },
+    :structured_schema => {
+      # Complex Container Types: map, array, enum, fixed
+      { 'type' => :array,  'items'  => :string  }                             => [Icss::Meta::ArraySchema, 'Icss::ArrayOfString'],
+      { 'type' => :map,    'values' => :string }                              => [Icss::Meta::HashSchema, 'Icss::HashOfString'],
+      { 'type' => :map,    'values' => {'type' => :array, 'items' => :int } } => [Icss::Meta::HashSchema, 'Icss::HashOfArrayOfInteger'],
+      { 'name'   => :Kind, 'type' => :enum,   'symbols' => [:A, :B, :C]}      => [Icss::Meta::EnumSchema, 'Icss::Kind'],
+      { 'name'   => :MD5,  'type' => :fixed,  'size' => 16}                   => [Icss::Meta::FixedSchema, 'Icss::Md5'],
+      { 'name'   => :bob,  'type' => :record,    }                            => [Icss::Meta::RecordSchema, 'Icss::Bob'],
+      { 'name'   => :node, 'type' => :record, 'fields' => [
+          { 'name' => :label,    'type' => :string},
+          { 'name' => :children, 'type' => {'type' => :array, 'items' => :string}}]} => [Icss::Meta::RecordSchema, 'Icss::Node'],
+      { 'type' => :map, 'values' => {
+          'name' => :Foo, 'type' => :record, 'fields' => [{'name' => :label, 'type' => :string}]} } => [Icss::Meta::HashSchema, 'Icss::HashOfFoo' ],
+    },
+    :union_type => {
+      # [ 'boolean', 'double', {'type' => 'array', 'items' => 'bytes'}] => nil,
+      # [ 'int', 'string' ]            => nil,
+    },
   }
-
   context 'test schema:' do
     TEST_SCHEMA_FLAVORS.each do |expected_schema_flavor, test_schemata|
       test_schemata.each do |schema_dec, (expected_schema_klass, expected_type_klass)|
@@ -85,45 +77,15 @@ describe Icss::Meta::TypeFactory do
           klass = Icss::Meta::TypeFactory.receive(schema_dec)
           klass.to_s.should == expected_type_klass.to_s  unless (not expected_type_klass)
         end
+
+        unless expected_type_klass.to_s =~ /Icss::This/
+          it "round-trips schema #{schema_dec.to_s[0..140]}" do
+            klass = Icss::Meta::TypeFactory.receive(schema_dec)
+            klass.to_schema.should == schema_dec
+          end
+        end
       end
     end
   end
 
-  context 'nested schema' do
-
-    # it 'handles map of array of ...' do
-    #   klass = Icss::Meta::TypeFactory.receive({
-    #       'type' => 'map',    'values' => { 'type' => 'array', 'items' => 'int' } })
-    #   # #<HashSchema::Writer @type=:map, @value_factory=Icss::ArrayOfInt, @name=nil>
-    #   ap klass
-    #   ap klass._schema
-    #   klass.type.should == :map
-    #   klass.value_factory.to_s.should == 'Icss::ArrayOfInt'
-    #   klass.value_factory.type.should == :array
-    #   klass.value_factory.item_factory.should == Integer
-    #
-    #   obj = klass.receive({ :tuesday => [ "1", 2, 3.4, nil ], :wednesday => nil, :thursday => [], 'friday' => [1.0] })
-    #   obj.should == { :tuesday => [ 1, 2, 3, nil ], :wednesday => nil, :thursday => [], 'friday' => [1] }
-    # end
-
-    # it 'handles array of record of ...' do
-    #   klass = Icss::Meta::TypeFactory.receive({
-    #       'type' => 'array',    'items' => {
-    #         'type'   => 'record',
-    #         'name'   => 'lab_experiment',
-    #         'fields' => [
-    #           { 'name' => 'day_of_week', 'type' => 'enum', 'symbols' => [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday] },
-    #           { 'name' => 'temperature', 'type' => 'float' },
-    #         ] } })
-    #   # #<HashSchema::Writer @type=:map, @value_factory=Icss::ArrayOfInt, @name=nil>
-    #   ap klass
-    #   ap klass._schema
-    #   ap klass.item_factory._schema
-    #   klass.type.should == :array
-    #   klass.item_factory.to_s.should == 'Icss::LabExperiment'
-    #
-    #   obj = klass.receive({ :tuesday => [ "1", 2, 3.4, nil ], :wednesday => nil, :thursday => [], 'friday' => [1.0] })
-    #   obj.should == { :tuesday => [ 1, 2, 3, nil ], :wednesday => nil, :thursday => [], 'friday' => [1] }
-    # end
-  end
 end

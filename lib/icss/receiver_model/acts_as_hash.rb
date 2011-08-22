@@ -142,12 +142,21 @@ module Icss
       #
       # @return [Hash] a new Hash instance, with each key set to its associated value.
       #
-      def to_hash
+      def attributes
         {}.tap do |hsh|
           each_pair do |key, val|
             hsh[key] = val.respond_to?(:to_hash) ? val.to_hash : val
           end
         end
+      end
+
+      #
+      # Returns a hash with each key set to its associated value.
+      #
+      # Delegates to #attributes
+      #
+      def to_hash
+        attributes
       end
 
       def self.included(base)

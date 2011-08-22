@@ -10,6 +10,7 @@ require 'gorillib/hash/compact'
 require 'gorillib/hash/keys'
 require 'gorillib/hash/tree_merge'
 require 'gorillib/metaprogramming/class_attribute'
+require 'gorillib/serialization'
 require 'gorillib/hashlike'
 #
 require 'icss/error'
@@ -31,6 +32,7 @@ require 'icss/type/record_schema'
 require 'icss/type/record_field'
 #
 require 'icss/receiver_model'
+require 'icss/serialization'
 #
 # require 'icss/message/sample_message_call'
 require 'icss/message'

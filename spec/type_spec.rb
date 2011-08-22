@@ -8,9 +8,7 @@ module Icss
       end
     end
   end
-  Blinken = 7
 end
-
 
 #
 # note: the Icss::SIMPLE_TYPES etc are tested in simple_type_spec.rb etc

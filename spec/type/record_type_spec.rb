@@ -8,9 +8,9 @@ require 'icss/type/record_type'
 require 'icss/type/record_model'      # instance methods for a record model
 require 'icss/type/type_factory'      #
 require 'icss/type/structured_schema'
-
+#
 require 'icss'
-
+#
 require ENV.root_path('spec/support/icss_test_helper')
 include IcssTestHelper
 

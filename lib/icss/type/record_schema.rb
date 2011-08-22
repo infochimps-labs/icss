@@ -12,6 +12,17 @@ module Icss
       #
       def type() :record ; end
 
+      def to_hash
+        {
+          :name      => fullname,
+          :namespace => namespace,
+          :type      => type,
+          :is_a      => (respond_to?(:is_a) ? is_a : []),
+          :doc       => doc,
+          :fields    => fields.map(&:to_schema),
+         }.compact_blank
+      end
+
       def model_klass
         return @model_klass if @model_klass
         super

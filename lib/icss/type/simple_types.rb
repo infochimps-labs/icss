@@ -11,21 +11,8 @@ module Icss
       end
     end
 
-    module NilClassSchema
-      include PrimitiveSchema
-      def receive(val=nil)
-        raise(ArgumentError, "#{self} must be initialized with nil, but [#{val}] was given") unless val.nil?
-        nil
-      end
-      def fullname()  :null    ; end
-    end
-    module BooleanSchema
-      include PrimitiveSchema
-      def receive(val=nil)
-        case when val.nil? then nil when val.to_s.strip.blank? then false else val.to_s.strip != "false" end
-      end
-      def fullname()  :boolean ; end
-    end
+    module NilClassSchema ; include PrimitiveSchema ; def fullname()  :null    ; end ; def receive(val=nil) raise(ArgumentError, "#{self} must be initialized with nil, but [#{val}] was given") unless val.nil? ; nil ; end ; end
+    module BooleanSchema  ; include PrimitiveSchema ; def fullname() :boolean ; end ; def receive(val=nil) case when val.nil? then nil when val.to_s.strip.blank? then false else val.to_s.strip != "false" end ; end ; end
     module IntegerSchema  ; include PrimitiveSchema ; def fullname() :int     ; end ; def receive(val=nil) val.blank? ? nil : val.to_i                            ; end ; end
     module LongSchema     ; include PrimitiveSchema ; def fullname() :long                                                                                        ; end ; end
     module FloatSchema    ; include PrimitiveSchema ; def fullname() :float   ; end ; def receive(val=nil) val.blank? ? nil : val.to_f                            ; end ; end
@@ -36,18 +23,6 @@ module Icss
     module NumericSchema  ; include PrimitiveSchema ; def fullname() :numeric ; end ; def receive(val=nil) val.blank? ? nil : val.to_f                          ; end ; end
     module SymbolSchema   ; include PrimitiveSchema ; def fullname() :symbol  ; end ; def receive(val=nil) val.blank? ? nil : val.to_sym                          ; end ; end
     module TimeSchema     ; include PrimitiveSchema ; def fullname() :time    ; end ; def receive(val=nil) val.blank? ? nil : self.parse(val.to_s).utc rescue nil ; end ; end
-
-    # patron saint of Simple Types (Structured Text)
-    module St
-      module St::FilePathSchema     ; def to_schema() :'st.file_path'     ; end ; end
-      module St::RegexpSchema       ; def to_schema() :'st.regexp'        ; end ; end
-      module St::UrlSchema          ; def to_schema() :'st.url'           ; end ; end
-      module St::Md5HexdigestSchema ; def to_schema() :'st.md5_hexdigest' ; end ; end
-    end
-    # pasture wherein graze MeasurementUnits
-    module Mu
-      module Mu::EpochTimeSchema    ; def to_schema() :'mu.epoch_time' ; end ; end
-    end
   end
 
   class ::NilClass                       ; self.extend ::Icss::Meta::NilClassSchema         ; end
@@ -56,27 +31,12 @@ module Icss
   class ::Long           < ::Integer     ; self.extend ::Icss::Meta::LongSchema             ; end
   class ::Float                          ; self.extend ::Icss::Meta::FloatSchema            ; end
   class ::Double         < ::Float       ; self.extend ::Icss::Meta::DoubleSchema           ; end
-  class ::Numeric                        ; self.extend ::Icss::Meta::NumericSchema          ; end
   class ::String                         ; self.extend ::Icss::Meta::StringSchema           ; end
   class ::Binary         < ::String      ; self.extend ::Icss::Meta::BinarySchema           ; end
   #
+  class ::Numeric                        ; self.extend ::Icss::Meta::NumericSchema          ; end
   class ::Symbol                         ; self.extend ::Icss::Meta::SymbolSchema           ; end
   class ::Time                           ; self.extend ::Icss::Meta::TimeSchema             ; end
-
-  class St::FilePath     < ::String      ; self.extend ::Icss::Meta::St::FilePathSchema     ; end
-  class St::Regexp       < ::String      ; self.extend ::Icss::Meta::St::RegexpSchema       ; end
-  class St::Url          < ::String      ; self.extend ::Icss::Meta::St::UrlSchema          ; end
-  class St::Md5Hexdigest < ::String      ; self.extend ::Icss::Meta::St::Md5HexdigestSchema ; end
-  class Mu::EpochTime    < ::Integer     ; self.extend ::Icss::Meta::Mu::EpochTimeSchema    ; end
-
-  ::Icss::SIMPLE_TYPES.merge!({
-      :numeric            => ::Numeric,
-      :'st.file_path'     => ::Icss::St::FilePath,
-      :'st.regexp'        => ::Icss::St::Regexp,
-      :'st.url'           => ::Icss::St::Url,
-      :'st.md5_hexdigest' => ::Icss::St::Md5Hexdigest,
-      :'mu.epoch_time'    => ::Icss::Mu::EpochTime,
-    })
 
 end
 

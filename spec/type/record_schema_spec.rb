@@ -12,6 +12,7 @@ require 'icss/type/structured_schema' # generate type from array, hash, &c schem
 require 'icss/receiver_model'
 require 'icss/type/record_schema'
 require 'icss/type/record_field'
+
 require ENV.root_path('spec/support/icss_test_helper')
 include IcssTestHelper
 

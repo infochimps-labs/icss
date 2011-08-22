@@ -26,11 +26,6 @@ module Icss
         return @model_klass if @model_klass
         @model_klass = Icss::Meta::NamedType.get_model_klass(fullname, parent_klass||Object)
         model_type = @model_klass.singleton_class
-        # module inclusions
-        parent_metamodels.each do |parent_metamodel|
-          @model_klass.class_eval{ include parent_metamodel }
-        end
-        klass_metatypes.each{|mt| @model_klass.extend(mt) }
         # inscribe attributes
         attrs_to_inscribe.each do |attr|
           val = self.send(attr)
@@ -38,27 +33,29 @@ module Icss
         end
         schema_writer = self
         model_type.class_eval{ define_method(:_schema){ schema_writer } }
+        # module inclusions
+        parent_metamodels.each do |parent_metamodel|
+          @model_klass.class_eval{ include parent_metamodel }
+        end
+        klass_metatypes.each{|mt| @model_klass.extend(mt) }
+        @model_klass.metamodel if @model_klass.respond_to?(:metamodel)
         @model_klass
       end
       #
       def self.receive(schema)
         super(schema).model_klass
       end
+      def to_hash
+        hsh = super
+        hsh[:type] = type
+        hsh[:name] = hsh.delete(:fullname)
+        hsh
+      end
     end
 
     class StructuredSchema < NamedSchema
       class_attribute :parent_klass
       self.klass_metatypes = [::Icss::Meta::NamedType]
-
-      # * create a schema writer object.
-      # * generate a named class to represent the type
-      # * add class attributes by extending with the provided type module
-      # * inscribe
-      #
-      def self.receive(schema)
-        schema.delete(:type)
-        super(schema)
-      end
     end
 
     # An array of objects with a specified type.
@@ -68,6 +65,11 @@ module Icss
         self.new( raw.map{|raw_item| items.receive(raw_item) } )
       end
       def to_schema() _schema.to_hash end
+    end
+    module ArrayModel
+      def to_wire(options={})
+        map{|item| item.respond_to?(:to_wire) ? item.to_wire(options) : item }
+      end
     end
 
     # A hash of objects with a specified type.
@@ -122,9 +124,10 @@ module Icss
     #     {"type": "array", "items": "string"}
     #
     class ArraySchema < ::Icss::Meta::StructuredSchema
-      self.parent_klass     = Array
-      self.klass_metatypes += [::Icss::Meta::ArrayType]
-      field     :items,        Icss::Meta::TypeFactory, :required => true
+      self.parent_klass       = Array
+      self.klass_metatypes   += [::Icss::Meta::ArrayType]
+      self.parent_metamodels += [::Icss::Meta::ArrayModel]
+      field :items, Icss::Meta::TypeFactory, :required => true
       #
       after_receive(:register){ true } # don't register
       def fullname
@@ -143,7 +146,7 @@ module Icss
       def to_hash
         hsh = super
         hsh[:items] = Type.schema_for(items)
-        hsh.delete(:fullname)
+        hsh.delete(:name)
         hsh
       end
       def type() :array ; end
@@ -183,7 +186,7 @@ module Icss
       def to_hash
         hsh = super
         hsh[:values] = Type.schema_for(values)
-        hsh.delete(:fullname)
+        hsh.delete(:name)
         hsh
       end
       def type() :map ; end
@@ -247,6 +250,7 @@ module Icss
       field :is_a,             Array, :default => [], :items => Icss::Meta::TypeFactory
       field :doc,              String, :required => true
       rcvr_alias :name, :fullname
+      self.klass_metatypes = [::Icss::Meta::NamedType]
       def type() :simple ; end
       #
       def parent_klass()      is_a.first ; end
@@ -254,7 +258,6 @@ module Icss
         return [] if is_a.length <= 1
         is_a[1 .. -1].map{|pk| pk.metamodel if pk.respond_to?(:metamodel) }.compact
       end
-      #
     end # SimpleSchema
 
   end

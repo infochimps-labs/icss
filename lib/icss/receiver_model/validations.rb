@@ -20,7 +20,7 @@ module Icss
       #      :inclusion    => { :in => [1,2,3] }
       #      :exclusion    => { :in => [1,2,3] }
       #
-      def add_after_receivers(field_name)
+      def add_validator(field_name)
         field = field_named(field_name)
         self.validates(field[:name], :presence => true ) if field[:required]
         self.validates(field[:name], field[:validates] ) if field[:validates]

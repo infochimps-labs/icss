@@ -6,40 +6,51 @@ require 'icss/type/simple_types'      # Boolean, Integer, ...
 require 'icss/type/named_type'        # class methods for a named type: .metamodel .doc, .fullname, &c
 require 'icss/type/record_type'       # class methods for a record model: .field, .receive,
 require 'icss/type/record_model'      # instance methods for a record model
+require 'icss/type/type_factory'      # turn schema into types
+require 'icss/type/structured_schema' # loads array, hash, enum, fixed and simple schema
 #
-require 'icss/type/type_factory'      #
-require 'icss/type/structured_schema'
+require ENV.root_path('spec/support/icss_test_helper')
+include IcssTestHelper
+
 
 module Icss
-  module TestStrSch
-    module Foo
-      class Bar
-      end
-    end
+  module Test
+    module Foo ; class Bar ; end ; end
   end
-  Blinken = 7
-  class Entity
-  end
-  module Core
-    class Thing < Entity
-    end
-  end
+  class Top ; end
 end
 
 describe 'complex types' do
+  before(:each) do
+    IcssTestHelper.remove_icss_constants('Test::Foo::Bar', 'Test::Foo', 'St::Bob')
+    module Icss
+      module Test
+        module Foo ; class Bar ; end ; end
+      end
+    end
+  end
 
   describe Icss::Meta::SimpleSchema do
-    it 'is ' do
-      kl = Icss::Meta::SimpleSchema.receive({ :name => 'st.bob', :type => :simple, :is_a => [Binary] })
-      p [kl, kl.ancestors]
+    let(:bob){ Icss::Meta::SimpleSchema.receive({ :name => 'st.bob', :type => :simple, :is_a => [Binary], :doc => "hi, bob" }) }
+    it 'loads types that inherit from simple base types' do
+      bob.should  < Binary
+      bob.should  < String
+      bob.should  < Icss::Meta::St::BobModel
+      bob.metamodel.should == Icss::Meta::St::BobModel
+    end
+    it 'has doc and all that' do
+      bob.fullname.should == :'st.bob'
+      bob.basename.should == 'bob'
+      bob.doc.should      == 'hi, bob'
+      bob.is_a.should     == [Binary]
     end
   end
 
   describe Icss::Meta::ArraySchema do
     [
-      [{:type => :array, :items => :'test_str_sch.foo.bar'}, Icss::TestStrSch::Foo::Bar, ],
-      [{:type => :array, :items => :'int'     },            Integer, ],
-      [{:type => :array, :items => :'core.thing'},          Icss::Core::Thing, ],
+      [{:type => :array, :items => :'test.foo.bar'}, 'Icss::Test::Foo::Bar', ],
+      [{:type => :array, :items => :'int'     },     'Integer', ],
+      [{:type => :array, :items => :'top'},          'Icss::Top', ],
     ].each do |schema, expected_item_factory|
       describe "With #{schema}" do
         before do
@@ -53,7 +64,7 @@ describe 'complex types' do
         end
         it 'has items and an item_factory' do
           @model_klass.should respond_to(:items)
-          @model_klass.items.should == expected_item_factory
+          @model_klass.items.should == expected_item_factory.constantize
         end
         it 'has schema_writer' do
           @schema_writer.type.should  == :array
@@ -70,8 +81,8 @@ describe 'complex types' do
         [ 'ArrayOfSymbol', :symbol  ],
         [ 'ArrayOfArrayOfInteger', { :type => :array, :items => :int } ],
         [ 'ArrayOfHashOfArrayOfString', { :type => :map, :values => { :type => :array, :items => :string } } ],
-        [ 'ArrayOfTestStrSchDotFooDotBar', 'test_str_sch.foo.bar' ],
-        [ 'ArrayOfHashOfArrayOfTestStrSchDotFooDotBar', { :type => :map, :values => { :type => :array, :items => 'test_str_sch.foo.bar' } } ],
+        [ 'ArrayOfTestDotFooDotBar', 'test.foo.bar' ],
+        [ 'ArrayOfHashOfArrayOfTestDotFooDotBar', { :type => :map, :values => { :type => :array, :items => 'test.foo.bar' } } ],
       ].each do |expected_name, items_schema|
         it "is #{expected_name} for #{items_schema}" do
           schema = {:type => :array, :items => items_schema }
@@ -114,9 +125,9 @@ describe 'complex types' do
 
   describe Icss::Meta::HashSchema do
     [
-      [{:type => :map, :values => :'test_str_sch.foo.bar'}, Icss::TestStrSch::Foo::Bar, ],
-      [{:type => :map, :values => :'int'     },            Integer,           ],
-      [{:type => :map, :values => :'core.thing'},          Icss::Core::Thing, ],
+      [{:type => :map, :values => :'test.foo.bar'}, 'Icss::Test::Foo::Bar', ],
+      [{:type => :map, :values => :'int'     },     'Integer',           ],
+      [{:type => :map, :values => :'top'},          'Icss::Top', ],
     ].each do |schema, expected_value_factory|
       describe "With #{schema}" do
         before do
@@ -130,7 +141,7 @@ describe 'complex types' do
         end
         it 'has values and an value_factory' do
           @model_klass.should respond_to(:values)
-          @model_klass.values.should == expected_value_factory
+          @model_klass.values.should == expected_value_factory.constantize
         end
         it 'has schema_writer' do
           @schema_writer.type.should   == :map
@@ -147,8 +158,8 @@ describe 'complex types' do
         [ 'HashOfSymbol', :symbol  ],
         [ 'HashOfHashOfInteger', { :type => :map, :values => :int } ],
         [ 'HashOfHashOfArrayOfString', { :type => :map, :values => { :type => :array, :items => :string } } ],
-        [ 'HashOfTestStrSchDotFooDotBar', 'test_str_sch.foo.bar' ],
-        [ 'HashOfHashOfArrayOfTestStrSchDotFooDotBar', { :type => :map, :values => { :type => :array, :items => 'test_str_sch.foo.bar' } } ],
+        [ 'HashOfTestDotFooDotBar', 'test.foo.bar' ],
+        [ 'HashOfHashOfArrayOfTestDotFooDotBar', { :type => :map, :values => { :type => :array, :items => 'test.foo.bar' } } ],
       ].each do |expected_name, values_schema|
         it "is #{expected_name} for #{values_schema}" do
           schema = {:type => :map, :values => values_schema }

@@ -36,14 +36,16 @@ module Icss
         @basename  ||= fullname.to_s.gsub(/.*[\.]/, "")
       end
       def namespace
-        @namespace ||= fullname.to_s.gsub(/\.[^\.]+\z/so, "")
+        @namespace ||= fullname.to_s.include?('.') ? fullname.to_s.gsub(/\.[^\.]+\z/so, '') : ''
       end
       #
       def to_schema
-        (defined?(super) ? super() : {}).merge(
+        if respond_to?(:_schema) then return _schema.to_hash ; end
+        {
           :name      => fullname,
+          :namespace => namespace,
           :doc       => doc,
-          ).compact_blank
+        }.compact_blank
       end
 
       # ---------------------------------------------------------------------------

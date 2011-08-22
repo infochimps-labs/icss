@@ -1,14 +1,11 @@
 source "http://rubygems.org"
-# Add dependencies required to use your gem here.
-# Example:
-#   gem                "activesupport", ">= 2.3.5"
 
-# gem 'gorillib',      :git => 'https://github.com/infochimps/gorillib.git'
-# gem 'gorillib',      "~> 0.1.5"
+gem   'json'
 gem   'activemodel',   "~> 3.0.9"
 
-# Add dependencies to develop your gem here.
-# Include everything needed to run rake, tests, features, etc.
+gem   'gorillib',      :git => 'https://github.com/infochimps/gorillib.git'
+# gem 'gorillib',      "~> 0.1.6"
+
 group                  :development do
   gem 'awesome_print', "~> 0.4.0"
   gem 'rspec',         "~> 2.3.0"

@@ -12,14 +12,10 @@ module IcssTestHelper
     :bytes              => [ ::Binary,                String, "hello"],
     :binary             => [ ::Binary,                String, "hello"],
     :integer            => [ ::Integer,               Integer,      1],
+    #
+    :numeric            => [::Numeric,                ::Numeric,    1.0],
     :symbol             => [::Symbol,                 Symbol,  :bob  ],
     :time               => [::Time,                   Time,    Time.now],
-    :numeric            => [::Numeric,                ::Numeric,    1.0],
-    :'st.file_path'     => [::Icss::St::FilePath,     String,  "/tmp"],
-    :'st.regexp'        => [::Icss::St::Regexp,       String,  "hel*o"],
-    :'st.url'           => [::Icss::St::Url,          String,  "bit.ly"],
-    :'st.md5_hexdigest' => [::Icss::St::Md5Hexdigest, String,  "fe8a2215ae337c77a3ff99d6069e2ac9"], # "chimpy"
-    :'mu.epoch_time'    => [::Icss::Mu::EpochTime,    Integer, Time.now.to_i],
   }
 
 
@@ -41,6 +37,16 @@ module IcssTestHelper
       parent_mod = (parent_mod.is_a?(Module) ? parent_mod : parent_mod.to_s.constantize)
     rescue ; return ; end
     parent_mod.send(:remove_const, const_name) if parent_mod.const_defined?(const_name)
+  end
+end
+
+module Icss
+  module This
+    module That
+      class TheOther
+      end
+    end
+    module Blinken ; end
   end
 end
 

@@ -16,6 +16,7 @@ module Icss
       field :type,      Icss::Meta::TypeFactory, :required => true
       field :doc,       String
       field :default,   Icss::Meta::IdenticalFactory
+      field :replace,   Hash
       field :required,  Boolean
       field :aliases,   Array,   :items => Symbol
       field :order,     String,  :validates => { :inclusion => { :in => ALLOWED_ORDERS } }
@@ -47,6 +48,9 @@ module Icss
         hsh = hsh.merge({ :type => (is_reference? ? type.fullname : Type.schema_for(type)) })
         hsh.delete(:_extra_params)
         hsh
+      end
+      def to_schema
+        to_hash
       end
 
       # is the field a reference to a named type (true), or an inline schema (false)?

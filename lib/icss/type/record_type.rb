@@ -58,14 +58,7 @@ module Icss
       #     map           object      Hash        container  { "a": 1 }
       #     fixed         string      String      container  "\u00ff"
       #     union         object      XxxFactory  union
-      #
-      #     date          string      Date        simple      "2011-01-02"
       #     time          string      Time        simple      "2011-01-02T03:04:05Z"
-      #     text          string      Text        simple      "long text"
-      #     file_path     string      FilePath    simple      "/tmp/foo"
-      #     regexp        string      Regexp      simple      "^hel*o newman"
-      #     url           string      Url         simple      "http://..."
-      #     epoch_time    string      EpochTime   simple      1312507492
       #
       # @option schema [String] :doc -- description of field for users (optional)
       #
@@ -85,20 +78,12 @@ module Icss
       #
       # @option schema [Boolean] :required -- same as :validates => :presence
       #
+      # @option schema [Hash] :validates -- sends the validation on to
+      #   Icss::Type::Validations. Uses syntax parallel to ActiveModel's:
+      #
       # @option schema [Symbol] :accessor -- with +:none+, no accessor is
       #   created. With +:protected+, +:private+, or +:public+, applies
       #   corresponding access rule.
-      #
-      # @option schema [Symbol] :reader -- with +:none+, no reader is
-      #   created. With +:protected+, +:private+, or +:public+, applies
-      #   corresponding access rule.
-      #
-      # @option schema [Symbol] :writer -- with +:none+, no writer is
-      #   created. With +:protected+, +:private+, or +:public+, applies
-      #   corresponding access rule.
-      #
-      # @option schema [Hash] :validates -- sends the validation on to
-      #   Icss::Type::Validations. Uses syntax parallel to ActiveModel's:
       #
       #      :presence     => true
       #      :uniqueness   => true
@@ -114,20 +99,23 @@ module Icss
         schema = add_field_schema(field_name, type, schema)
         add_field_accessor(field_name, schema)
         rcvr(field_name, schema)
+        add_validator(field_name) if respond_to?(:add_validator)
       end
 
       def field_names
-        all_f = @field_names || []
-        call_ancestor_chain(:field_names){|anc_f| all_f = anc_f | all_f }
+        all_f = []
+        call_ancestor_chain(:field_names){|anc_f| all_f = all_f | anc_f }
         all_f
       end
 
       def fields
-        field_schemas.values_at(*field_names)
+        field_schemas.values # _at(*field_names)
       end
 
       def field_named(fn)
-        field_schemas[fn]
+        # field_schemas[fn]
+        ancestors.each{|anc| hsh = anc.instance_variable_get('@field_schemas') or next ; return(hsh[fn]) if hsh[fn] }
+        nil
       end
 
       def has_field?(fn)
@@ -159,14 +147,14 @@ module Icss
 
       #
       def to_schema
-        #(defined?(super) ? super() : {}).merge(
-        ({
-          :name   => fullname,
-          :type   => :record,
-          :doc    => doc,
-          :fields => fields.map(&:to_hash),
-          :is_a   => (respond_to?(:is_a) ? is_a : []),
-         }).compact_blank
+        {
+          :name      => fullname,
+          :namespace => namespace,
+          :type      => :record,
+          :is_a      => (respond_to?(:is_a) ? is_a : []),
+          :doc       => doc,
+          :fields    => fields.map(&:to_hash),
+         }.compact_blank
       end
 
       #
@@ -199,17 +187,16 @@ module Icss
 
       # after_receive blocks for self and all ancestors
       def after_receivers
-        all_f = @after_receivers || {}
-        call_ancestor_chain(:after_receivers){|anc_f| all_f = anc_f.merge(all_f) }
+        all_f = {} # @after_receivers || {}
+        call_ancestor_chain(:after_receivers){|anc_f| all_f.merge!(anc_f) }
         all_f
       end
 
     protected
 
       #
-      # yield, in turn, the result of calling the given method on each
-      # ancestor that responds. (ancestors are called from parent to
-      # great-grandparent)
+      # yield, in turn, the given instance variable from each ancestor having
+      # that variable. Ancestors are called from parent to great-grandparent
       #
       # So you're asking yourself "Self, why not just call .super?
       #
@@ -226,9 +213,12 @@ module Icss
       # Poppa.field_names calls Icss::Meta::RecordType --
       # it's the first member of its inheritance chain to define the method.
       # We want it to do so for each ancestor that has added fields.
-      def call_ancestor_chain(meth)
-        self.ancestors[1..-1].each do |ancestor|
-          yield(ancestor.send(meth)) if ancestor.respond_to?(meth)
+      def call_ancestor_chain(attr)
+        # puts "\n\n********\n\n"
+        # puts caller.grep(%r{vendor/libs/icss/lib})
+        ivar = "@#{attr}"
+        self.ancestors.reverse.each do |ancestor|
+          yield(ancestor.instance_variable_get(ivar)) if ancestor.instance_variable_defined?(ivar)
         end
       end
 
@@ -237,8 +227,8 @@ module Icss
       end
 
       def field_schemas
-        all_f = @field_schemas || {}
-        call_ancestor_chain(:field_schemas){|anc_f| all_f = anc_f.merge(all_f) }
+        all_f = {}
+        call_ancestor_chain(:field_schemas){|anc_f| all_f.merge!(anc_f) }
         all_f
       end
 
@@ -273,8 +263,8 @@ module Icss
       end
 
       def _rcvr_methods
-        all_f = @_rcvr_methods || {}
-        call_ancestor_chain(:_rcvr_methods){|anc_f| all_f = anc_f.merge(all_f) }
+        all_f = {}
+        call_ancestor_chain(:_rcvr_methods){|anc_f| all_f.merge!(anc_f) }
         all_f
       end
 
@@ -307,7 +297,7 @@ module Icss
             end
           end
         end
-        super(field_name) if defined?(super)
+        # super(field_name) if defined?(super)
       end
 
       def set_field_default(field_name, default_val=nil, &blk)
