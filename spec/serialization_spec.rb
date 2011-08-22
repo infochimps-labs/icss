@@ -53,6 +53,8 @@ describe Icss::ReceiverModel do
 
     context '#to_wire' do
       it 'works on a complex record' do
+        # p torchys
+        # p torchys.to_wire
         torchys.to_wire.should == TORCHYS_HSH
       end
     end

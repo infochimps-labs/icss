@@ -8,10 +8,7 @@ ___________________________________________________________________________
 ## Icss::ReceiverModel -- a pragmatic, flexible framework for active structured data
 ### (or: How to Be Object-Oriented in a JSON World)
 
-`Icss::ReceiverModel` 
-
-
-The real power is in the intelligent type delegation:
+Hooray:
 
 ```ruby
     class Thing
@@ -22,8 +19,8 @@ The real power is in the intelligent type delegation:
     
     class GeoCoordinates
       include Icss::ReceiverModel
-      field :latitude,  Float, :validates => { :numericality => { :>= =>  -90, :<= =>  90  } }
       field :longitude, Float, :validates => { :numericality => { :>= => -180, :<= => 180  } }
+      field :latitude,  Float, :validates => { :numericality => { :>= =>  -90, :<= =>  90  } }
       def coordinates
         [ longitude, latitude ]
       end
@@ -36,9 +33,10 @@ The real power is in the intelligent type delegation:
     class MenuItem < Thing
       field :price, Float, :required => true
     end
-
-    class Restaurant < Place
-      field :menu, Array, :items => MenuItem
+    
+    class TacoTrailer < Place
+      field :menu,          Array, :items => MenuItem
+      field :founding_date, Time
     end
     
     torchys = Restaurant.receive({
@@ -47,20 +45,26 @@ The real power is in the intelligent type delegation:
         { :name => "Dirty Sanchez", :price => "6.95" }, 
         { :name => "Fried Avocado", :price => "7.35" }
       ],
+      :founding_date => '2006-08-01T00:00:00Z',
       :geo  => { :longitude => 30.295, :latitude => -97.745 },
     })
-    # #<Restaurant:0x00000101d539f8 @name="Torchy's Taco's", 
+    # #<TacoTrailer:0x00000101d539f8 @name="Torchy's Taco's", 
     #   @geo=#<GeoCoordinates:0x00000101d53318 @latitude=-97.745, @longitude=30.295>,
     #   @menu=[ #<MenuItem:0x00000101d51180 @name="Dirty Sanchez", @price=6.95>, 
-    #           #<MenuItem:0x00000101d4d468 @name="Fried Avocado", @price=7.35>  ]>
+    #           #<MenuItem:0x00000101d4d468 @name="Fried Avocado", @price=7.35>  ]
+    #   @founding_date=2006-08-01 00:00:00 UTC >
 
     torchys.geo.coordinates
     # [ 30.295, -97.745 ]
 
     torchys.to_hash
-    # {:name=>"Torchy's Taco's", 
-    #   :geo=>{:latitude=>-97.745, :longitude=>30.295}, 
-    #   :menu=>[#<MenuItem:0x00000101d452b8 @name="Dirty Sanchez", @price=6.95>, #<MenuItem:0x00000101d44a98 @name="Fried Avocado", @price=6.3>]}
+    # { :name => "Torchy's Taco's",
+    #   :geo  => { :longitude => 30.295, :latitude => -97.745 },
+    #   :menu => [
+    #     { :name => "Dirty Sanchez", :price => 3.50 },
+    #     { :name => "Fried Avocado", :price => 2.95 } ],
+    #   :founding_date => '2006-08-01T00:00:00Z',
+    # }
 
 
 ```
@@ -78,7 +82,8 @@ Declaring a field constructs the following. Taking
 * field schema    -- a `RecordField` object describing the field, available through the `.fields` class method. You can send this schema over the wire (in JSON or whatever) and use it to recapitulate the type elsewhere.
 * hashlike access -- retrieve a value with `object[:foo]`, or set it with `object[:foo] = 7`. 
 
-Optionally, you can decorate with 
+Optionally, you can decorate with
+
 * rcvr_remaining -- a catchall field for anything `receive!`d that wasn't predicted by the schema.
 * validations  -- the full set of ActiveModel validations
 * after_receive hooks -- including default value
@@ -94,11 +99,9 @@ Magic *only* happens in the neighborhood of `receive` methods.
 
 You can make a new ojbect using `Smurf.receive({...})`, which is exactly equivalent to calling each of `obj = Smurf.new ; obj.receive!({...}) ; obj` in turn.
 
-* The 
-
 ### Hashlike
 
-* .
+* `.keys` returns a list of the *fields with set values*, in the same order as the class `.field_names`
 
 ### validations
 
