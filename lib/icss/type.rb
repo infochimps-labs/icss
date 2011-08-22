@@ -1,5 +1,13 @@
 module Icss
 
+  module Meta
+    module Type
+      def self.registry
+        @registry ||= {}
+      end
+    end
+  end
+
   #
   # Predefining the namespaces here makes inclusion-order less brittle.
   #

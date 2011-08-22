@@ -74,7 +74,7 @@ describe ZAML do
     it 'matches sample' do
       expected_yaml_str = File.read(ENV.root_path('spec/fixtures/zaml_complex_hash.yaml'))
       yaml_str = ZAML.dump(complex_hash_with_comments, '', :valign => 24 )
-      puts yaml_str
+      # puts yaml_str
       yaml_str.should == expected_yaml_str
     end
   end

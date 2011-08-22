@@ -1,5 +1,6 @@
 Settings = {} unless defined?(Settings)
-Settings[:catalog_root] ||= ENV.root_path('examples/infochimps_catalog')
+Settings[:catalog_root] ||= (defined?(Rails) ? (Rails.root+'catalog') : ENV.root_path('examples/infochimps_catalog'))
+# Log = Rails.logger if defined?(Rails) && (not defined?(Log))
 
 module Icss
   module Meta
@@ -76,6 +77,12 @@ module Icss
       field :under_consideration, Boolean
       field :update_frequency, String
 
+      class_attribute :registry
+      self.registry = Hash.new
+      after_receive(:register) do |hsh|
+        registry[fullname] = self
+      end
+
       validates :protocol,  :presence => true, :format => { :with => /\A[A-Za-z_]\w*\z/, :message => "must start with [A-Za-z_] and contain only [A-Za-z0-9_]." }
       validates :namespace, :presence => true, :format => { :with => /\A([A-Za-z_]\w*\.?)+\z/, :message => "Segments that start with [A-Za-z_] and contain only [A-Za-z0-9_], joined by '.'dots" }
       validates :update_frequency, :format => { :with => /daily|weekly|monthly|quarterly|never/ }, :allow_blank => true
@@ -99,16 +106,20 @@ module Icss
         fullname.gsub('.', '/')
       end
 
-      CATALOG_PATH = 'examples/infochimps_catalog/core' unless defined? CATALOG_PATH
       def self.load_from_catalog(protocol_fullname)
         filepath = protocol_fullname.to_s.gsub(/(\.icss\.yaml)?$/,'').gsub(/\./, '/')+".icss.yaml"
-        filepath = File.join(Settings[:catalog_root],'*',filepath)
+        filepath = File.join(Settings[:catalog_root], filepath)
         Dir[filepath].sort.map do |filename|
-          protocol_hsh = YAML.load(File.open(filename))
-          proto = self.receive(protocol_hsh)
-          Log.debug(['Loaded', filepath, proto].join("\t")) if defined?(Log)
-          proto
-        end
+          begin
+            protocol_hsh = YAML.load(File.open(filename))
+            proto = self.receive(protocol_hsh)
+            Log.debug(['Loaded', filepath, proto].join("\t")) if defined?(Log)
+            proto
+          rescue Exception => boom
+            warn( [boom.backtrace, "Could not load ICSS file #{filename}: #{boom}" ].flatten.join("\n") )
+            nil
+          end
+        end.compact
       end
 
       def find_message nm

@@ -13,6 +13,9 @@ require 'gorillib/metaprogramming/class_attribute'
 #
 require 'gorillib/hashlike'
 require 'icss/receiver_model/acts_as_hash'
+require 'icss/receiver_model/acts_as_loadable'
+require 'icss/receiver_model/active_model_shim'
+require 'icss/receiver_model/validations'
 #
 require 'icss/type'                   #
 require 'icss/type/simple_types'      # Boolean, Integer, ...
@@ -27,8 +30,6 @@ require 'icss/type/record_schema'
 require 'icss/type/record_field'
 #
 require 'icss/receiver_model'
-require 'icss/receiver_model/acts_as_loadable'
-require 'icss/receiver_model/active_model_shim'
 #
 # require 'icss/message/sample_message_call'
 require 'icss/message'
