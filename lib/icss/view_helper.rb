@@ -5,7 +5,7 @@ module Icss
       def query_string
         req_fields = request.first.type.fields rescue nil ; return unless req_fields
         req_fields.map do |field|
-          "#{field_name}=#{first_sample_request_param[field_name.to_s]}"
+          "#{field.name}=#{first_sample_request_param[field.name.to_s]}"
         end.join("&")
       end
 

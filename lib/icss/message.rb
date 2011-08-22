@@ -46,7 +46,7 @@ module Icss
       end
 
       def path
-        File.join(protocol.path, name)
+        File.join(protocol.path, basename.to_s)
       end
 
       def first_sample_request_param
