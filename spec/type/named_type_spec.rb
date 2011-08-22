@@ -60,4 +60,8 @@ describe Icss::Meta::NamedType do
     end
   end
 
+  context '.define_metamodel_method' do
+    it 'does not overwrite an existing method'
+  end
+
  end

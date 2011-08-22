@@ -11,6 +11,13 @@ module Icss
       class_attribute :klass_metatypes   ; self.klass_metatypes   = []
       class_attribute :parent_metamodels ; self.parent_metamodels = []
 
+      after_receive(:verify_name) do |hsh|
+        warn "** Missing name for #{self}" unless self.fullname.present?
+      end
+      after_receive(:register) do |hsh|
+        Icss::Meta::Type.registry[fullname] = self if fullname.present?
+      end
+
       def attrs_to_inscribe
         self.class.field_names
       end
@@ -118,11 +125,12 @@ module Icss
       self.parent_klass     = Array
       self.klass_metatypes += [::Icss::Meta::ArrayType]
       field     :items,        Icss::Meta::TypeFactory, :required => true
-      after_receive(:klassname_from_contents_type) do |hsh|
-        if not self.fullname
-          slug = (Type.klassname_for(items) || object_id.to_s).gsub(/^:*Icss:+/, '').gsub(/:+/, 'Dot')
-          self.fullname = "ArrayOf#{slug}"
-        end
+      #
+      after_receive(:register){ true } # don't register
+      def fullname
+        return @fullname if @fullname
+        slug = (Type.klassname_for(items) || object_id.to_s).gsub(/^:*Icss:+/, '').gsub(/:+/, 'Dot')
+        @fullname = "ArrayOf#{slug}"
       end
       #
       def self.receive(hsh)
@@ -158,11 +166,11 @@ module Icss
       self.klass_metatypes += [::Icss::Meta::HashType]
       field :values, Icss::Meta::TypeFactory, :required => true
       #
-      after_receive(:klassname_from_contents_type) do |hsh|
-        if not self.fullname
-          slug = (Type.klassname_for(values) || object_id.to_s).gsub(/^:*Icss:+/, '').gsub(/:+/, 'Dot')
-          self.fullname = "HashOf#{slug}"
-        end
+      after_receive(:register){ true } # don't register
+      def fullname
+        return @fullname if @fullname
+        slug = (Type.klassname_for(values) || object_id.to_s).gsub(/^:*Icss:+/, '').gsub(/:+/, 'Dot')
+        self.fullname = "HashOf#{slug}"
       end
       #
       def self.receive(hsh)
@@ -202,7 +210,7 @@ module Icss
     class EnumSchema < ::Icss::Meta::StructuredSchema
       self.parent_klass     = Symbol
       self.klass_metatypes += [::Icss::Meta::EnumType]
-      field     :symbols, Array,  :items => Symbol, :required => true
+      field      :symbols, Array,  :items => Symbol, :required => true
       def type() :enum ; end
     end # EnumSchema
 

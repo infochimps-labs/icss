@@ -32,9 +32,9 @@ describe Icss::Meta::TypeFactory do
         end
       end
     end
-    context 'identity schema return the IdenticalFactory' do
-      [Object, Icss::Meta::IdenticalFactory].each do |type_name|
-          Icss::Meta::TypeFactory.receive(type_name).should == Icss::Meta::IdenticalFactory
+    [Object, Icss::Meta::IdenticalFactory].each do |type_name|
+      it "#{type_name} schema return the IdenticalFactory" do
+        Icss::Meta::TypeFactory.receive(type_name).should == Icss::Meta::IdenticalFactory
       end
     end
   end

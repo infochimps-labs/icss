@@ -83,7 +83,10 @@ module Icss
         type = type.to_sym if type.respond_to?(:to_sym)
         # p ['clfy', __FILE__, schema, type]
 
-        if    ::Icss::SIMPLE_TYPES.include?(type)             then return [:simple,            SIMPLE_TYPES[type]]
+        # FIXME -- make this match the preamble comment
+
+        if    type.is_a?(Module) && type < NamedType          then return [:is_type,           type]
+        elsif ::Icss::SIMPLE_TYPES.include?(type)             then return [:simple,            SIMPLE_TYPES[type]]
         elsif (type == Array) && schema[:items].blank?        then return [:factory,           IdenticalArrayFactory]
         elsif (type == Hash)  && schema[:values].blank?       then return [:factory,           IdenticalHashFactory]
         elsif ::Icss::FACTORY_TYPES.include?(type)            then return [:factory,           FACTORY_TYPES[type]]
@@ -104,8 +107,8 @@ module Icss
         begin
           klass_name.constantize
         rescue NameError => e
-          # p "loading! #{type} - #{schema}"
-          Icss::Meta::Protocol.load_from_catalog(type.to_sym)
+          Log.debug "auto loading core type #{type} - #{schema}" if defined?(Log)
+          Icss::Meta::Protocol.load_from_catalog("core/#{type}")
           klass_name.constantize
         end
       end
