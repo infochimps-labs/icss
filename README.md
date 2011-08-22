@@ -124,7 +124,7 @@ Add ActiveModel validations with the `:validates` option to `.field`, or directl
 
 As shown, you can also say `:required => true` as a shorthand for `:validates => { :presence => true }`. A summary of the other `:validates` directives:
 
-```
+```ruby
     :presence     => true
     :uniqueness   => true
     :numericality => true           # also :==, :>, :>=, :<, :<=, :odd?, :even?, :equal_to, :less_than, etc
@@ -181,7 +181,7 @@ Notes:
 
 You can use the `:default` option to `field` (or call `.set_field_default` directly) to specify a default value when the field is empty after a `receive!`.
 
-```
+```ruby
     class Icss::Smurf
       field :tool,    Symbol, :default => :smurfwrench
       field :weapon,  Symbol, :default => :smurfthrower
