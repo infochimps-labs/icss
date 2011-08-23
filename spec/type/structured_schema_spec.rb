@@ -91,11 +91,9 @@ describe 'complex types' do
         end
       end
     end
-
   end
 
   describe Icss::Meta::ArrayType do
-
     context '.receive' do
       it 'generates an instance of the type' do
         Icss::Meta::ArraySchema.receive({:type => :array, :items => :'int' })
@@ -120,6 +118,7 @@ describe 'complex types' do
         inst = Icss::ArrayOfInteger.receive([1, 2.0, nil, "4.5", "8", "fnord"])
         inst.should eql([1, 2, nil, 4, 8, 0])  # (1 == 1.0) is true but 1.eql?(1.0) is false
       end
+      it 'passes items through if they already is_a? the item factory type'
     end
   end
 
@@ -152,7 +151,6 @@ describe 'complex types' do
         end
       end
     end
-
     context "klass name" do
       [
         [ 'HashOfSymbol', :symbol  ],
@@ -168,7 +166,6 @@ describe 'complex types' do
         end
       end
     end
-
   end
 
   describe Icss::Meta::HashType do
@@ -196,6 +193,7 @@ describe 'complex types' do
         inst = Icss::HashOfInteger.receive({ :a => 1, 'b' => 2.0, :c => nil, 'd' => "4.5", :e => "8", 99 => "fnord"})
         inst.should eql({ :a => 1, 'b' => 2, :c => nil, 'd' => 4, :e => 8, 99 => 0})
       end
+      it 'passes items through if they already is_a? the values factory type'
       it 'warns when I supply "items" not "values"' do
         lambda{
           Icss::Meta::HashSchema.receive({:type => :map, :items => :int })

@@ -62,7 +62,7 @@ module Icss
     module ArrayType
       def receive(raw)
         return nil if raw.nil? || (raw == "")
-        self.new( raw.map{|raw_item| items.receive(raw_item) } )
+        self.new( raw.map{|raw_item| raw_item.is_a?(items) ? raw_item : items.receive(raw_item) } )
       end
       def to_schema() _schema.to_hash end
     end
@@ -77,7 +77,7 @@ module Icss
       def receive(raw)
         return nil if raw.nil? || (raw == "")
         obj = self.new
-        raw.each{|rk,rv| obj[rk] = values.receive(rv) }
+        raw.each{|rk,rv| obj[rk] = (rv.is_a?(values) ? rv : values.receive(rv)) }
         obj
       end
       def to_schema() _schema.to_hash end
