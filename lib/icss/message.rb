@@ -45,8 +45,14 @@ module Icss
 
       end
 
+      def fullname
+        "#{protocol.fullname}.#{basename}"
+      end
       def path
-        File.join(protocol.path, basename.to_s)
+        fullname.gsub(%r{\.},'/')
+      end
+      def id
+        fullname
       end
 
       def first_sample_request_param

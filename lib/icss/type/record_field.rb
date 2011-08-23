@@ -25,8 +25,8 @@ module Icss
       field :validates, Hash
       field :indexed_on,  Symbol
       rcvr_remaining :_extra_params
-      attr_reader   :parent
-      attr_accessor :is_reference
+      field :parent,    Object
+      attr_accessor  :is_reference
 
       # track recursion of type references
       after_receive(:am_i_a_reference) do |hsh|

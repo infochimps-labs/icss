@@ -15,6 +15,7 @@ module Icss
       end
 
       module ClassMethods
+
         # returns a depth-first traversal of the object's fields' keys, as Strings:
         #
         #   class Address < Icss::Thing
@@ -26,16 +27,43 @@ module Icss
         #     field(:street_address, Address)
         #   end
         #   Person.tuple_keys
-        #   # => ['street_address.housenum', 'street_address.street', 'fullname']
-        def tuple_keys
-          return @tuple_keys if @tuple_keys
-          @tuple_keys = fields.map do |attr, field_info|
-            if field_info[:type].respond_to?(:tuple_keys)
-              field_info[:type].tuple_keys.map{|k| "attr.#{k}" }
+        #   # => ['fullname', 'street_address.housenum', 'street_address.street']
+        #
+        # @param [Integer] max_key_segments the maximum length of key (depth to
+        #   recurse); a stark 3 by default.
+        def tuple_keys(max_key_segments=3)
+          tuple_fields(max_key_segments).map{|field_set| field_set.map(&:name).join('.') }
+        end
+
+        # returns a depth-first traversal of the object's fields, as RecordFields:
+        #
+        #   class Address < Icss::Thing
+        #     field(:housenum, Integer)
+        #     field(:street, String)
+        #   end
+        #   class Person <  Icss::Thing
+        #     field(:full_name, String)
+        #     field(:street_address, Address)
+        #   end
+        #   Person.tuple_keys
+        #   # => [ [<RecordField name='fullname' ...>],
+        #   #      [<RecordField name='street_address' ...>, <RecordField name='housenum' ...>],
+        #   #      [<RecordField name='street_address' ...>, <RecordField name='street' ...>],
+        #
+        # Note that RecordField helpfully supplies a 'parent' attribute pointing to it parent record.
+        #
+        # @param [Integer] max_key_segments the maximum length of key (depth to
+        #   recurse); a stark 3 by default.
+        #
+        def tuple_fields(max_key_segments=3)
+          # return @tuple_fields if @tuple_fields
+          @tuple_fields = field_schemas.flat_map do |fn, fld|
+            if (max_key_segments > 1) && fld[:type].respond_to?(:tuple_fields)
+              fld[:type].tuple_fields(max_key_segments-1).map{|subfield| [fld, subfield].flatten }
             else
-              attr.to_s
+              [[fld]]
             end
-          end.flatten
+          end
         end
 
         # walks through the tuple, destructively consuming each value in a
@@ -67,8 +95,6 @@ module Icss
         end
       end
       def self.included(base) base.extend(Icss::ReceiverModel::ActsAsTuple::ClassMethods) ; end
-
     end
   end
-
 end

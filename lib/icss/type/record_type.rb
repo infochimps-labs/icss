@@ -113,7 +113,7 @@ module Icss
       end
 
       def field_named(fn)
-        # field_schemas[fn]
+        fn = fn.to_sym
         ancestors.each{|anc| hsh = anc.instance_variable_get('@field_schemas') or next ; return(hsh[fn]) if hsh[fn] }
         nil
       end
@@ -236,7 +236,7 @@ module Icss
       # To preserve field order for 1.8.7, we track field names as an array
       def add_field_schema(name, type, schema)
         @field_names ||= [] ; @field_schemas ||= {}
-        @field_names         = @field_names | [name]
+        @field_names = @field_names | [name]
         schema = schema.symbolize_keys.merge({ :name => name })
         #
         # FIXME: this is terrible, especially given what's in TypeFactory anyway.
@@ -250,7 +250,9 @@ module Icss
         else
           Icss::Meta::TypeFactory.receive(type)
         end
-        @field_schemas[name] = (field_schemas[name] || make_field_schema).merge(schema)
+        fld = (field_schemas[name] || make_field_schema).merge(schema)
+        fld[:parent] = self
+        @field_schemas[name] = fld
       end
 
       def add_field_accessor(field_name, schema)

@@ -8,6 +8,7 @@ module Icss
       include Gorillib::Hashlike::Keys
       #
       field :_domain_id_field, String, :default => 'name'
+      field :_doc_hints,       Hash,  :default => {}
       field :fields,           Array, :default => []
       #
       def type() :record ; end
@@ -38,7 +39,7 @@ module Icss
       end
 
       def attrs_to_inscribe
-        [:doc, :fullname, :is_a, :_domain_id_field]
+        [ :doc, :fullname, :is_a, :_domain_id_field, :_doc_hints ]
       end
     end
 

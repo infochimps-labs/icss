@@ -18,6 +18,7 @@ require 'icss/receiver_model/acts_as_hash'
 require 'icss/receiver_model/acts_as_loadable'
 require 'icss/receiver_model/active_model_shim'
 require 'icss/receiver_model/validations'
+require 'icss/receiver_model/acts_as_tuple'
 #
 require 'icss/type'                   #
 require 'icss/type/simple_types'      # Boolean, Integer, ...

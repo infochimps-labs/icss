@@ -67,15 +67,19 @@ module Icss
       alias_method  :basename, :protocol
       field :namespace,   String
       field :doc,         String
+      field :license,     Hash
       #
       field :types,       Array, :items => Icss::Meta::TypeFactory, :default => []
+      field :_doc_hints,  Hash,  :default => {}
 
       field :messages,    Hash,  :values => Icss::Meta::Message,     :default => {}
       field :data_assets, Array, :items  => Icss::Meta::DataAsset,   :default => []
       field :code_assets, Array, :items  => Icss::Meta::CodeAsset,   :default => []
       field :targets,     Hash,  :values => Icss::TargetListFactory, :default => {}, :merge_as => :hash_of_arrays
+
       field :under_consideration, Boolean
       field :update_frequency, String
+      rcvr_remaining :_extra_params
 
       class_attribute :registry
       self.registry = Hash.new
@@ -94,6 +98,7 @@ module Icss
       end
       after_receive(:warn_if_invalid) do |hsh|
         warn errors.inspect unless valid?
+        warn "Extra params given to #{self.inspect}: #{_extra_params.inspect}" if _extra_params.present?
       end
 
       # String: namespace.basename
