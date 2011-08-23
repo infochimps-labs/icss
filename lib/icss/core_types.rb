@@ -1,4 +1,5 @@
 Icss::Meta::Protocol.load_from_catalog('core/*')
+Icss::Meta::Protocol.load_from_catalog('core/geo/place')
 
 if defined?(Icss::Thing)
   Icss::Thing.class_eval do
