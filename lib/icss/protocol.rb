@@ -118,10 +118,10 @@ module Icss
           begin
             protocol_hsh = YAML.load(File.open(filename))
             proto = self.receive(protocol_hsh)
-            Log.debug(['Loaded', filepath, proto].join("\t")) if defined?(Log)
+            Log.debug(['load', filename, proto.to_wire.inspect[0..100]].join("\t")) if defined?(Log)
             proto
           rescue Exception => boom
-            warn( [boom.backtrace, "Could not load ICSS file #{filename}: #{boom}" ].flatten.join("\n") )
+            warn( [boom.to_s, boom.backtrace, "Could not load ICSS file #{filename}: #{boom}" ].flatten.join("\n") )
             nil
           end
         end.compact

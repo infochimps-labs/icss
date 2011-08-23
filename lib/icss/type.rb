@@ -26,6 +26,8 @@ module Icss
   module Business ;  end
   #
   module Culture  ;  end
+  # we gots the whhole worl innour hans
+  module Encyclopedic ; end
   # Eventfully, Tom phoned the caterer.
   module Ev       ; end
   #
@@ -83,6 +85,7 @@ module Icss
       :time    => ::Time,
       :integer => ::Integer,
       :numeric => ::Numeric,
+      :regexp  => ::Regexp,
     })
 
   ::Icss::STRUCTURED_SCHEMAS.merge!({

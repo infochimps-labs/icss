@@ -24,6 +24,7 @@ module Icss
       field :receiver,  Symbol
       field :validates, Hash
       field :indexed_on,  Symbol
+      field :identifier,  Boolean
       rcvr_remaining :_extra_params
       field :parent,    Object
       attr_accessor  :is_reference

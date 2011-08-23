@@ -5,7 +5,7 @@ module Icss
   #
   class TargetListFactory
     def self.receive target_info_list, target_name
-      klass = "Icss::#{target_name.camelize}Target".constantize
+      klass = "Icss::#{target_name.to_s.camelize}Target".constantize
       target_info_list.map{|target_info| klass.receive(target_info)}
     end
   end

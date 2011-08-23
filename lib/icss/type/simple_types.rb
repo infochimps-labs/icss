@@ -20,9 +20,10 @@ module Icss
     module StringSchema   ; include PrimitiveSchema ; def fullname() :string  ; end ; def receive(val=nil) self.new(val.to_s)                                     ; end ; end
     module BinarySchema   ; include PrimitiveSchema ; def fullname() :bytes                                                                                       ; end ; end
     #
-    module NumericSchema  ; include PrimitiveSchema ; def fullname() :numeric ; end ; def receive(val=nil) val.blank? ? nil : val.to_f                          ; end ; end
+    module NumericSchema  ; include PrimitiveSchema ; def fullname() :numeric ; end ; def receive(val=nil) val.blank? ? nil : val.to_f                            ; end ; end
     module SymbolSchema   ; include PrimitiveSchema ; def fullname() :symbol  ; end ; def receive(val=nil) val.blank? ? nil : val.to_sym                          ; end ; end
     module TimeSchema     ; include PrimitiveSchema ; def fullname() :time    ; end ; def receive(val=nil) val.blank? ? nil : self.parse(val.to_s).utc rescue nil ; end ; end
+    module RegexpSchema   ; include PrimitiveSchema ; def fullname() :regexp  ; end ; def receive(val=nil) val.blank? ? nil : Regexp.new(val.to_s)                ; end ; end
   end
 
   class ::NilClass                       ; self.extend ::Icss::Meta::NilClassSchema         ; end
@@ -37,6 +38,7 @@ module Icss
   class ::Numeric                        ; self.extend ::Icss::Meta::NumericSchema          ; end
   class ::Symbol                         ; self.extend ::Icss::Meta::SymbolSchema           ; end
   class ::Time                           ; self.extend ::Icss::Meta::TimeSchema             ; end
+  class ::Regexp                         ; self.extend ::Icss::Meta::RegexpSchema           ; end
 
 end
 
