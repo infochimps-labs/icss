@@ -1,7 +1,3 @@
-Settings = {} unless defined?(Settings)
-Settings[:catalog_root] ||= (defined?(Rails) ? (Rails.root+'catalog') : ENV.root_path('examples/infochimps_catalog'))
-# Log = Rails.logger if defined?(Rails) && (not defined?(Log))
-
 module Icss
   module Meta
 

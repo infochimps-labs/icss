@@ -41,8 +41,10 @@ module Icss
   module Prod     ;  end
   #
   module Social   ; end
-  #
+  # Oh what a tangled web we weave when first we practice to receive
   module Web      ; end
+  # Raw records, for use by data mungers
+  module Raw      ; end
 
   # Buffalo Buffalo buffalo Buffalo Buffalo Buffalo buffalow.
   module Meta
