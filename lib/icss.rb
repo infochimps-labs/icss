@@ -14,7 +14,7 @@ require 'gorillib/serialization'
 require 'gorillib/hashlike'
 #
 require 'configliere'
-Settings.define :catalog_root, :default => (defined?(Rails) ? (Rails.root+'catalog') : File.expand_path('../../infochimps_catalog', __FILE__))
+Settings.define :catalog_root, :type => :filename, :default => (defined?(Rails) ? (Rails.root+'catalog') : File.expand_path('../../infochimps_catalog', __FILE__))
 #
 require 'icss/error'
 require 'icss/receiver_model/acts_as_hash'
@@ -44,6 +44,3 @@ require 'icss/protocol/data_asset'
 require 'icss/protocol/code_asset'
 require 'icss/protocol/target'
 require 'icss/protocol'
-#
-require 'icss/core_types'
-

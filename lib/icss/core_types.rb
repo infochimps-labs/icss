@@ -6,5 +6,5 @@ if defined?(Icss::Thing)
     include Icss::ReceiverModel
   end
 else
-  warn 'Could not load core type "thing". Make sure the catalog is where you expect it to be.'
+  warn "Could not load core type 'thing'. Make sure the catalog (#{Settings.catalog_root}) is where you expect it to be."
 end
