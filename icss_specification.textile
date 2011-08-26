@@ -1,0 +1,393 @@
+h1. The Infochimps Stupid Schema (ICSS) Specification
+
+The icss is intended to be a *complete* and *expressive* description of a collection of related data and its associated assets. This includes a description of data assets (including their location and schema) and of api calls (messages) based on the the described records (including their call signature and schema).
+
+Besides this document, please refer to icss_style.textile, which gives agreed style convention for icss authoring.
+
+Before any further proclamations here is a complete example:
+
+<pre><code>
+---
+namespace: language.corpora.word_freq
+protocol: bnc
+under_consideration: true
+update_frequency: monthly
+
+messages:
+  word_stats:
+    request:
+      - name: word_stats_request
+        type: word_stats_request
+    response: word_statistics_record
+    doc: Query on a head word to get back word statistics (and word variants) from the British National Corpus.
+    samples:
+      - request: 
+          - head_word: hello
+        response: 
+          variant_word_dispersion: 0.78
+          variant_word_freq_ppm: 38.0
+          part_of_speech:       Int
+          head_word:            hello
+          variant_word_range:   91
+          variant_word:         hello
+          head_word_dispersion: 0.78
+          head_word_freq_ppm:   38.0
+          head_word_range:      91
+
+data_assets:
+  - name: word_stats_data_asset
+    location: data/word_stats
+    type: word_statistics_record
+
+code_assets:
+  - location: code/bnc_endpoint.rb
+    name: bnc_endpoint
+
+types:
+
+  - name: word_stats_request
+    type: record
+    doc: Query api parameters for the word_stats message
+    fields:
+      - name: head_word
+        type: string
+
+  - name: word_statistics_record
+    doc: |-
+      Here we provide plain text versions of the frequency lists contained in WFWSE. These are
+      raw unedited frequency lists produced by our software and do not contain the many
+      additional notes supplied in the book itself. The lists are tab delimited plain text so
+      can be imported into your prefered spreadsheet format. For the main lists we provide a
+      key to the columns. More details on the process undertaken in the preparation of the
+      lists can be found in the introduction to the book. These lists show dispersion ranging
+      between 0 and 1 rather than 0 and 100 as in the book. We multiplied the value by 100 and
+      rounded to zero decimal places in the book for reasons of space. Log likelihood values
+      are shown here to one decimal place rather than zero as in the book. Please note, all
+      frequencies are per million words.
+    type: record
+    fields:
+      - name: head_word
+        doc:  Word type headword - see pp.4-5
+        type: string
+      - name: part_of_speech
+        doc: Part of speech (grammatical word class - see pp. 12-13)
+        type: string
+      - name: head_word_freq_ppm
+        doc:  Rounded frequency per million word tokens (down to a minimum of 10 occurrences of a lemma per million)- see pp. 5. Where BOTH head word and lemmas appear
+        type: float
+      - name: head_word_range
+        doc: Range, the number of sectors of the corpus (out of a maximum of 100) in which the word occurs. Where BOTH head word and lemmas appear
+        type: int
+      - name: head_word_dispersion
+        doc: Dispersion value (Juilland's D) from a minimum of 0.00 to a maximum of 1.00. Where BOTH head word and lemmas appear
+        type: float
+      - name: variant_word
+        doc: Variant form of headword
+        type: string
+      - name: variant_word_freq_ppm
+        doc:  Rounded frequency per million word tokens (down to a minimum of 10 occurrences of a lemma per million)- see pp. 5. Where BOTH head word and lemmas appear
+        type: float
+      - name: variant_word_range
+        doc: Range, the number of sectors of the corpus (out of a maximum of 100) in which the word occurs. Where BOTH head word and lemmas appear
+        type: int
+      - name: variant_word_dispersion
+        doc: Dispersion value (Juilland's D) from a minimum of 0.00 to a maximum of 1.00. Where BOTH head word and lemmas appear
+        type: float
+
+targets:
+  mysql:
+    - table_name: bnc
+      database: language_corpora_word_freq
+      name: word_freq_bnc
+      data_assets:
+        - word_stats_data_asset
+  apeyeye:
+    - code_assets:
+      - bnc_endpoint.rb
+  catalog:
+    - name: word_freq_bnc
+      title: Word Frequencies From the British National Corpus
+      description: |-
+        Here we provide plain text versions of the frequency lists contained in         WFWSE. These are
+        raw unedited frequency lists produced by our software and do not contain the many
+        additional notes supplied in the book itself. The lists are tab delimited plain text so
+        can be imported into your prefered spreadsheet format. For the main lists we provide a
+        key to the columns. More details on the process undertaken in the preparation of the
+        lists can be found in the introduction to the book. These lists show dispersion ranging
+        between 0 and 1 rather than 0 and 100 as in the book. We multiplied the value by 100 and
+        rounded to zero decimal places in the book for reasons of space. Log likelihood values
+        are shown here to one decimal place rather than zero as in the book. Please note, all
+        frequencies are per million words.
+      tags:
+        - token
+        - word
+        - corpus
+        - word-frequency
+        - british
+        - words
+        - language
+      messages:
+        - word_stats
+      packages:
+        - data_assets:
+            - word_stats_data_asset
+
+</code></pre>
+
+h2. namespace
+
+The namespace for the entire icss. It should be interpreted as the 'category' and 'subcategory' and so on. While the nesting is allowed to be arbitrarily deep, nesting deeper than 2 is strongly discouraged unless you have a very good reason (you probably don't). Each additional category must be appended with a dot ('.').
+
+h2. protocol
+
+The short name of the collection. Together the protocol and namespace should be globally unique and fully qualify the data.
+
+h2. under_consideration
+
+This flag is set to true while you are working on a procuring a dataset. The icss can still be published, and the webpage will reflect the current status of the icss based upon this flag.
+
+h2. update_frequency
+
+The frequency with which that the dataset needs to be updated. Acceptable strings are _daily_, _weekly_, _monthly_, _quarterly_, and _never_.
+h2. data_assets
+
+Describes each data asset (a homogeneous chunk of data) and its location relative to the icss itself. This section is written in the icss as an array of hashes where the fields of each hash are as follows:
+
+* @name@        - The name of the data asset.
+* @location@    - The _relative_ uri of the described data asset. This is always assumed to be a directory and contains one or more actual files. All of the files must be homogeneous amongst themselves in that they are identically formatted (and have the same fields in the same order when that makes sense).
+* @type@        - The fully qualified @type@ of the described data asset. The @type@ must be defined as a @record@ in the @types@ section of the icss.
+
+h2. code_assets
+
+Describes each code asset (an auxillary piece of code) and its location relative to the icss itself. A typical code asset is the full definition of classes and functions required to implement a message in the @messages@ section of the icss. The code_assets section is written in the icss as an array of hashes where the fields of each hash are as follows:
+
+* @name@        - The name of the code asset.
+* @location@    - The location, _relative_ to the icss, of the code asset.
+
+h2. types
+
+Defines named record types for each data asset, message request, and message response. It is an array of valid avro @record@ schemas, and adheres to the 1.4.1 avro specification. Each entry in the array is called a @named record type@. Its fields may be composed of primitive types (eg. string, int, float) as well as other named types so long as they are defined _previously_ in the @types@ array. Any referenced types must be defined in the types array before any definitions that refer to them. A @type@ definition can have the following fields:
+
+* @name@        - The name of the defined type.
+* @type@        - The @type@ of the defined type (think of it as the superclass). Typically @record@.
+* @doc@         - Top level documentation of this type describing what it is and some justification for its existence.
+* @fields@      - An array of @field@ hashes. See below.
+
+h3. fields
+
+The @fields@ section of a @record@ definition is an array of hashes with the following fields:
+
+* @name@        - the name of the field (required)
+* @type@        - the @type@ of the field: either a primitive type, a named type, or an avro schema (as defined above under _types_). A complex type can be defined in line as a full type definition or previously in the @types@ array. See primitive types. Note: you *must* define a named type before referring to it. Recursive type definitions are currently unsupported. To decide whether to define a named type inline, consider how the documentationwill ultimately read.
+* @doc@         - a string describing this field for users (optional).
+* @default@     - a default value for this field, used when reading instances that lack this field. Note: do _not_ use the @default@ attribute to show an "example" parameter, only to show the value used if none is supplied. 
+* @order@:      - specifies how this field impacts sort ordering of this record (optional). Valid values are "ascending" (the default), "descending", or "ignore". For more details on how this is used, see the the sort order section in the avro spec.
+
+h4. Extended attributes
+
+* @index@       - a string naming the index group, for databases that choose to take advantage of it (optional).
+* @unique@      - index is unique (optional)
+* @length@      - a length constraint, for downstream consumers that choose to take advantage of it (optional).
+
+h3. Primitive Types
+
+The set of primitive type names is:
+
+* @null@        - no value
+* @boolean@     - a binary value
+* @int@         - 32-bit signed integer
+* @long@        - 64-bit signed integer
+* @float@       - single precision (32-bit) IEEE 754 floating-point number
+* @double@      - double precision (64-bit) IEEE 754 floating-point number
+* @bytes@       - sequence of 8-bit unsigned bytes
+* @string@      - unicode character sequence
+
+h2. messages
+
+This section defines the messages (remote procedure calls) against the collection. It is a hash where each entry has the the following fields:
+
+* @request@     - An list of arguments to the message (required).. A request has two fields, a @name@ and a @type@ where the @type@ is defined in the @types@ section. All infochimps API calls take a single argument of either a named @record@ type or a @map@ (hash). Although in principle the argument list is processed equivalently to the fields in a @record@ type schema, we demand that the list have exactly one element and that it refer to a named type defined at top level in the @types@ section.
+* @response@    - The named @type@ for the response (required), defined at top level in the protocol's @types@ section.
+* @errors@      - An optional array of named types that this message throws as errors (optional).
+* @doc@         - Documentation specific to this message (optional).
+* @samples@     - Sample call request and response/error contents (optional; see below).
+
+h3. samples
+
+A message may optionally supply @samples@, an array of SampleMessageCalls. Each SampleMessageCall is a hash with the following fields:
+
+* @request@     - an array of one element giving a hash suitable for populating the message's @request@ type.
+* @url@         - Rather than supply the request params, you may supply them as a URL. While the URL may be used to imply request parameters, it is permitted to be inconsistent.
+* @response@    - a hash suitable for populating the message's @response@ type (optional).
+* @error@       - in place of a response, an error expected for this call, from the message's error types.
+
+h2. targets
+
+This section defines publishing targets for the collection. It is an optional field, and each target type is optional as well. It is a hash with the following possible elements:
+
+h3. Summary
+
+* *@Mysql@*          - Create tables and push data into MySQL
+* *@Hbase@*          - Create tables and push data into HBase
+* *@ElasticSearch@*  - Index data into Elasticsearch
+* *@Catalog@*        - Create a dataset page on the "Infochimps":http://www.infochimps.com site.
+                     - Attaches API documentation and Packages
+* *@Apeyeye@*        - Publishes ICSS and Endpoint code assets to the Apeyeye
+* *@GeoIndex@*       - Index data into GeoIndex
+
+* *@Apitest@*        - Generate Rspec integration test for ICSS messages
+
+h3. catalog
+
+An array of CatalogTarget hashes. Each CatalogTarget hash describes a catalog entry on the Infochimps data catalog. It contains the following fields:
+
+* @name@        - The name of the catalog entry. [String] (required)
+* @title@       - The display title of the catalog entry. [String] (required)
+* @description@ - A full description (can be textile) for the catalog entry that is displayed in the overview section on the catalog. [String] (required)
+* @license@     - The name of an existing license on Infochips.com [String] (optional)
+* @link@        - The source URL of the data described by this catalog entry. [String] (optional)
+* @owner@       - Who will own this catalog entry on Infochimps.com; the user must already exist. [String] (optional, defaults to user **Infochimps**)
+* @price@       - The price in USD that this catalog's packages will be available for. Data is free if price is not provided [Float] (optional)
+* @tags@        - An array of tags describing the catalog entry. Tags may only contain characters within [a-z0-9_] (lowercase alphanumeric or underscore). The publishing system MAY augment these tags with additional ones extracted from the protocol as a whole. (optional)
+
+* @messages@    - An array of message names to attach to the catalog entry. Each message will be fully documented on the catalog. The last message in the array will be available to explore with the api explorer. 
+* @packages@    - An array of hashes. Each hash has a field called @data_assets@ which is an array of named data assets. Each data asset in the array will be bundled together into a single bulk download on the catalog. 
+
+h3. apeyeye
+
+* @code_assets@ - An array of named code_assets (required to exist in the top-level @code_assets@ section) to copy to an Apeyeye repository
+
+h4. Note
+
+* The @Apeyeye@ target also places a copy of the @ICSS@ next to the endpoint code assets.
+
+* The @Apeyeye@ target creates necessary subdirectories and copies data_assets to the directory specified by the @apeyeye:repo_path@ in the @troop.yaml@ configuration file.
+  Troop will **not** currently perform an actual deployment to the cluster running the Infochimps API. After Troop has finished, the @endpoint@ and @icss.yaml@ files will need to be manually committed to the repo and the Chef deployment performed.
+
+h3. mysql
+
+An array of MysqlTarget hashes. Each MysqlTarget hash describes how to map one or more data_assets into a MySQL database. It contains the following fields:
+
+* @database@    - The mysql database to write data into (required).
+* @table_name@  - The table name to write data into (required).
+* @data_assets@ - An array of named data assets (required to exist in the @data_assets@ section) to write to @database@.@table_name@. (required).
+
+h3. hbase
+
+An array of HbaseTarget hashes. There are two possibilities here:
+
+h4. Fourple
+
+Here your data itself will contain the hbase column family, and column name each line of data will be stored into. In this case the HbaseTarget hash will contain the following fields:
+
+* @table_name@ - The hbase table to write data into (required)
+* @column_families@ - An array of hbase column families that data will be written into (required). These column families will be created if they do not already exist.
+* @loader@ - 'fourple_loader', this tells Troop to load _this_ target with the FourpleLoader class (required)
+* @data_assets@ - An array of named data assets (required to exist in the @data_assets@ section. (required)
+
+Your data *must* have the following schema to use this loader:
+
+(@row_key@, @column_family@, @column_name@, @column_value@)
+
+and optionally,
+
+(@row_key@, @column_family@, @column_name@, @column_value@, @timestamp@)
+
+where @timestamp@ is unix time.
+
+h4. Tsv
+
+Here your data will simply be tsv records. In this case the HbaseTarget hash will contain the following fields:
+
+* @table_name@ - The hbase table to write data into (required)
+* @column_family@ - An single hbase column family that data will be written into (required). This column family will be created if it does not already exist.
+* @id_field@ - The name of a field to use as the row key during indexing (required).
+* @loader@ - 'tsv_loader', this tells Troop to load _this_ target with the TsvLoader class (required)
+* @data_assets@ - An array of named data assets (required to exist in the @data_assets@ section. (required)
+
+h3. geo_index
+
+This is for storing data into the infochimps geo index. An array of GeoIndexTarget hashes. Each hash has the following fields:
+
+* @table_name@ - The hbase table to write data into. It *must* be one of @geo_location_infochimps_place@, @geo_location_infochimps_event@, or @geo_location_infochimps_path@ (required)
+* @data_assets@ - An array of named data assets (required to exist in the @data_assets@ section. (required)
+* @min_zoom@ - An integer specifying the minimum zoom level at which to index the data. Defaults to 3 (optional)
+* @max_zoom@ - An integer specifying the maximum zoom level at which to index the data. Defaults to 6 (optional)
+* @chars_per_page@ - An integer number of approximate characters per page. One or more pages, combined into a geoJSON "FeatureCollection" are returned from the infochimps geo api. This parameter affects how large a single page is. (required)
+* @sort_field@ - A field within the @properties@ portion of each geoJSON feature indexed. This @sort_field@ will be used to sort the pages returned when a request is made against the infochimps geo api. Use '-1' if there is no sort field.
+
+h3. elastic_search
+
+An array of ElasticSearchTarget hashes. Each ElasticSearchTarget hash describes how to map one or more data_assets into an ElasticSearch data store. It contains the following fields:
+
+* @index_name@  - The name of the index to write data into (required). It need not already exist.
+* @object_type@ - The object type create (required). Many different types of objects can exist in the same index. Each @object_type@ has its own schema that will be updated dynamically by ElasticSearch as records of that type are indexed. If this dynamism is unwanted (in the case you have more complex fields like @date@ or @geo_point@) then you should use the rest API and PUT the appropriate schema mapping ahead of time.
+* @id_field@    - The name of a field within @object_type@ to use as an inherent id during indexing (optional). If this field is omitted the records will be assigned an id dynamically during indexing.
+* @data_assets@ - An array of named data assets (required to exist in the @data_assets@ section), to write to the index specified by @index_name@ with the schema mapping specified by @object_type@.
+* @loader@      - The way in which to load the data. One of @tsv_loader@ or @json_loader@. Choose the appropriate one based on what type of data you have.
+
+h3. apitest
+
+This target exists to generate simple unit tests apeyeye calls in troop.  This target always runs when troop runs and does not need to be declared in the ICSS for a hackbox.  The unit tests are described as a request/response pairs, as in this example from the provider_lookup message in the cedexis ICSS file:
+
+<pre><code>
+    samples:
+      - request:
+          - q:          rackspace
+        response:       {"results": [{ "label": "rackspace_cloudfiles", "name": "*Rackspace CloudFiles"}, {"label": "rackspace_cloudserver", "name": "*Rackspace CloudServer"}], "total": 2 }
+</code></pre>
+
+In order to run properly, the troop config must include these fields:
+
+<pre><code>
+apitest:
+  api_key: api_test-W1cipwpcdu9Cbd9pmm8D4Cjc469
+  test_dir: /path/to/api/tests
+</code></pre>
+
+@api_key@ should be a valid IC API key and @test_dir@ is where the generated tests will be written.  Each test is named by its @namespace.protocol@ UID and is in @rspec@ format.  
+
+h2. Differences between ICSS and Avro
+
+Note the following limitations on the avro spec:
+
+* No recursive definitions. A named type may not include a schema that eventually refers to the named type itself.
+* All top-level schemas must be @record@ types.
+* Do not use @union@ or @enum@ schema types.
+* Do not define a complex schema in the request or response portion of a message -- you MUST use a named type defined at top level in the @types@ section, or use type @map@.
+* Every message request must be an array of exactly one element.
+
+h2. Proposed Alterations and Extensions to the spec
+
+h3. Versioning
+
+We need to take advantage of the Avro versioning abilities
+
+h3. Many Catalog properties belong at top level
+
+The catalog target entries should be changed:
+
+* @name@ is redundant, should be the fullname of the protocol with '.' converted to '-' and used as a durable handle for the catalog entry.
+* @title@ should become a top-level attribute of the protocol. 
+* @tags@ should become a top-level attribute of the protocol.
+* @description@ should be called @doc@. The catalog description should be the catalog target's @doc@ prepended to the protocol's @doc@.
+* @messages@ should go away - all messages should be published by default.
+
+These attributes should be added at the top level:
+
+* @created_at@  - fixes the notional created_at date of the dataset.
+* @created_by@  - handle for the infochimps user to credit
+* @collection@  - handle for a collection to tie the dataset.
+* @link@        - URL to consider the primary reference link
+* @sources@     - array of handles for the dataset's sources.
+* @license@     - handle for the dataset's license
+
+h3. Documentation Extensions
+
+* @doc_order@   - On @types@, gives the order to display their documentation. Since we have to
+* @doc_hide@    - Hide this type when displaying documentation.
+* @doc_long@    - For cases where the doc string extends to many pages, lets us separate the doc into an abstract (in @doc@) and extended description (in @doc_long@).
+
+h3. Extended Primitive Types
+
+I'd (flip) like a way for a client to, on a best-effort basis, accept @time@, @date@, and @symbol@.  This could be done by allowing those as primitive types, or by saying they are { "type":"string", "extended_type":"iso_time" }. Needs more thought.

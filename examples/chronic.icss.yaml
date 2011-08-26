@@ -1,0 +1,115 @@
+---
+namespace: util.time
+protocol: chronic
+
+doc: >-
+  A series of calls hooking into the Chronic ruby gem
+
+code_assets:
+  - location:   code/chronic_endpoint.rb
+    type:       apeyeye_endpoint
+
+targets:
+  catalog:
+    - name: util_time_chronic_parse
+      title: Utils - Parse Times
+      description: An API call to parse human-readable date / time strings
+      messages:
+        - parse
+      tags:
+        - apiawesome
+        - ruby
+        - gems
+        - chronic
+        - time
+        - date
+        - util
+        - parse
+      
+types:
+    - name:     chronic_parse_params
+      type:     record
+      doc: Query API parameters for the /util/time/chronic/parse call
+      fields:
+        - name: time_str
+          type: string
+          doc: >-
+            The string to parse.
+            
+        - name: context
+          type: symbol
+          doc: >-
+              <tt>past</tt> or <tt>future</tt> (defaults to <tt>future</tt>)
+              
+              If your string represents a birthday, you can set
+              <tt>context</tt> to <tt>past</tt> and if an ambiguous string is
+              given, it will assume it is in the past. Specify <tt>future</tt>
+              or omit to set a future context.
+              
+        - name: now
+          type: time
+          doc: >-
+            Time (defaults to Time.now)
+            
+            By setting <tt>:now</tt> to a Time, all computations will be based off
+            of that time instead of Time.now. If set to nil, Chronic will use
+            the current time in UTC. You must supply a date that unambiguously
+            parses with the much-less-generous ruby Time.parse()
+
+        - name: ambiguous_time_range
+          type: int
+          doc: >-
+            Integer or <tt>:none</tt> (defaults to <tt>6</tt> (6am-6pm))
+
+            If an Integer is given, ambiguous times (like 5:00) will be
+            assumed to be within the range of that time in the AM to that time
+            in the PM. For example, if you set it to <tt>7</tt>, then the parser will
+            look for the time between 7am and 7pm. In the case of 5:00, it would
+            assume that means 5:00pm. If <tt>:none</tt> is given, no assumption
+            will be made, and the first matching instance of that time will
+            be used.
+            
+    - name: chronic_parse_response
+      type: record
+      doc: |-
+        Query API response for the /util/time/chronic/parse call
+      fields:
+        - name: time
+          doc:  >-
+            The UTC parsed time, as a "ISO 8601 combined date time":http://en.wikipedia.org/wiki/ISO_8601 string.
+          type: string
+        - name: epoch_seconds
+          doc:  >-
+            The UTC parsed time, as "epoch seconds":http://en.wikipedia.org/wiki/Epoch_seconds integer.
+          type: int
+
+messages:
+  parse:
+    request:
+      - name: chronic_parse_params
+        type: chronic_parse_params
+    response: chronic_parse_response
+    samples:
+      - request: 
+        - time_str: one hour ago
+          now: "2007-03-16T12:09:08Z"
+        response: 
+          epoch_seconds: 1174043348
+          time: "2007-03-16T11:09:08Z"
+        url: ?now=2007-03-16T12%3A09%3A08Z&time_str=one%20hour%20ago
+      - request: 
+        - time_str: Yesterday
+          now: 5:06:07T2010-08-08Z
+        response: 
+          epoch_seconds: 1281182400
+          time: "2010-08-07T12:00:00Z"
+        url: ?now=5%3A06%3A07%202010-08-08&time_str=Yesterday
+      - url:            "?time_str=5pm+on+November+4th&context=past"
+      # - request:
+      #     - time_str:   2 hours
+      #   error:          Apeyeye::MethodFailedError
+          
+    doc: |-
+
+        Chronic is a natural language date/time parser written in pure Ruby. See below
+        for the wide variety of formats Chronic will parse.

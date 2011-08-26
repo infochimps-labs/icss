@@ -1,0 +1,9 @@
+{"name": "test.Weather", 
+ "doc": "A weather reading.",
+ "type": "record", 
+ "fields": [
+     {"name": "station", "type": "string", "order": "ignore"},
+     {"name": "time", "type": "long"},
+     {"name": "temp", "type": "int"}
+ ]
+}

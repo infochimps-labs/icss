@@ -1,0 +1,70 @@
+---
+namespace: language.corpora.word_freq
+protocol: bnc
+
+targets:
+  catalog:
+    - name: word_freq_bnc
+      title: Word Frequencies From the British National Corpus
+      description: foobar
+      tags:
+        - bnc
+        - british-national-corpus
+        - awesomeapi
+        - token
+        - word
+        - corpus
+        - word-frequency
+        - british
+        - words
+        - language
+      messages:
+        - word_stats
+
+messages:
+  word_stats:
+    request:
+      - name: word_stats_request
+        type: word_stats_request
+    response: word_statistics_record
+    doc: Query on a head word to get back word statistics (and word variants) from the British National Corpus.
+
+data_assets:
+  - name: word_stats_data_asset
+    location: data/word_stats
+    type: word_statistics_record
+      
+code_assets:
+  - location: code/bnc_endpoint.rb
+    name: word_stats
+    
+types:
+
+  
+  - name: test_record
+    doc: A record for testing
+    type: record
+    fields:
+    - name: name
+      doc: A person's name.
+      type: string
+    - name: age
+      doc: A person's age.
+      type: whatever
+    - name: email
+      doc: A person's email address
+      type: string
+      validates:
+        :length:
+          :maximum: 10
+
+  - name: whatever
+    doc: lkajd
+    type: record
+    fields:
+    - name: f
+      doc: bar
+      type: place
+  
+- name: place
+  

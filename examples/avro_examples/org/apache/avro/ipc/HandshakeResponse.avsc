@@ -1,0 +1,15 @@
+{
+    "name": "HandshakeResponse", "namespace": "org.apache.avro.ipc",
+    "type": "record",
+    "fields": [
+        {"name": "match",
+         "type": {"name": "HandshakeMatch", "type": "enum", 
+                  "symbols": ["BOTH", "CLIENT", "NONE"]}},
+        {"name": "serverProtocol",
+         "type": ["null", "string"]},
+        {"name": "serverHash",
+         "type": ["null", {"name": "MD5", "type": "fixed", "size": 16}]},
+ 	{"name": "meta",
+         "type": ["null", {"type": "map", "values": "bytes"}]}
+    ]
+}

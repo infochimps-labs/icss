@@ -1,0 +1,67 @@
+---
+namespace: foo.bar
+protocol: baz
+types:
+
+- name: test_simple_type
+  doc: A record to test simple record types.
+  type: record
+  fields:
+  - name: my_happy_string
+    doc:  field 1
+    type: string
+  - name: my_happy_int
+    doc:  field 2
+    type: int
+  - name: my_happy_boolean
+    doc:  field 3
+    type: boolean
+
+- name: test_ref_type
+  doc: A record to test referenced types.
+  type: record
+  fields:
+  - name: ref_field
+    doc: A field that references a type.
+    type: icss.core.place
+
+- name: test_is_a_method
+  doc: A record to test the is_a method.
+  type: record
+  is_a:
+  - icss.core.place
+  fields:
+  - name: additional_field
+    doc: A field to test the ability to add additional fields with the is_a method.
+    type: int
+  - name: description
+    doc: A field to test the override of is_a properties.
+    type: string
+
+- name: test_identifiers
+  doc: A record to test the identifier methods.
+  type: record
+  domain_id: ssn
+  fields:
+  - name: name
+    doc: A field that is NOT an identifier.
+    type: string
+  - name: age
+    doc: A field that IS an identifier.
+    type: int
+    identifier: true
+  - name: ssn
+    doc: A field to test the domain_id.
+    type: int
+    identifier: true
+
+- name: test_validators
+  doc: A record to test validations.
+  type: record
+  fields:
+  - name: homepage
+    doc: A field needing formatting validation.
+    type: string
+    validates:
+      format:
+        with: "/[\w+]\.[com?|org|net]/"
