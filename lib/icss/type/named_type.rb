@@ -109,8 +109,8 @@ module Icss
       #
       # @param scope_names [Array of String]
       # @param superklass  [Class] - the superclass to use if the class doesn't exist.
-      def self.get_model_klass(fullname, superklass)
-        fullname = Icss::Meta::Type.fullname_for(fullname)
+      def self.get_model_klass(fn, superklass)
+        fullname = Icss::Meta::Type.fullname_for(fn)
         return Class.new(superklass) if fullname.nil?
         #
         scope_names   = scope_names_for(fullname)
@@ -119,7 +119,8 @@ module Icss
         #
         if parent_module.const_defined?(klass_name)
           klass = parent_module.const_get(klass_name)
-          warn "+++++++++++++++++++++++++++++++ Superclass and is_a? mismatch for #{klass} (doesn't inherit from #{superklass})" unless klass.ancestors.include?(superklass)
+          # #{superklass.object_id}: #{klass.ancestors.map{|o| [o, o.object_id] }}
+          unless klass.ancestors.include?(superklass) then warn "+++++++++++++++++++++++++++++++ Superclass and is_a? mismatch for #{klass.inspect} (doesn't inherit from #{superklass.inspect})"  ; end
           klass
         else
           parent_module.const_set(klass_name, Class.new(superklass))

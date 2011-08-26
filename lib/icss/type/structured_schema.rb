@@ -246,11 +246,23 @@ module Icss
     # * namespace, a string that qualifies the name;
     #
     class SimpleSchema < ::Icss::Meta::NamedSchema
-      field :fullname,         Symbol, :required => true
+      field :basename,         Symbol, :required => true
+      field :namespace,        String
       field :is_a,             Array, :default => [], :items => Icss::Meta::TypeFactory
       field :doc,              String, :required => true
-      rcvr_alias :name, :fullname
+      rcvr_alias :name, :basename
       self.klass_metatypes = [::Icss::Meta::NamedType]
+
+      def basename=(s)
+        segs = s.to_s.split(/\./)
+        @basename = segs.pop.to_sym
+        @namespace = segs.join('.').to_s if segs.present?
+      end
+
+      def fullname
+        [namespace, basename].compact_blank.join('.')
+      end
+
       def type() :simple ; end
       #
       def parent_klass()      is_a.first ; end

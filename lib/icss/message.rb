@@ -34,6 +34,12 @@ module Icss
       # this is defined in sample_message_call.rb -- since we don't do referenced types yet
       field :samples,  Array, :default => [], :items => Object # FIXME: Icss::SampleMessageCall
 
+      def self.receive(hsh)
+        foo = hsh.stringify_keys
+        resp = Icss::Meta::TypeFactory.receive(foo['response'])
+        super(hsh)
+      end
+
       after_receive(:are_my_types_references) do |hsh|
         # track recursion of type references
         @response_is_reference = true if hsh['response'].is_a?(String) || hsh['response'].is_a?(Symbol)

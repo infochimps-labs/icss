@@ -100,20 +100,39 @@ module Icss
         end
       end
 
-   protected
+      def self.with_namespace(def_ns)
+        old_def_ns = @default_namespace
+        @default_namespace = def_ns
+        ret = yield
+        @default_namespace = old_def_ns
+        ret
+      end
 
-      def self.receive_named_type(type, schema)
-        klass_name = Icss::Meta::Type.klassname_for(type.to_sym)
+      def self.namespaced_name(nm)
+        nm = nm.to_s
+        return nm if (nm == 'thing') || (nm =~ /[\.\/]/)
+        [@default_namespace, nm].compact.join('.')
+      end
+
+    protected
+
+      def self.receive_named_type(type_name, schema)
+        ns_name   = namespaced_name(type_name)
+        klass_name = Icss::Meta::Type.klassname_for(ns_name.to_sym)
+        # p ['rnt', type_name, schema, ns_name, klass_name]
         begin
           klass_name.constantize
         rescue NameError => e
-          Log.debug "auto loading core type #{type} - #{schema}" if defined?(Log)
-          Icss::Meta::Protocol.load_from_catalog("core/#{type}")
+          # Log.debug "auto loading core type #{ns_name} - #{schema}" if defined?(Log)
+          Icss::Meta::Protocol.load_from_catalog("core/#{ns_name}")
           klass_name.constantize
         end
       end
 
       def self.receive_structured_schema(schema_writer, schema)
+        if (schema[:name].to_s !~ /[\.\/]/) && @default_namespace && (schema[:name].to_s != 'thing')
+          schema[:namespace] ||= @default_namespace
+        end
         schema_writer.receive(schema)
       end
 

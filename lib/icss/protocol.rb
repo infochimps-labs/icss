@@ -59,9 +59,9 @@ module Icss
     class Protocol
       include Icss::ReceiverModel
 
-      field :protocol,    String
+      field :protocol,    String, :required => true, :validates => { :format => { :with => /\A[A-Za-z_]\w*\z/, :message => "must start with [A-Za-z_] and contain only [A-Za-z0-9_]." } }
       alias_method  :basename, :protocol
-      field :namespace,   String
+      field :namespace,   String, :required => true, :validates => { :format => { :with => /\A([A-Za-z_]\w*\.?)+\z/, :message => "Segments that start with [A-Za-z_] and contain only [A-Za-z0-9_], joined by '.'dots" } }
       field :doc,         String
       field :license,     Hash
       #
@@ -74,7 +74,7 @@ module Icss
       field :targets,     Hash,  :values => Icss::TargetListFactory, :default => {}, :merge_as => :hash_of_arrays
 
       field :under_consideration, Boolean
-      field :update_frequency, String
+      field :update_frequency, String, :validates => { :format => { :with => /daily|weekly|monthly|quarterly|never/ }, :allow_blank => true }
       rcvr_remaining :_extra_params
 
       class_attribute :registry
@@ -82,10 +82,6 @@ module Icss
       after_receive(:register) do |hsh|
         registry[fullname] = self
       end
-
-      validates :protocol,  :presence => true, :format => { :with => /\A[A-Za-z_]\w*\z/, :message => "must start with [A-Za-z_] and contain only [A-Za-z0-9_]." }
-      validates :namespace, :presence => true, :format => { :with => /\A([A-Za-z_]\w*\.?)+\z/, :message => "Segments that start with [A-Za-z_] and contain only [A-Za-z0-9_], joined by '.'dots" }
-      validates :update_frequency, :format => { :with => /daily|weekly|monthly|quarterly|never/ }, :allow_blank => true
 
       after_receive(:parent_my_messages) do |hsh|
         # Set each message's protocol to self, and if the basename wasn't given, set
@@ -107,6 +103,39 @@ module Icss
         fullname.gsub('.', '/')
       end
 
+      def find_message nm
+        return if messages.blank?
+        nm = nm.to_s.gsub("/", ".").split(".").last
+        messages[nm]
+      end
+
+      def receive_types(types)
+        Icss::Meta::TypeFactory.with_namespace(namespace) do
+          super(types)
+        end
+      end
+
+      def receive_messages(types)
+        Icss::Meta::TypeFactory.with_namespace(namespace) do
+          super(types)
+        end
+      end
+
+      def receive_protocol(nm)
+        name_segs = nm.to_s.gsub("/", ".").split(".")
+        self.protocol  = name_segs.pop
+        self.namespace = name_segs.join('.') if name_segs.present?
+      end
+
+      def receive_targets(tgts)
+        return unless tgts.present?
+        self.targets ||= {}
+        tgts.each do |target_name, target_info_list|
+          targets[target_name] = TargetListFactory.receive(target_info_list, target_name) # array of targets
+        end
+        targets
+      end
+
       def self.load_from_catalog(protocol_fullname)
         filepath = protocol_fullname.to_s.gsub(/(\.icss\.yaml)?$/,'').gsub(/\./, '/')+".icss.yaml"
         filepath = File.join(Settings[:catalog_root], filepath)
@@ -118,32 +147,12 @@ module Icss
             proto
           rescue Exception => boom
             warn( [
-                # boom.to_s, boom.backtrace,
+                # boom.to_s,
+                boom.backtrace[1 .. 30],
                 "Could not load ICSS file #{filename}: #{boom}" ].flatten.join("\n") )
             nil
           end
         end.compact
-      end
-
-      def find_message nm
-        return if messages.blank?
-        nm = nm.to_s.gsub("/", ".").split(".").last
-        messages[nm]
-      end
-
-      def receive_protocol nm
-        namespace_and_name = nm.to_s.gsub("/", ".").split(".")
-        self.protocol  = namespace_and_name.pop
-        self.namespace = namespace_and_name.join('.')
-      end
-
-      def receive_targets tgts
-        return unless tgts.present?
-        self.targets ||= {}
-        tgts.each do |target_name, target_info_list|
-          targets[target_name] = TargetListFactory.receive(target_info_list, target_name) # array of targets
-        end
-        targets
       end
 
       def to_hash()
