@@ -1,3 +1,4 @@
+# p [__FILE__, "catalog_root", Settings.catalog_root]
 Icss::Meta::Protocol.load_from_catalog('core/*')
 Icss::Meta::Protocol.load_from_catalog('core/geo/place')
 
