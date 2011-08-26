@@ -214,8 +214,10 @@ module Icss
       # it's the first member of its inheritance chain to define the method.
       # We want it to do so for each ancestor that has added fields.
       def call_ancestor_chain(attr)
-        # puts "\n\n********\n\n"
-        # puts caller.grep(%r{vendor/libs/icss/lib})
+        # if caller.length > 200
+        #   puts "\n\n********\n#{self}\n#{attr}\n#{ancestors.inspect}"
+        #   puts caller.grep(%r{lib/icss})
+        # end
         ivar = "@#{attr}"
         self.ancestors.reverse.each do |ancestor|
           yield(ancestor.instance_variable_get(ivar)) if ancestor.instance_variable_defined?(ivar)
