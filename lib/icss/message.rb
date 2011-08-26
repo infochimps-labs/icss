@@ -77,9 +77,6 @@ module Icss
 
       rcvr_alias(:is_geo, :is_geo)
       def receive_is_geo(val)
-
-        p ["receive_is_geo", val, __FILE__,]
-
         return unless val
         unless defined?(Icss::Meta::Req::Geolocator) then
           warn "View helpers can\'t help with geolocators: Icss::Meta::Req::Geolocator type is missing. Is the catalog loaded properly?"
