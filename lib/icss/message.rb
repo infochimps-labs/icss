@@ -23,6 +23,8 @@ module Icss
       alias_method :basename=, :name=
       field :doc,      String
 
+      field :request_decorators, Hash, :default => {:anchors => []}
+
       #we're starting to attach a lot of pork to this lib...
       field :initial_free_qty,      Integer
       field :price_per_k_in_cents,  Integer
@@ -48,7 +50,6 @@ module Icss
 
         # # tie each sample back to this, its parent message
         # (self.samples ||= []).each{|sample| sample.message = self }
-
       end
 
       def fullname
@@ -64,6 +65,36 @@ module Icss
       def first_sample_request_param
         req = samples.first.request.first rescue nil
         req || {}
+      end
+
+      # ----------------------------------------
+      # GEO
+      #
+
+      def is_a_geo?
+        geolocators.present?
+      end
+
+      rcvr_alias(:is_geo, :is_geo)
+      def receive_is_geo(val)
+
+        p ["receive_is_geo", val, __FILE__,]
+
+        return unless val
+        unless defined?(Icss::Meta::Req::Geolocator) then
+          warn "View helpers can\'t help with geolocators: Icss::Meta::Req::Geolocator type is missing. Is the catalog loaded properly?"
+          return
+        end
+        self.request_decorators = {
+          :anchors => [
+            Icss::Meta::Req::PointWithRadiusGeolocator,
+            Icss::Meta::Req::AddressStringGeolocator,
+          ],
+        }
+      end
+
+      def geolocators
+        request_decorators[:anchors]
       end
 
       #

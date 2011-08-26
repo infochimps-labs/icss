@@ -120,7 +120,12 @@ module Icss
         if parent_module.const_defined?(klass_name)
           klass = parent_module.const_get(klass_name)
           # #{superklass.object_id}: #{klass.ancestors.map{|o| [o, o.object_id] }}
-          unless klass.ancestors.include?(superklass) then warn "+++++++++++++++++++++++++++++++ Superclass and is_a? mismatch for #{klass.inspect} (doesn't inherit from #{superklass.inspect})"  ; end
+          unless klass.ancestors.include?(superklass)
+            warn "+++++++++++++++++++++++++++++++ Superclass and is_a? mismatch for #{klass.inspect} (doesn't inherit from #{superklass.inspect})"
+            # p [klass_name, klass, Icss::Thing.object_id, ::Icss::Thing.object_id, Icss.const_get(:Thing).object_id,]
+            # p klass      .ancestors.flatten.map{|t| [t, t.object_id]}
+            # p Icss::Thing.ancestors.flatten.map{|t| [t, t.object_id]}
+          end
           klass
         else
           parent_module.const_set(klass_name, Class.new(superklass))

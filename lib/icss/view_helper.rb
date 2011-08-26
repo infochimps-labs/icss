@@ -13,6 +13,7 @@ module Icss
         # all calls accept xml or json
         "http://api.infochimps.com/#{path}?#{query_string}"
       end
+
     end
 
     RecordField.class_eval do
