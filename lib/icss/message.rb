@@ -85,7 +85,7 @@ module Icss
         self.request_decorators = {
           :anchors => [
             Icss::Meta::Req::PointWithRadiusGeolocator,
-            Icss::Meta::Req::AddressStringGeolocator,
+            Icss::Meta::Req::AddressTextGeolocator,
           ],
         }
       end
