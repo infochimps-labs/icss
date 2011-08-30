@@ -62,6 +62,11 @@ module Icss
         fullname
       end
 
+      # the type of the message's params (by convention, its first request field)
+      def params_type
+        request.first ? request.first.type : {}
+      end
+
       def first_sample_request_param
         req = samples.first.request.first rescue nil
         req || {}
