@@ -39,8 +39,8 @@ describe Icss::Meta::RecordModel do
     end
   end
 
-  let(:poppa          ){ Icss::Poppa.new() }
-  let(:smurfette      ){ Icss::Smurfette.new() }
+  let(:poppa     ){ Icss::Poppa.new() }
+  let(:smurfette ){ Icss::Smurfette.new() }
 
   context '#receive!' do
     it 'sets values' do
