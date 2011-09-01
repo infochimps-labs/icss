@@ -25,26 +25,21 @@ module Icss
 
       field :request_decorators, Hash, :default => {:anchors => []}
 
+      field :request,  Array, :items => Icss::Meta::RecordField, :default => []
+      field :response, Icss::Meta::TypeFactory
+      field :errors,   Object # FIXME: Icss::Meta::UnionType, :default => []
+      # this is defined in sample_message_call.rb -- since we don't do referenced types yet
+      # field :samples,  Array, :items => Icss::Meta::MessageSample, :default => []
+
+      attr_accessor :protocol
+
       #we're starting to attach a lot of pork to this lib...
       field :initial_free_qty,      Integer
       field :price_per_k_in_cents,  Integer
 
-      field :request,  Array, :items => Icss::Meta::RecordField, :default => []
-      field :response, Icss::Meta::TypeFactory
-      field :errors,   Object # FIXME: Icss::Meta::UnionType, :default => []
-      attr_accessor :protocol
-      # this is defined in sample_message_call.rb -- since we don't do referenced types yet
-      field :samples,  Array, :default => [], :items => Object # FIXME: Icss::SampleMessageCall
-
-      def self.receive(hsh)
-        foo = hsh.stringify_keys
-        resp = Icss::Meta::TypeFactory.receive(foo['response'])
-        super(hsh)
-      end
-
       after_receive(:are_my_types_references) do |hsh|
         # track recursion of type references
-        @response_is_reference = true if hsh['response'].is_a?(String) || hsh['response'].is_a?(Symbol)
+        @response_referenceness = ! hsh[:response].respond_to?(:each_pair)
 
         # FIXME: !!! reenable
 
@@ -57,9 +52,6 @@ module Icss
       end
       def path
         fullname.gsub(%r{\.},'/')
-      end
-      def id
-        fullname
       end
 
       # the type of the message's params (by convention, its first request field)
@@ -113,20 +105,26 @@ module Icss
           # :samples  => samples.map(&:to_hash).map(&:compact_blank),
           :initial_free_qty => initial_free_qty,
           :price_per_k_in_cents => price_per_k_in_cents,
-        }.reject{|k,v| v.nil? }
+        }.compact
       end
       def to_json(*args) to_hash.to_json(*args) ; end
 
-      private
+    private
       def summary_of_response_attr
         case
         when response.blank?        then response
-        when @response_is_reference then response.fullname
+        when @response_referenceness then response.fullname
         else response.to_schema.compact_blank
         end
       end
       def summary_of_request_attr
-        request.map(&:to_hash).compact_blank
+        request.map do |req|
+          case
+          when req.blank?        then req
+          when req.is_reference? then req.type.fullname
+          else                        req.to_schema.compact_blank
+          end
+        end
       end
     end
   end
