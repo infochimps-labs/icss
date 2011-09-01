@@ -40,7 +40,6 @@ module Icss
       after_receive(:are_my_types_references) do |hsh|
         # track recursion of type references
         @response_referenceness = ! hsh[:response].respond_to?(:each_pair)
-        @request_referenceness  = hsh[:request].map{|req| not req.respond_to?(:each_pair) }
 
         # FIXME: !!! reenable
 
@@ -110,7 +109,7 @@ module Icss
       end
       def to_json(*args) to_hash.to_json(*args) ; end
 
-      private
+    private
       def summary_of_response_attr
         case
         when response.blank?        then response
@@ -121,9 +120,9 @@ module Icss
       def summary_of_request_attr
         request.map do |req|
           case
-          when req.blank?             then req
-          when @request_referenceness then req.type.fullname
-          else                             req.to_schema.compact_blank
+          when req.blank?        then req
+          when req.is_reference? then req.type.fullname
+          else                        req.to_schema.compact_blank
           end
         end
       end

@@ -15,7 +15,7 @@ describe Icss::Meta::MessageSample do
     end
     class Icss::Handy < Icss::SmurfRecord
       field :smurfiness, Integer
-      field :tool,       Symbol, :default => :pipesmurf
+      field :tool,       Symbol, :default => :smurfwrench
       field :weapon,     Symbol, :default => :smurfthrower
     end
   end

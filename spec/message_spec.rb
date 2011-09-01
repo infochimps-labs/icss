@@ -6,7 +6,7 @@ include IcssTestHelper
 
 describe Icss::Meta::Message do
   before(:each) do
-    IcssTestHelper.remove_icss_constants('Poppa', 'Smurfette', 'Handy')
+    IcssTestHelper.remove_icss_constants('Poppa', 'Smurfette', 'Handy', 'Hefty')
     class Icss::Poppa < Icss::SmurfRecord
       field :smurfiness, Integer
     end
@@ -15,7 +15,7 @@ describe Icss::Meta::Message do
     end
     class Icss::Handy < Icss::SmurfRecord
       field :smurfiness, Integer
-      field :tool,       Symbol, :default => :pipesmurf
+      field :tool,       Symbol, :default => :smurfwrench
       field :weapon,     Symbol, :default => :smurfthrower
     end
   end
@@ -58,7 +58,37 @@ describe Icss::Meta::Message do
   describe '#to_hash' do
     it 'correctly' do
       smurfy_message.to_hash.should == {
+        :request  => ["poppa"],
+        :response => "smurfette",
+        :doc      => "this is how we dance",
+        :errors   => ["oops"]
       }
     end
+  end
+
+  describe 'reference tracking' do
+    {
+      'simple type' => 'string',
+      'named ref'   => 'poppa',
+      'class'       => Icss::SmurfRecord,
+    }.each do |ref_type, ref|
+      it "is a reference if it receives a #{ref_type}" do
+        smurfy_message_hsh[:request].first[:type] = ref
+        msg = Icss::Meta::Message.receive(smurfy_message_hsh)
+        msg.request.map{|r| r.is_reference? }.should == [true]
+      end
+    end
+    {
+      'record schema' => {:name => 'hefty', :type => :record, :fields => [:name => :strength, :type => :float]},
+      'array schema'  => {:type => :array,  :items  => :poppa},
+      'hash schema'   => {:type => :map,    :values => :smurfette},
+    }.each do |ref_type, ref|
+      it "is not a reference if it receives a string" do
+        smurfy_message_hsh[:request].first[:type] = ref
+        msg = Icss::Meta::Message.receive(smurfy_message_hsh)
+        msg.request.map{|r| r.is_reference? }.should == [nil]
+      end
+    end
+
   end
 end
