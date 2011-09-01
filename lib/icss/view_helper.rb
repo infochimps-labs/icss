@@ -36,6 +36,9 @@ module Icss
       #   the longitude field object in that type.
       # * if no :display_fields is given, return the full (flat) set of fields.
       #
+      
+      #raise @dataset.messages.values.first.response.fields.last.type.items
+      #raise @dataset.messages.values.first.response.
       def display_fields
         df_names = self._doc_hints[:display_fields]
         return fields.map{|f| [f] } if df_names.blank?
@@ -46,6 +49,8 @@ module Icss
           name_segs.map do |name_seg|
             sub_fields << (type.field_named(name_seg) || name_seg)
             type = sub_fields.last.type if sub_fields.last.respond_to?(:type)
+            type = type.items if type.respond_to?(:items)
+            type = type.values if type.respond_to?(:values)
           end
           sub_fields
         end
