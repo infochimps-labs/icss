@@ -1,5 +1,5 @@
 ---
-namespace: util.time
+namespace: st.time_utils
 protocol: chronic
 
 doc: >-

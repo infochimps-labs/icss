@@ -258,6 +258,7 @@ module Icss
         @basename = segs.pop.to_sym
         @namespace = segs.join('.').to_s if segs.present?
       end
+      def receive_basename(s) self.basename = s.to_sym ; end
 
       def fullname
         [namespace, basename].compact_blank.join('.')

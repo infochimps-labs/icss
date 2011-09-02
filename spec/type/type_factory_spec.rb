@@ -8,7 +8,7 @@ require 'icss/type/record_type'       # class methods for a record model: .field
 require 'icss/type/record_model'      # instance methods for a record model
 require 'icss/type/type_factory'      # turn schema into types
 require 'icss/type/structured_schema' # loads array, hash, enum, fixed and simple schema
-require 'icss/receiver_model'
+require 'icss/receiver_model/active_model_shim'
 require 'icss/type/record_schema'     # loads array, hash, enum, fixed and simple schema
 require 'icss/type/record_field'
 

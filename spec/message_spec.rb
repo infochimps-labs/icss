@@ -86,7 +86,7 @@ describe Icss::Meta::Message do
       it "is not a reference if it receives a string" do
         smurfy_message_hsh[:request].first[:type] = ref
         msg = Icss::Meta::Message.receive(smurfy_message_hsh)
-        msg.request.map{|r| r.is_reference? }.should == [nil]
+        msg.request.map{|r| r.is_reference? }.should == [false]
       end
     end
 
