@@ -11,7 +11,7 @@ code_assets:
 
 targets:
   catalog:
-    - name: util_time_chronic_parse
+    - name: st_time_utils_chronic_parse
       title: Utils - Parse Times
       description: An API call to parse human-readable date / time strings
       messages:
@@ -29,7 +29,7 @@ targets:
 types:
     - name:     chronic_parse_params
       type:     record
-      doc: Query API parameters for the /util/time/chronic/parse call
+      doc: Query API parameters for the /st/time_utils/chronic/parse call
       fields:
         - name: time_str
           type: string

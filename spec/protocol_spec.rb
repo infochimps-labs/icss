@@ -8,19 +8,19 @@ describe Icss::Meta::Protocol do
 
   it 'loads cleanly' do
     simple_icss.basename.should == 'chronic'
-    simple_icss.fullname.should == 'util.time.chronic'
+    simple_icss.fullname.should == 'st.time_utils.chronic'
   end
 
   describe '#fullname' do
     it 'has namespace and basename' do
-      simple_icss.fullname.should == 'util.time.chronic'
+      simple_icss.fullname.should == 'st.time_utils.chronic'
       simple_icss.namespace = nil
       simple_icss.fullname.should == 'chronic'
     end
   end
   describe '#path' do
     it 'is a / separated version of the name, with no / at start' do
-      simple_icss.path.should == 'util/time/chronic'
+      simple_icss.path.should == 'st/time_utils/chronic'
     end
   end
   describe '#doc' do
@@ -49,9 +49,9 @@ describe Icss::Meta::Protocol do
     it '#find_message' do
       msg = simple_icss.find_message(:parse)
       msg.should be_a(Icss::Meta::Message) ; msg.basename.should == 'parse'
-      msg = simple_icss.find_message('util.time.parse')
+      msg = simple_icss.find_message('st.time_utils.parse')
       msg.should be_a(Icss::Meta::Message) ; msg.basename.should == 'parse'
-      msg = simple_icss.find_message('util/time/parse')
+      msg = simple_icss.find_message('st/time_utils/parse')
       msg.should be_a(Icss::Meta::Message) ; msg.basename.should == 'parse'
     end
   end
@@ -60,7 +60,7 @@ describe Icss::Meta::Protocol do
     it 'has a hash of targets' do
       simple_icss.targets.keys.should == ['catalog']
       simple_icss.targets['catalog'].first.should be_a(Icss::CatalogTarget)
-      simple_icss.targets['catalog'].first.basename.should == 'util_time_chronic_parse'
+      simple_icss.targets['catalog'].first.basename.should == 'st_time_utils_chronic_parse'
     end
   end
 
@@ -86,17 +86,17 @@ describe Icss::Meta::Protocol do
     it 'roundtrips' do
       hsh = simple_icss.to_hash
       hsh.should == {
-        :namespace=>"util.time", :protocol=>"chronic",
+        :namespace=>"st.time_utils", :protocol=>"chronic",
         :doc=>"A series of calls hooking into the Chronic ruby gem",
         :types => [
-          {:name=>:chronic_parse_params,   :type=>:record, :doc=>"Query API parameters for the /util/time/chronic/parse call",
+          {:name=>:chronic_parse_params,   :type=>:record, :doc=>"Query API parameters for the /st/time_utils/chronic/parse call",
             :fields=>[
               {:name=>:time_str,             :type=>:string, :doc=>"The string to parse."},
               {:name=>:context,              :type=>:symbol, :doc=>"<tt>past</tt> or <tt>future</tt> (defaults to <tt>future</tt>)\nIf your string represents a birthday, you can set <tt>context</tt> to <tt>past</tt> and if an ambiguous string is given, it will assume it is in the past. Specify <tt>future</tt> or omit to set a future context."},
               {:name=>:now,                  :type=>:time,   :doc=>"Time (defaults to Time.now)\nBy setting <tt>:now</tt> to a Time, all computations will be based off of that time instead of Time.now. If set to nil, Chronic will use the current time in UTC. You must supply a date that unambiguously parses with the much-less-generous ruby Time.parse()"},
               {:name=>:ambiguous_time_range, :type=>:int,    :doc=>"Integer or <tt>:none</tt> (defaults to <tt>6</tt> (6am-6pm))\nIf an Integer is given, ambiguous times (like 5:00) will be assumed to be within the range of that time in the AM to that time in the PM. For example, if you set it to <tt>7</tt>, then the parser will look for the time between 7am and 7pm. In the case of 5:00, it would assume that means 5:00pm. If <tt>:none</tt> is given, no assumption will be made, and the first matching instance of that time will be used."}
             ]},
-          {:name=>:chronic_parse_response, :type=>:record, :doc=>"Query API response for the /util/time/chronic/parse call",
+          {:name=>:chronic_parse_response, :type=>:record, :doc=>"Query API response for the /st/time_utils/chronic/parse call",
             :fields=>[
               {:name=>:time,                 :type=>:string, :doc=>"The UTC parsed time, as a \"ISO 8601 combined date time\":http://en.wikipedia.org/wiki/ISO_8601 string."},
               {:name=>:epoch_seconds,        :type=>:int,    :doc=>"The UTC parsed time, as \"epoch seconds\":http://en.wikipedia.org/wiki/Epoch_seconds integer."}
@@ -107,17 +107,17 @@ describe Icss::Meta::Protocol do
             :request  =>[{:name=>:chronic_parse_params, :type=>:chronic_parse_params}],
             :response =>:chronic_parse_response,
             :doc=>"\nChronic is a natural language date/time parser written in pure Ruby. See below\nfor the wide variety of formats Chronic will parse.",
-            # :samples  =>[{
-            #     :request=>[{"time_str"=>"one hour ago", "now"=>"2007-03-16T12:09:08Z"}],
-            #     :response=>{"epoch_seconds"=>1174043348, "time"=>"2007-03-16T11:09:08Z"}, :url=>"?now=2007-03-16T12%3A09%3A08Z&time_str=one%20hour%20ago"},
-            #   {:request=>[{"time_str"=>"Yesterday", "now"=>"5:06:07T2010-08-08Z"}],
-            #     :response=>{"epoch_seconds"=>1281182400, "time"=>"2010-08-07T12:00:00Z"}, :url=>"?now=5%3A06%3A07%202010-08-08&time_str=Yesterday"},
-            #   {:url=>"?time_str=5pm+on+November+4th&context=past"}]
+            :samples  =>[{
+                :request=>[{"time_str"=>"one hour ago", "now"=>"2007-03-16T12:09:08Z"}],
+                :response=>{"epoch_seconds"=>1174043348, "time"=>"2007-03-16T11:09:08Z"}, :url=>"?now=2007-03-16T12%3A09%3A08Z&time_str=one%20hour%20ago"},
+              {:request=>[{"time_str"=>"Yesterday", "now"=>"5:06:07T2010-08-08Z"}],
+                :response=>{"epoch_seconds"=>1281182400, "time"=>"2010-08-07T12:00:00Z"}, :url=>"?now=5%3A06%3A07%202010-08-08&time_str=Yesterday"},
+              {:url=>"?time_str=5pm+on+November+4th&context=past"}]
           },
         },
         :data_assets=>[],
         :code_assets=>[{:location=>"code/chronic_endpoint.rb"}],
-        :targets => {"catalog"=>[{:name=>"util_time_chronic_parse", :title=>"Utils - Parse Times", :description=>"An API call to parse human-readable date / time strings", :tags=>["apiawesome", "ruby", "gems", "chronic", "time", "date", "util", "parse"], :messages=>["parse"]}]},
+        :targets => {"catalog"=>[{:name=>"st_time_utils_chronic_parse", :title=>"Utils - Parse Times", :description=>"An API call to parse human-readable date / time strings", :tags=>["apiawesome", "ruby", "gems", "chronic", "time", "date", "util", "parse"], :messages=>["parse"]}]},
       }
     end
   end

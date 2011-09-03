@@ -13,8 +13,7 @@ describe Icss::Meta::Message do
     class Icss::Smurfette < Icss::SmurfRecord
       field :blondness, Integer
     end
-    class Icss::Handy < Icss::SmurfRecord
-      field :smurfiness, Integer
+    class Icss::Handy < Icss::Poppa
       field :tool,       Symbol, :default => :smurfwrench
       field :weapon,     Symbol, :default => :smurfthrower
     end
@@ -23,16 +22,54 @@ describe Icss::Meta::Message do
   let(:smurfy_message_hsh){
     { :name     => 'dance',
       :doc      => 'this is how we dance',
-      :request  => [{ :name => 'params', :type => Icss::Poppa },],
+      :request  => [{ :name => 'params', :type => Icss::Smurfette },],
       :response => Icss::Smurfette,
       :errors   => ['oops']
     } }
   let(:smurfy_message){ Icss::Meta::Message.receive(smurfy_message_hsh) }
 
-  let(:fun_protocol_hsh){
-    { :protocol => 'smurf.village.fun',
-      :messages => { :dance => smurfy_message_hsh } } }
-  let(:fun_protocol){ Icss::Meta::Protocol.receive(fun_protocol_hsh) }
+  # ===========================================================================
+  #
+  # Message samples
+  #
+  describe Icss::Meta::MessageSample do
+    let(:samp_msg_hsh){
+      {
+        :name         => 'lambada',
+        :request      => [{ :smurfiness => 1, :blondness => 12 }],
+        :response_hsh =>  { :smurfiness => 1, :tool => :pipesmurf, :weapon => :broadsmurf },
+      }
+    }
+    let(:smurfy_message_sample){ Icss::Meta::MessageSample.receive(samp_msg_hsh) }
+
+    let(:message_with_sample){ Icss::Meta::Message.receive( smurfy_message_hsh.merge(:samples => [samp_msg_hsh])) }
+    it 'is created by its message' do
+      message_with_sample.should be_a(Icss::Meta::Message)
+      message_with_sample.samples.map(&:class).should == [Icss::Meta::MessageSample]
+    end
+    it 'knows its message' do
+      message_with_sample.samples.first.message.should == message_with_sample
+    end
+
+    describe 'basic behavior' do
+      subject{ smurfy_message_sample }
+      its('name'){         should == 'lambada' }
+      its('request'){      should == [{ :smurfiness => 1, :blondness => 12 }] }
+      its('response_hsh'){ should == { :smurfiness => 1, :tool => :pipesmurf, :weapon => :broadsmurf } }
+    end
+
+    # context 'loading from API'  do
+    #   it 'constructs a URL'
+    #   it 'loads'
+    #   it 'accepts a server'
+    # end
+
+  end
+
+  # ===========================================================================
+  #
+  # Message
+  #
 
   describe 'basic behavior' do
     subject{ smurfy_message }
@@ -46,6 +83,12 @@ describe Icss::Meta::Message do
 
   describe 'knows its protocol' do
     let(:dance){ fun_protocol.messages[:dance] }
+
+  let(:fun_protocol_hsh){
+    { :protocol => 'smurf.village.fun',
+      :messages => { :dance => smurfy_message_hsh } } }
+  let(:fun_protocol){ Icss::Meta::Protocol.receive(fun_protocol_hsh) }
+    #
     subject{ dance }
     it{ should be_a(Icss::Meta::Message) }
     it 'knows its protocol' do
@@ -91,4 +134,5 @@ describe Icss::Meta::Message do
     end
 
   end
+
 end

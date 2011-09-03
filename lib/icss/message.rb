@@ -47,6 +47,10 @@ module Icss
         # (self.samples ||= []).each{|sample| sample.message = self }
       end
 
+      after_receive(:parent_my_samples) do |hsh|
+        (self.samples||=[]).each{|samp| samp.message = self }
+      end
+
       def fullname
         "#{protocol.fullname}.#{basename}"
       end

@@ -48,14 +48,14 @@ describe Icss::Meta::TypeFactory do
       { 'type' => :array,  'items'  => :string  }                             => [Icss::Meta::ArraySchema, 'Icss::ArrayOfString'],
       { 'type' => :map,    'values' => :string }                              => [Icss::Meta::HashSchema, 'Icss::HashOfString'],
       { 'type' => :map,    'values' => {'type' => :array, 'items' => :int } } => [Icss::Meta::HashSchema, 'Icss::HashOfArrayOfInteger'],
-      { 'name'   => :Kind, 'type' => :enum,   'symbols' => [:A, :B, :C]}      => [Icss::Meta::EnumSchema, 'Icss::Kind'],
-      { 'name'   => :MD5,  'type' => :fixed,  'size' => 16}                   => [Icss::Meta::FixedSchema, 'Icss::Md5'],
-      { 'name'   => :bob,  'type' => :record,    }                            => [Icss::Meta::RecordSchema, 'Icss::Bob'],
-      { 'name'   => :node, 'type' => :record, 'fields' => [
+      { 'name'   => 'Kind', 'type' => :enum,   'symbols' => [:A, :B, :C]}      => [Icss::Meta::EnumSchema, 'Icss::Kind'],
+      { 'name'   => 'MD5',  'type' => :fixed,  'size' => 16}                   => [Icss::Meta::FixedSchema, 'Icss::Md5'],
+      { 'name'   => 'bob',  'type' => :record,    }                            => [Icss::Meta::RecordSchema, 'Icss::Bob'],
+      { 'name'   => 'node', 'type' => :record, 'fields' => [
           { 'name' => :label,    'type' => :string},
           { 'name' => :children, 'type' => {'type' => :array, 'items' => :string}}]} => [Icss::Meta::RecordSchema, 'Icss::Node'],
       { 'type' => :map, 'values' => {
-          'name' => :Foo, 'type' => :record, 'fields' => [{'name' => :label, 'type' => :string}]} } => [Icss::Meta::HashSchema, 'Icss::HashOfFoo' ],
+          'name' => 'Foo', 'type' => :record, 'fields' => [{'name' => :label, 'type' => :string}]} } => [Icss::Meta::HashSchema, 'Icss::HashOfFoo' ],
     },
     :union_type => {
       # [ 'boolean', 'double', {'type' => 'array', 'items' => 'bytes'}] => nil,

@@ -2,6 +2,7 @@ require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 require 'yaml'
 require 'gorillib/object/try_dup'
 require 'icss/receiver_model/acts_as_hash'
+require 'icss/receiver_model/active_model_shim'
 require 'icss/type'                   #
 require 'icss/type/simple_types'      # Boolean, Integer, ...
 require 'icss/type/named_type'        # class methods for a named type: .metamodel .doc, .fullname, &c
@@ -9,7 +10,6 @@ require 'icss/type/record_type'       # class methods for a record model: .field
 require 'icss/type/record_model'      # instance methods for a record model
 require 'icss/type/type_factory'      # factory for instances based on type
 require 'icss/type/structured_schema' # generate type from array, hash, &c schema
-require 'icss/receiver_model'
 require 'icss/type/record_schema'
 require 'icss/type/record_field'
 
@@ -56,20 +56,20 @@ describe Icss::Meta::RecordSchema do
 
     it 'has schema_writer' do
       @schema_writer.type.should  == :record
-      @schema_writer.fullname.should == :'business.restaurant'
+      @schema_writer.fullname.should == 'business.restaurant'
       @schema_writer.fields.length.should == 1
     end
 
     it 'creates a named class' do
-      @model_klass.name.to_s.should == 'Icss::Business::Restaurant'
-      Icss::Business::Restaurant.fullname.should == :"business.restaurant"
-      Icss::Business::Restaurant.doc.should == "y'know, for food and stuff"
+      @model_klass.name.to_s.should              == 'Icss::Business::Restaurant'
+      Icss::Business::Restaurant.fullname.should == "business.restaurant"
+      Icss::Business::Restaurant.doc.should      == "y'know, for food and stuff"
     end
 
     it 'has accessors and receivers for the fields' do
       blank_model = Class.new{ include Icss::Meta::RecordModel }
       (@model_klass.public_methods - blank_model.public_methods).sort.should == [
-        :_domain_id_field, :_schema, :is_a
+        :_domain_id_field, :_schema, :is_a, :_doc_hints,
       ].sort.uniq
       (@model_klass.public_instance_methods - Object.public_instance_methods).sort.should == [
         :attr_set?, :menu, :menu=, :receive!, :receive_menu

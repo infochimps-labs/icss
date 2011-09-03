@@ -24,7 +24,7 @@ module Icss
       field :receiver,   Symbol
       field :validates,  Hash
       rcvr_remaining :_extra_params
-      field :parent,     Object
+      attr_accessor :parent
 
       # FIXME: cruft
       field :indexed_on, Symbol

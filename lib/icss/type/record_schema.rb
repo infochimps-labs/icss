@@ -15,7 +15,7 @@ module Icss
 
       def to_hash
         {
-          :name      => fullname,
+          :name      => basename,
           :namespace => namespace,
           :type      => type,
           :is_a      => (respond_to?(:is_a) ? is_a : []),
