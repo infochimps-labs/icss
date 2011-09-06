@@ -8,6 +8,7 @@ module Icss
   module Language ; module Corpora ; module WordFreq ; end ; end ; end
   module Sports ; module Stats ; module Baseball ; end ; module Vargatron ; end ; end ; end
   module Social  ; module Network ; module Tw ; end ; module Qwerly ; end ; end ;  end
+  module Soc  ; module Net ; module Tw ; end ; end ;  end
   module Meta ; module Req ; class Geolocator ; end  ; end ; end
   module St ; class Url < String ; end ; end
   module Geo ; module Location ; end ; end
