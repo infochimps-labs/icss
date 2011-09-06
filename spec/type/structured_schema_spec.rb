@@ -39,8 +39,8 @@ describe 'complex types' do
       bob.metamodel.should == Icss::Meta::St::BobModel
     end
     it 'has doc and all that' do
-      bob.fullname.should == :'st.bob'
-      bob.basename.should == 'bob'
+      bob.fullname.should == 'st.bob'
+      bob.basename.should == :'bob'
       bob.doc.should      == 'hi, bob'
       bob.is_a.should     == [Binary]
     end

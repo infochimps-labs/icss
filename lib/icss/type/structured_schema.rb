@@ -5,7 +5,7 @@ module Icss
       include Icss::Meta::RecordModel
       include Icss::ReceiverModel::ActsAsHash
       include Gorillib::Hashlike
-      field     :fullname, Symbol, :required => true
+      field     :fullname, String, :required => true
       rcvr_alias :name, :fullname
       #
       class_attribute :klass_metatypes   ; self.klass_metatypes   = []
@@ -144,10 +144,7 @@ module Icss
         val
       end
       def to_hash
-        hsh = super
-        hsh[:items] = Type.schema_for(items)
-        hsh.delete(:name)
-        hsh
+        { :type => :array, :items => Type.schema_for(items) }
       end
       def type() :array ; end
     end
@@ -184,10 +181,7 @@ module Icss
         val
       end
       def to_hash
-        hsh = super
-        hsh[:values] = Type.schema_for(values)
-        hsh.delete(:name)
-        hsh
+        { :type => :map, :values => Type.schema_for(values) }
       end
       def type() :map ; end
     end # HashSchema
@@ -258,6 +252,7 @@ module Icss
         @basename = segs.pop.to_sym
         @namespace = segs.join('.').to_s if segs.present?
       end
+      def receive_basename(s) self.basename = s.to_sym ; end
 
       def fullname
         [namespace, basename].compact_blank.join('.')

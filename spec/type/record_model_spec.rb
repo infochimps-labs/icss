@@ -39,8 +39,8 @@ describe Icss::Meta::RecordModel do
     end
   end
 
-  let(:poppa          ){ Icss::Poppa.new() }
-  let(:smurfette      ){ Icss::Smurfette.new() }
+  let(:poppa     ){ Icss::Poppa.new() }
+  let(:smurfette ){ Icss::Smurfette.new() }
 
   context '#receive!' do
     it 'sets values' do
@@ -132,7 +132,7 @@ describe Icss::Meta::RecordModel do
 
   context ':default =>' do
     before do
-      Icss::Hefty.field :tool,    Symbol, :default => :pipesmurf
+      Icss::Hefty.field :tool,    Symbol, :default => :smurfwrench
       Icss::Hefty.field :weapon,  Symbol, :default => :smurfthrower
       Icss::Hefty.field :no_default, Symbol
     end

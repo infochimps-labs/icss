@@ -46,7 +46,7 @@ module Icss
         if respond_to?(:_schema) then return _schema.to_hash ; end
         {
           :name      => fullname,
-          :namespace => namespace,
+          # :namespace => namespace,
           :doc       => doc,
         }.compact_blank
       end

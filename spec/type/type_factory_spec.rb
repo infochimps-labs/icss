@@ -8,7 +8,7 @@ require 'icss/type/record_type'       # class methods for a record model: .field
 require 'icss/type/record_model'      # instance methods for a record model
 require 'icss/type/type_factory'      # turn schema into types
 require 'icss/type/structured_schema' # loads array, hash, enum, fixed and simple schema
-require 'icss/receiver_model'
+require 'icss/receiver_model/active_model_shim'
 require 'icss/type/record_schema'     # loads array, hash, enum, fixed and simple schema
 require 'icss/type/record_field'
 
@@ -48,14 +48,14 @@ describe Icss::Meta::TypeFactory do
       { 'type' => :array,  'items'  => :string  }                             => [Icss::Meta::ArraySchema, 'Icss::ArrayOfString'],
       { 'type' => :map,    'values' => :string }                              => [Icss::Meta::HashSchema, 'Icss::HashOfString'],
       { 'type' => :map,    'values' => {'type' => :array, 'items' => :int } } => [Icss::Meta::HashSchema, 'Icss::HashOfArrayOfInteger'],
-      { 'name'   => :Kind, 'type' => :enum,   'symbols' => [:A, :B, :C]}      => [Icss::Meta::EnumSchema, 'Icss::Kind'],
-      { 'name'   => :MD5,  'type' => :fixed,  'size' => 16}                   => [Icss::Meta::FixedSchema, 'Icss::Md5'],
-      { 'name'   => :bob,  'type' => :record,    }                            => [Icss::Meta::RecordSchema, 'Icss::Bob'],
-      { 'name'   => :node, 'type' => :record, 'fields' => [
+      { 'name'   => 'Kind', 'type' => :enum,   'symbols' => [:A, :B, :C]}      => [Icss::Meta::EnumSchema, 'Icss::Kind'],
+      { 'name'   => 'MD5',  'type' => :fixed,  'size' => 16}                   => [Icss::Meta::FixedSchema, 'Icss::Md5'],
+      { 'name'   => 'bob',  'type' => :record,    }                            => [Icss::Meta::RecordSchema, 'Icss::Bob'],
+      { 'name'   => 'node', 'type' => :record, 'fields' => [
           { 'name' => :label,    'type' => :string},
           { 'name' => :children, 'type' => {'type' => :array, 'items' => :string}}]} => [Icss::Meta::RecordSchema, 'Icss::Node'],
       { 'type' => :map, 'values' => {
-          'name' => :Foo, 'type' => :record, 'fields' => [{'name' => :label, 'type' => :string}]} } => [Icss::Meta::HashSchema, 'Icss::HashOfFoo' ],
+          'name' => 'Foo', 'type' => :record, 'fields' => [{'name' => :label, 'type' => :string}]} } => [Icss::Meta::HashSchema, 'Icss::HashOfFoo' ],
     },
     :union_type => {
       # [ 'boolean', 'double', {'type' => 'array', 'items' => 'bytes'}] => nil,
