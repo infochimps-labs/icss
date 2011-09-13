@@ -90,7 +90,7 @@ module Icss
       end
       after_receive(:warn_if_invalid) do |hsh|
         warn errors.inspect unless valid?
-        warn "Extra params #{_extra_params.keys.inspect} given to #{self.inspect}" if _extra_params.present?
+        warn "Extra params #{_extra_params.keys.inspect} given to #{self.fullname}" if _extra_params.present?
       end
 
       # String: namespace.basename
