@@ -6,6 +6,8 @@ gem   'activemodel',   "~> 3.0.9"
 gem   'gorillib',      :git => 'https://github.com/infochimps/gorillib.git'
 # gem 'gorillib',      "~> 0.1.6"
 
+gem   'addressable',   "~> 2.2"
+
 group                  :development do
   gem 'awesome_print', "~> 0.4.0"
   gem 'rspec',         "~> 2.3.0"

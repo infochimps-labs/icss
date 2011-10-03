@@ -99,7 +99,7 @@ module Icss
 end
 
 class Icss::Meta::Message
-  field :samples, Array, :items => Icss::Meta::MessageSample, :default => []
+  field :samples, Array, :items => Icss::Meta::MessageSample, :default => []  
 end
 
 class Icss::Meta::Protocol

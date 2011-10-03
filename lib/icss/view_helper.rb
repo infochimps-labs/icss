@@ -13,6 +13,12 @@ module Icss
         # all calls accept xml or json
         "http://api.infochimps.com/#{path}?#{query_string}"
       end
+      
+      def sample_field_value(field)
+        field_name = ((field.respond_to?(:name) && field.name) || field).to_s
+        
+        value =  first_sample_request_param[field_name]  # sample value for field
+      end
 
     end
 
@@ -36,9 +42,7 @@ module Icss
       #   the longitude field object in that type.
       # * if no :display_fields is given, return the full (flat) set of fields.
       #
-      
-      #raise @dataset.messages.values.first.response.fields.last.type.items
-      #raise @dataset.messages.values.first.response.
+
       def display_fields
         df_names = self._doc_hints[:display_fields]
         return fields.map{|f| [f] } if df_names.blank?
