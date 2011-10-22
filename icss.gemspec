@@ -13,11 +13,11 @@ Gem::Specification.new do |s|
   s.description = "Infochimps Simple Schema library: an avro-compatible data description standard. ICSS completely describes a collection of data (and associated assets) in a way that is expressive, scalable and sufficient to drive remarkably complex downstream processes."
   s.email = "coders@infochimps.com"
   s.extra_rdoc_files = [
+    "LICENSE.textile",
     "README.md"
   ]
   s.files = [
     ".document",
-    ".gitignore",
     ".rspec",
     ".watchr",
     "CHANGELOG.md",
