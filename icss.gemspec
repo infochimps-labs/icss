@@ -50,7 +50,7 @@ Gem::Specification.new do |s|
     "lib/icss/core_types.rb",
     "lib/icss/error.rb",
     "lib/icss/message.rb",
-    "lib/icss/message/sample_message_call.rb",
+    "lib/icss/message/message_sample.rb",
     "lib/icss/protocol.rb",
     "lib/icss/protocol/code_asset.rb",
     "lib/icss/protocol/data_asset.rb",
@@ -176,4 +176,3 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<rcov>, [">= 0"])
   end
 end
-
