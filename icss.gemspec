@@ -4,20 +4,20 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{icss}
-  s.version = "0.2.0"
+  s.name = "icss"
+  s.version = "0.3.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = [%q{Philip (flip) Kromer for Infochimps}]
-  s.date = %q{2011-08-22}
-  s.description = %q{Infochimps Stupid Schema library: an avro-compatible data description standard. ICSS completely describes a collection of data (and associated assets) in a way that is expressive, scalable and sufficient to drive remarkably complex downstream processes.}
-  s.email = %q{coders@infochimps.com}
+  s.authors = ["Philip (flip) Kromer for Infochimps"]
+  s.date = "2011-10-22"
+  s.description = "Infochimps Stupid Schema library: an avro-compatible data description standard. ICSS completely describes a collection of data (and associated assets) in a way that is expressive, scalable and sufficient to drive remarkably complex downstream processes."
+  s.email = "coders@infochimps.com"
   s.extra_rdoc_files = [
-    "LICENSE.textile",
     "README.md"
   ]
   s.files = [
     ".document",
+    ".gitignore",
     ".rspec",
     ".watchr",
     "CHANGELOG.md",
@@ -62,6 +62,7 @@ Gem::Specification.new do |s|
     "lib/icss/receiver_model/acts_as_tuple.rb",
     "lib/icss/receiver_model/locale/en.yml",
     "lib/icss/receiver_model/to_geo_json.rb",
+    "lib/icss/receiver_model/tree_merge.rb",
     "lib/icss/receiver_model/validations.rb",
     "lib/icss/serialization.rb",
     "lib/icss/serialization/zaml.rb",
@@ -80,10 +81,10 @@ Gem::Specification.new do |s|
     "notes/named_array.md",
     "notes/on_include_vs_extend_etc.rb",
     "notes/technical_details.md",
-    "overlay.rb",
     "spec/core_types_spec.rb",
     "spec/fixtures/zaml_complex_hash.yaml",
     "spec/icss_spec.rb",
+    "spec/message/message_sample_spec.rb",
     "spec/message_spec.rb",
     "spec/protocol/protocol_validations_spec.rb",
     "spec/protocol_spec.rb",
@@ -106,36 +107,11 @@ Gem::Specification.new do |s|
     "spec/type/union_schema_spec.rb",
     "spec/type_spec.rb"
   ]
-  s.homepage = %q{http://github.com/mrflip/icss}
-  s.licenses = [%q{MIT}]
-  s.require_paths = [%q{lib}]
-  s.rubygems_version = %q{1.8.6}
-  s.summary = %q{Infochimps Stupid Schema library: an avro-compatible data description standard. ICSS completely describes a collection of data (and associated assets) in a way that is expressive, scalable and sufficient to drive remarkably complex downstream processes.}
-  s.test_files = [
-    "spec/core_types_spec.rb",
-    "spec/icss_spec.rb",
-    "spec/message_spec.rb",
-    "spec/protocol/protocol_validations_spec.rb",
-    "spec/protocol_spec.rb",
-    "spec/receiver_model_spec.rb",
-    "spec/serialization/zaml_spec.rb",
-    "spec/serialization/zaml_test.rb",
-    "spec/serialization_spec.rb",
-    "spec/spec_helper.rb",
-    "spec/support/icss_test_helper.rb",
-    "spec/support/load_example_protocols.rb",
-    "spec/type/base_type_spec.rb",
-    "spec/type/named_type_spec.rb",
-    "spec/type/record_field_spec.rb",
-    "spec/type/record_model_spec.rb",
-    "spec/type/record_schema_spec.rb",
-    "spec/type/record_type_spec.rb",
-    "spec/type/simple_types_spec.rb",
-    "spec/type/structured_schema_spec.rb",
-    "spec/type/type_factory_spec.rb",
-    "spec/type/union_schema_spec.rb",
-    "spec/type_spec.rb"
-  ]
+  s.homepage = "http://github.com/mrflip/icss"
+  s.licenses = ["MIT"]
+  s.require_paths = ["lib"]
+  s.rubygems_version = "1.8.10"
+  s.summary = "Infochimps Stupid Schema library: an avro-compatible data description standard. ICSS completely describes a collection of data (and associated assets) in a way that is expressive, scalable and sufficient to drive remarkably complex downstream processes."
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
@@ -143,36 +119,37 @@ Gem::Specification.new do |s|
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<json>, [">= 0"])
       s.add_runtime_dependency(%q<activemodel>, ["~> 3.0.9"])
-      s.add_dependency(%q<addressable>, ["~> 2.2"])
       s.add_runtime_dependency(%q<gorillib>, [">= 0"])
+      s.add_runtime_dependency(%q<addressable>, ["~> 2.2"])
       s.add_development_dependency(%q<awesome_print>, ["~> 0.4.0"])
       s.add_development_dependency(%q<rspec>, ["~> 2.3.0"])
       s.add_development_dependency(%q<yard>, ["~> 0.6.0"])
-      s.add_development_dependency(%q<bundler>, ["~> 1.0.0"])
-      s.add_development_dependency(%q<jeweler>, ["~> 1.5.2"])
+      s.add_development_dependency(%q<bundler>, ["~> 1"])
+      s.add_development_dependency(%q<jeweler>, ["~> 1.6.4"])
       s.add_development_dependency(%q<rcov>, [">= 0"])
     else
       s.add_dependency(%q<json>, [">= 0"])
       s.add_dependency(%q<activemodel>, ["~> 3.0.9"])
-      s.add_dependency(%q<addressable>, ["~> 2.2"])
       s.add_dependency(%q<gorillib>, [">= 0"])
+      s.add_dependency(%q<addressable>, ["~> 2.2"])
       s.add_dependency(%q<awesome_print>, ["~> 0.4.0"])
       s.add_dependency(%q<rspec>, ["~> 2.3.0"])
       s.add_dependency(%q<yard>, ["~> 0.6.0"])
-      s.add_dependency(%q<bundler>, ["~> 1.0.0"])
-      s.add_dependency(%q<jeweler>, ["~> 1.5.2"])
+      s.add_dependency(%q<bundler>, ["~> 1"])
+      s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
       s.add_dependency(%q<rcov>, [">= 0"])
     end
   else
     s.add_dependency(%q<json>, [">= 0"])
     s.add_dependency(%q<activemodel>, ["~> 3.0.9"])
-    s.add_dependency(%q<addressable>, ["~> 2.2"])
     s.add_dependency(%q<gorillib>, [">= 0"])
+    s.add_dependency(%q<addressable>, ["~> 2.2"])
     s.add_dependency(%q<awesome_print>, ["~> 0.4.0"])
     s.add_dependency(%q<rspec>, ["~> 2.3.0"])
     s.add_dependency(%q<yard>, ["~> 0.6.0"])
-    s.add_dependency(%q<bundler>, ["~> 1.0.0"])
-    s.add_dependency(%q<jeweler>, ["~> 1.5.2"])
+    s.add_dependency(%q<bundler>, ["~> 1"])
+    s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
     s.add_dependency(%q<rcov>, [">= 0"])
   end
 end
+
