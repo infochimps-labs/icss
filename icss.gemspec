@@ -119,8 +119,9 @@ Gem::Specification.new do |s|
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<json>, [">= 0"])
       s.add_runtime_dependency(%q<activemodel>, ["~> 3.0.9"])
-      s.add_runtime_dependency(%q<gorillib>, [">= 0"])
       s.add_runtime_dependency(%q<addressable>, ["~> 2.2"])
+      s.add_runtime_dependency(%q<configliere>, ["~> 0.4.8"])
+      s.add_runtime_dependency(%q<gorillib>, [">= 0"])
       s.add_development_dependency(%q<awesome_print>, ["~> 0.4.0"])
       s.add_development_dependency(%q<rspec>, ["~> 2.3.0"])
       s.add_development_dependency(%q<yard>, ["~> 0.6.0"])
@@ -130,8 +131,9 @@ Gem::Specification.new do |s|
     else
       s.add_dependency(%q<json>, [">= 0"])
       s.add_dependency(%q<activemodel>, ["~> 3.0.9"])
-      s.add_dependency(%q<gorillib>, [">= 0"])
       s.add_dependency(%q<addressable>, ["~> 2.2"])
+      s.add_dependency(%q<configliere>, ["~> 0.4.8"])
+      s.add_dependency(%q<gorillib>, [">= 0"])
       s.add_dependency(%q<awesome_print>, ["~> 0.4.0"])
       s.add_dependency(%q<rspec>, ["~> 2.3.0"])
       s.add_dependency(%q<yard>, ["~> 0.6.0"])
@@ -142,8 +144,9 @@ Gem::Specification.new do |s|
   else
     s.add_dependency(%q<json>, [">= 0"])
     s.add_dependency(%q<activemodel>, ["~> 3.0.9"])
-    s.add_dependency(%q<gorillib>, [">= 0"])
     s.add_dependency(%q<addressable>, ["~> 2.2"])
+    s.add_dependency(%q<configliere>, ["~> 0.4.8"])
+    s.add_dependency(%q<gorillib>, [">= 0"])
     s.add_dependency(%q<awesome_print>, ["~> 0.4.0"])
     s.add_dependency(%q<rspec>, ["~> 2.3.0"])
     s.add_dependency(%q<yard>, ["~> 0.6.0"])
