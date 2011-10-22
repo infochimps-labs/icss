@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Philip (flip) Kromer for Infochimps"]
   s.date = "2011-10-22"
-  s.description = "Infochimps Stupid Schema library: an avro-compatible data description standard. ICSS completely describes a collection of data (and associated assets) in a way that is expressive, scalable and sufficient to drive remarkably complex downstream processes."
+  s.description = "Infochimps Simple Schema library: an avro-compatible data description standard. ICSS completely describes a collection of data (and associated assets) in a way that is expressive, scalable and sufficient to drive remarkably complex downstream processes."
   s.email = "coders@infochimps.com"
   s.extra_rdoc_files = [
     "README.md"
@@ -111,7 +111,7 @@ Gem::Specification.new do |s|
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
   s.rubygems_version = "1.8.10"
-  s.summary = "Infochimps Stupid Schema library: an avro-compatible data description standard. ICSS completely describes a collection of data (and associated assets) in a way that is expressive, scalable and sufficient to drive remarkably complex downstream processes."
+  s.summary = "Infochimps Simple Schema library: an avro-compatible data description standard. ICSS completely describes a collection of data (and associated assets) in a way that is expressive, scalable and sufficient to drive remarkably complex downstream processes."
 
   if s.respond_to? :specification_version then
     s.specification_version = 3

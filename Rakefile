@@ -15,14 +15,10 @@ Jeweler::Tasks.new do |gem|
   gem.name = "icss"
   gem.homepage = "http://github.com/mrflip/icss"
   gem.license = "MIT"
-  gem.summary = %Q{Infochimps Stupid Schema library: an avro-compatible data description standard. ICSS completely describes a collection of data (and associated assets) in a way that is expressive, scalable and sufficient to drive remarkably complex downstream processes.}
-  gem.description = %Q{Infochimps Stupid Schema library: an avro-compatible data description standard. ICSS completely describes a collection of data (and associated assets) in a way that is expressive, scalable and sufficient to drive remarkably complex downstream processes.}
+  gem.summary = %Q{Infochimps Simple Schema library: an avro-compatible data description standard. ICSS completely describes a collection of data (and associated assets) in a way that is expressive, scalable and sufficient to drive remarkably complex downstream processes.}
+  gem.description = %Q{Infochimps Simple Schema library: an avro-compatible data description standard. ICSS completely describes a collection of data (and associated assets) in a way that is expressive, scalable and sufficient to drive remarkably complex downstream processes.}
   gem.email = "coders@infochimps.com"
   gem.authors = ["Philip (flip) Kromer for Infochimps"]
-  # Include your dependencies below. Runtime dependencies are required when using your gem,
-  # and development dependencies are only needed for development (ie running rake tasks, tests, etc)
-  #  gem.add_runtime_dependency 'jabber4r', '> 0.1'
-  #  gem.add_development_dependency 'rspec', '> 1.2.3'
 end
 Jeweler::RubygemsDotOrgTasks.new
 
