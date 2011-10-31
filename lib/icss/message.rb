@@ -88,7 +88,8 @@ module Icss
             Icss::Meta::Req::PointWithRadiusGeolocator,
             Icss::Meta::Req::AddressTextGeolocator,
             Icss::Meta::Req::TileXYZoomGeolocator,
-            Icss::Meta::Req::BoundingBoxGeolocator
+            Icss::Meta::Req::BoundingBoxGeolocator,
+            Icss::Meta::Req::IpAddressGeolocator
           ],
         }
       end
