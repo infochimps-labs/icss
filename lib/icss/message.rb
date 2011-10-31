@@ -29,7 +29,6 @@ module Icss
       field :response, Icss::Meta::TypeFactory
       field :errors,   Object # FIXME: Icss::Meta::UnionType, :default => []
       # this is defined in sample_message_call.rb -- since we don't do referenced types yet
-      # field :samples,  Array, :items => Icss::Meta::MessageSample, :default => []
 
       attr_accessor :protocol
 
@@ -40,14 +39,10 @@ module Icss
       after_receive(:are_my_types_references) do |hsh|
         # track recursion of type references
         @response_referenceness = ! hsh[:response].respond_to?(:each_pair)
-
-        # FIXME: !!! reenable
-
-        # # tie each sample back to this, its parent message
-        # (self.samples ||= []).each{|sample| sample.message = self }
       end
 
       after_receive(:parent_my_samples) do |hsh|
+        # # tie each sample back to this, its parent message
         (self.samples||=[]).each{|samp| samp.message = self }
       end
 
@@ -106,7 +101,7 @@ module Icss
           :response => summary_of_response_attr,
           :doc      => doc,
           :errors   => (errors.blank? ? nil : errors),
-          # :samples  => samples.map(&:to_hash).map(&:compact_blank),
+          :samples  => samples.map(&:to_hash).map(&:compact_blank),
           :initial_free_qty => initial_free_qty,
           :price_per_k_in_cents => price_per_k_in_cents,
         }.compact
@@ -125,7 +120,8 @@ module Icss
         request.map do |req|
           case
           when req.blank?        then req
-          when req.is_reference? then req.type.fullname
+          # Is there a case where this needs to be a string and not a hash?
+          # when req.is_reference? then req.type.fullname
           else                        req.to_schema.compact_blank
           end
         end

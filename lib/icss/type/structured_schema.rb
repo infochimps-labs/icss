@@ -5,7 +5,10 @@ module Icss
       include Icss::Meta::RecordModel
       include Icss::ReceiverModel::ActsAsHash
       include Gorillib::Hashlike
-      field     :fullname, String, :required => true
+      field     :fullname, String,  :required => true
+      field     :is_core,  Boolean, :default => false
+      attr_accessor :is_core
+
       rcvr_alias :name, :fullname
       #
       class_attribute :klass_metatypes   ; self.klass_metatypes   = []
@@ -14,8 +17,21 @@ module Icss
       after_receive(:verify_name) do |hsh|
         warn "** Missing name for #{self}" unless self.fullname.present?
       end
+      
       after_receive(:register) do |hsh|
-        Icss::Meta::Type.registry[fullname] = self if fullname.present?
+        begin
+          Icss::Meta::Type.register(self.model_klass)
+        rescue
+          # If all after_receivers haven't been called, model_klass may error.
+          # Adding another after_receiver here, adds it to the end of the list
+          self.class.after_receive(:register_again) do
+            Icss::Meta::Type.register(self.model_klass)
+          end
+        end
+      end
+      
+      def is_core?
+        !!is_core
       end
 
       def attrs_to_inscribe
@@ -28,7 +44,7 @@ module Icss
         model_type = @model_klass.singleton_class
         # inscribe attributes
         attrs_to_inscribe.each do |attr|
-          val = self.send(attr)
+          val = self.send(attr) 
           model_type.class_eval{ define_method(attr){ val } }
         end
         schema_writer = self
@@ -49,6 +65,7 @@ module Icss
         hsh = super
         hsh[:type] = type
         hsh[:name] = hsh.delete(:fullname)
+        hsh.delete(:is_core)
         hsh
       end
     end

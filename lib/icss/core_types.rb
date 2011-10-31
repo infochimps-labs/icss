@@ -14,12 +14,6 @@ module Icss
   module Geo ; module Location ; end ; end
 end
 
-Icss::Meta::Protocol.load_from_catalog('core/thing')
-Icss::Meta::Protocol.load_from_catalog('core/*')
-Icss::Meta::Protocol.load_from_catalog('core/geo/place')
-# Icss::Meta::Protocol.load_from_catalog('core/**/*')
-Icss::Meta::Protocol.load_from_catalog('datasets/encyclopedic/wikipedia/wikipedia_article')
-
 unless defined?(Icss::Geo::Place)
   warn "Could not load core type 'place'. Make sure the catalog (#{Settings.catalog_root}) is where you expect it to be."
 end

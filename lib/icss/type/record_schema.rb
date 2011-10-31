@@ -7,10 +7,11 @@ module Icss
       include Gorillib::Hashlike
       include Gorillib::Hashlike::Keys
       #
-      field :_domain_id_field, String, :default => 'name'
-      field :_doc_hints,       Hash,  :default => {}
-      field :fields,           Array, :default => []
+      field :_domain_id_field, String,  :default => 'name'
+      field :_doc_hints,       Hash,    :default => {}
+      field :fields,           Array,   :default => []
       #
+      
       def type() :record ; end
 
       def to_hash

@@ -303,6 +303,7 @@ module Icss
         end
         # super(field_name) if defined?(super)
       end
+      
 
       def set_field_default(field_name, default_val=nil, &blk)
         blk = default_val if default_val.is_a?(Proc)

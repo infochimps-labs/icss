@@ -1,9 +1,12 @@
-module Icss
-
+module Icss  
   module Meta
     module Type
-      def self.registry
-        @registry ||= {}
+      include Icss::ReceiverModel::ActsAsCatalog
+      def self.catalog_sections
+        ::Icss::Meta::Protocol.catalog_sections
+      end
+      def self.receive(hsh)
+        ::Icss::Meta::Protocol.receive(hsh)
       end
     end
   end

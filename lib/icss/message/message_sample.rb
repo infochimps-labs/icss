@@ -14,6 +14,7 @@ module Icss
       field         :doc,          String
       field         :request,      Array, :default => []
       field         :response_hsh, Hash  # a hash suitable for populating the message's @response@ type
+      field         :response,     Hash
       attr_accessor :raw_response         # the raw http response from fetching
       field         :error,        String
       field         :url,          String

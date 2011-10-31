@@ -50,6 +50,10 @@ module Icss
           :doc       => doc,
         }.compact_blank
       end
+      
+      def is_core?
+        respond_to?(:_schema) && _schema.is_core?
+      end
 
       # ---------------------------------------------------------------------------
       #
@@ -116,9 +120,11 @@ module Icss
         scope_names   = scope_names_for(fullname)
         klass_name    = scope_names.pop
         parent_module = get_nested_module(%w[Icss] + scope_names)
-        #
-        if parent_module.const_defined?(klass_name)
-          klass = parent_module.const_get(klass_name)
+        
+        # const_defined?(klass, inherit), const_get(klass, inherit)
+        # inherit = false makes these methods be scoped to parent_module instead of universally
+        if parent_module.const_defined?(klass_name, false)
+          klass = parent_module.const_get(klass_name, false)
           # #{superklass.object_id}: #{klass.ancestors.map{|o| [o, o.object_id] }}
           unless klass.ancestors.include?(superklass)
             warn "+++++++++++++++++++++++++++++++ Superclass and is_a? mismatch for #{klass.inspect} (doesn't inherit from #{superklass.inspect})"
@@ -136,7 +142,7 @@ module Icss
       # '::Icss::Meta' and creating all necessary parents along the way.
       # @example
       #   Icss::Meta::TypeFactory.get_meta_module(["This", "That"], "TheOther")
-      #   # Icss::Meta::This::That::TheOtherType
+      #   # Icss::Meta::This::That::TheOtherModel
       def self.get_meta_module(fullname)
         fullname = Icss::Meta::Type.fullname_for(fullname)
         return Module.new if fullname.nil?
@@ -161,8 +167,11 @@ module Icss
       #   # This::That::TheOther
       def self.get_nested_module(scope_names)
         scope_names.inject(Object) do |parent_module, module_name|
-          if parent_module.const_defined?(module_name)
-            parent_module.const_get(module_name)
+          
+          # const_defined?(klass, inherit), const_get(klass, inherit)
+          # inherit = false makes these methods be scoped to parent_module instead of universally
+          if parent_module.const_defined?(module_name, false)
+            parent_module.const_get(module_name, false)
           else
             parent_module.const_set(module_name.to_sym, Module.new)
           end

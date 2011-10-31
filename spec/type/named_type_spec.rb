@@ -14,9 +14,17 @@ describe Icss::Meta::NamedType do
     end
     Blinken = 7
   end
+  #
+  #  modules defined outside of Icss with the same names will cause problems
+  #  unless const_defined? and const_get are used correctly
+  #
+  module Nod
+  end
+  module Wears
+  end
 
   context '.make' do
-    it 'succeeds when the class already exists' do
+    it 'succeeds when the class already exists' do      
       klass, klass_metamodel = Icss::Meta::NamedType.make('this.that.the_other', Object)
       klass.should be_a(Class)
       klass.name.should == 'Icss::This::That::TheOther'

@@ -81,6 +81,10 @@ describe "Icss::Meta::Protocol validations" do
   before :each do
     @template = YAML.load(template_icss)
   end
+  
+  after :all do
+    Icss::Meta::TypeFactory.send :remove_instance_variable, :"@default_namespace"
+  end
 
   it "should be able to receive a correctly formatted template Icss" do
     lambda { @icss =Icss::Meta::Protocol.receive @template }.should_not raise_error
@@ -89,7 +93,7 @@ describe "Icss::Meta::Protocol validations" do
 
   it "should contain keys for all fields even if not included in the Icss file" do
     @icss = Icss::Meta::Protocol.receive @template
-    @icss.keys.map{|k| k.to_s }.sort.should == (@template.keys | %w[code_assets _doc_hints _extra_params]).sort
+    @icss.keys.map{|k| k.to_s }.sort.should == (@template.keys | %w[code_assets _doc_hints _extra_params tags categories source_ids]).sort
   end
 
   it "should generate an error when the namespace is formatted incorrectly" do
@@ -164,6 +168,7 @@ describe "Icss::Meta::Protocol validations" do
             }]
         })
       lambda{ Icss::Meta::Protocol.receive(@template) }.should raise_error(NameError, /uninitialized.*FakeType/)
+      
     end
 
   end

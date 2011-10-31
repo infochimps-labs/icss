@@ -1,6 +1,8 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 require 'gorillib/object/try_dup'
 require 'icss/receiver_model/acts_as_hash'
+require 'icss/receiver_model/acts_as_loadable'
+require 'icss/receiver_model/acts_as_catalog'
 require 'icss/type'                   #
 require 'icss/type/simple_types'      # Boolean, Integer, ...
 require 'icss/type/named_type'        # class methods for a named type: .metamodel .doc, .fullname, &c

@@ -12,10 +12,10 @@ module IcssTestHelper
     :bytes              => [ ::Binary,                String, "hello"],
     :binary             => [ ::Binary,                String, "hello"],
     :integer            => [ ::Integer,               Integer,      1],
-    #
-    :numeric            => [::Numeric,                ::Numeric,    1.0],
-    :symbol             => [::Symbol,                 Symbol,  :bob  ],
-    :time               => [::Time,                   Time,    Time.now],
+    :regexp             => [ ::Regexp,                Regexp,     /a/],
+    :numeric            => [ ::Numeric,               ::Numeric,  1.0],
+    :symbol             => [ ::Symbol,                Symbol,    :bob],
+    :time               => [ ::Time,                  Time,  Time.now],
   }
 
 
