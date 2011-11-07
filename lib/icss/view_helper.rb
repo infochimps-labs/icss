@@ -43,7 +43,7 @@ module Icss
       # * if no :display_fields is given, return the full (flat) set of fields.
       #
       def display_fields
-        df_names = self._doc_hints[:display_fields]
+        df_names = self._schema._doc_hints[:display_fields]
         return fields.map{|f| [f] } if df_names.blank?
         df_names.map do |fn|
           name_segs = fn.split('.')

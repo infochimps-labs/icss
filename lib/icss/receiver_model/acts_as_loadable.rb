@@ -13,9 +13,9 @@ module Icss
     module ActsAsLoadable
       module ClassMethods
 
-        module ::Icss::ReceiverModel::ClassMethods
-          include Icss::ReceiverModel::ActsAsLoadable::ClassMethods
-        end
+        # module ::Icss::ReceiverModel::ClassMethods
+        #   include Icss::ReceiverModel::ActsAsLoadable::ClassMethods
+        # end
 
         def receive_json stream
           receive(JSON.load(stream))
@@ -41,6 +41,7 @@ module Icss
         tree_merge! other_obj
       end
     end
-
+    
   end
+
 end

@@ -182,7 +182,7 @@ describe Icss::Meta::RecordModel do
     it 'accepts a proc' do
       dummy = mock
       Icss::Glad.field :weapon, Symbol, :default => lambda{ [dummy, tool, self] }
-      glad_smurf.weapon.should == [dummy, :smurfwrench, glad_smurf]
+      glad_smurf.weapon.should == [dummy, :smurfwrench, glad_smurf]      
     end
 
     context 'can also be set with set_field_default' do

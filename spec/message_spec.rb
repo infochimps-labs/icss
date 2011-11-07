@@ -22,7 +22,7 @@ describe Icss::Meta::Message do
   let(:smurfy_message_hsh){
     { :name     => 'dance',
       :doc      => 'this is how we dance',
-      :request  => [{ :name => 'params', :type => Icss::Smurfette },],
+      :request  => [{ :name => 'params', :type => Icss::Poppa },],
       :response => Icss::Smurfette,
       :errors   => ['oops']
     } }
@@ -72,7 +72,7 @@ describe Icss::Meta::Message do
   #
 
   describe 'basic behavior' do
-    subject{ smurfy_message }
+    subject{ smurfy_message }    
     its(:name){                should == 'dance' }
     its('request.first.name'){ should == :params }
     its('request.first.type'){ should == Icss::Poppa }
@@ -101,10 +101,11 @@ describe Icss::Meta::Message do
   describe '#to_hash' do
     it 'correctly' do
       smurfy_message.to_hash.should == {
-        :request  => ["poppa"],
+        :request  => [{:name => :params, :type => "poppa"}],
         :response => "smurfette",
         :doc      => "this is how we dance",
-        :errors   => ["oops"]
+        :errors   => ["oops"],
+        :samples  => []
       }
     end
   end

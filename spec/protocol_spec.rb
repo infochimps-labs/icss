@@ -2,6 +2,7 @@ require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 require 'icss'
 
 describe Icss::Meta::Protocol do
+  
   let(:simple_icss) do
     Icss::Meta::Protocol.receive_from_file(ENV.root_path('examples/chronic.icss.yaml'))
   end
@@ -63,10 +64,37 @@ describe Icss::Meta::Protocol do
       simple_icss.targets['catalog'].first.basename.should == 'st_time_utils_chronic_parse'
     end
   end
-
-  # describe 'tree_merge!' do
-  #   it 'merges recursively'
-  # end
+  
+  describe 'license' do
+    it 'returns nil if no license_id specified' do
+      simple_icss.license.should be_nil
+    end
+    it 'raises Icss::NotFoundError if license_id specified and not found' do
+      simple_icss.license_id = 'not_found_license'
+      lambda{ simple_icss.license }.should raise_error(Icss::NotFoundError, /Cannot find .*/)
+    end
+    it 'returns the Icss::Meta::License object' do
+      license = Icss::Meta::License.receive_from_file(ENV.root_path('examples/license.icss.yaml'))
+      simple_icss.license_id = 'licenses.example'
+      simple_icss.license.should == license
+    end
+  end
+  
+  describe 'sources' do
+    it 'returns empty array if no source_ids specified' do
+      simple_icss.sources.should == []
+    end
+    it 'raises Icss::NotFoundError if license_id specified and not found' do
+      simple_icss.source_ids = ['not_found_license']
+      lambda{ simple_icss.sources }.should raise_error(Icss::NotFoundError, /Cannot find .*/)
+    end
+    it 'returns array of Icss::Meta::Source objects' do
+      source2 = Icss::Meta::Source.receive_from_file(ENV.root_path('examples/source2.icss.yaml'))
+      source1 = Icss::Meta::Source.receive_from_file(ENV.root_path('examples/source1.icss.yaml'))
+      simple_icss.source_ids = ['sources.source1', 'sources.source2'] 
+      simple_icss.sources.should == [source1, source2]
+    end
+  end
 
   describe 'validations' do
     it 'validates protocol name' do
@@ -84,19 +112,33 @@ describe Icss::Meta::Protocol do
 
   describe '#to_hash' do
     it 'roundtrips' do
+      simple_icss.license_id = 'licenses.example'
+      simple_icss.source_ids = ['sources.source1']
+      simple_icss.tags       = ['tag1', 'tag2', 'tag3']
+      simple_icss.categories = ['category1', 'category2', 'category3']
       hsh = simple_icss.to_hash
       hsh.should == {
         :namespace=>"st.time_utils", :protocol=>"chronic",
         :doc=>"A series of calls hooking into the Chronic ruby gem",
+        :license_id=>"licenses.example",
+        :source_ids=>["sources.source1"],
+        :tags=>['tag1', 'tag2', 'tag3'],
+        :categories=>['category1', 'category2', 'category3'],
         :types => [
-          {:name=>:chronic_parse_params,   :type=>:record, :doc=>"Query API parameters for the /st/time_utils/chronic/parse call",
+          {:name=>"st.time_utils.chronic_parse_params",
+           :namespace=>"st.time_utils",
+           :type=>:record,
+           :doc=>"Query API parameters for the /st/time_utils/chronic/parse call",
             :fields=>[
               {:name=>:time_str,             :type=>:string, :doc=>"The string to parse."},
               {:name=>:context,              :type=>:symbol, :doc=>"<tt>past</tt> or <tt>future</tt> (defaults to <tt>future</tt>)\nIf your string represents a birthday, you can set <tt>context</tt> to <tt>past</tt> and if an ambiguous string is given, it will assume it is in the past. Specify <tt>future</tt> or omit to set a future context."},
               {:name=>:now,                  :type=>:time,   :doc=>"Time (defaults to Time.now)\nBy setting <tt>:now</tt> to a Time, all computations will be based off of that time instead of Time.now. If set to nil, Chronic will use the current time in UTC. You must supply a date that unambiguously parses with the much-less-generous ruby Time.parse()"},
               {:name=>:ambiguous_time_range, :type=>:int,    :doc=>"Integer or <tt>:none</tt> (defaults to <tt>6</tt> (6am-6pm))\nIf an Integer is given, ambiguous times (like 5:00) will be assumed to be within the range of that time in the AM to that time in the PM. For example, if you set it to <tt>7</tt>, then the parser will look for the time between 7am and 7pm. In the case of 5:00, it would assume that means 5:00pm. If <tt>:none</tt> is given, no assumption will be made, and the first matching instance of that time will be used."}
             ]},
-          {:name=>:chronic_parse_response, :type=>:record, :doc=>"Query API response for the /st/time_utils/chronic/parse call",
+          {:name=>"st.time_utils.chronic_parse_response",
+           :namespace=>"st.time_utils",
+           :type=>:record,
+           :doc=>"Query API response for the /util/time/chronic/parse call",
             :fields=>[
               {:name=>:time,                 :type=>:string, :doc=>"The UTC parsed time, as a \"ISO 8601 combined date time\":http://en.wikipedia.org/wiki/ISO_8601 string."},
               {:name=>:epoch_seconds,        :type=>:int,    :doc=>"The UTC parsed time, as \"epoch seconds\":http://en.wikipedia.org/wiki/Epoch_seconds integer."}
@@ -104,8 +146,8 @@ describe Icss::Meta::Protocol do
         ],
         :messages => {
           :parse => {
-            :request  =>[{:name=>:chronic_parse_params, :type=>:chronic_parse_params}],
-            :response =>:chronic_parse_response,
+            :request  =>[{:name=>:chronic_parse_params, :type=>"st.time_utils.chronic_parse_params"}],
+            :response =>"st.time_utils.chronic_parse_response",
             :doc=>"\nChronic is a natural language date/time parser written in pure Ruby. See below\nfor the wide variety of formats Chronic will parse.",
             :samples  =>[{
                 :request=>[{"time_str"=>"one hour ago", "now"=>"2007-03-16T12:09:08Z"}],

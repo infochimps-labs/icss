@@ -1,6 +1,8 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 require 'gorillib/object/try_dup'
 require 'icss/receiver_model/acts_as_hash'
+require 'icss/receiver_model/acts_as_loadable'
+require 'icss/receiver_model/acts_as_catalog'
 require 'icss/type'
 require 'icss/type/simple_types'
 require 'icss/type/named_type'
@@ -44,9 +46,9 @@ describe Icss::Meta::RecordType do
     (Icss::Smurf::Smurfette.public_methods - Class.public_methods).sort.should == [
       :after_receive, :after_receivers,
       :field, :field_names, :fields, :has_field?, :field_named,
-      :metamodel, :to_schema,
+      :metamodel, :to_schema, :is_core?,
       :fullname, :namespace, :basename, :doc, :doc=,
-      :rcvr, :rcvr_alias, :rcvr_remaining, :receive,
+      :rcvr, :rcvr_alias, :rcvr_remaining, :receive, :pathname
     ].sort
   end
   it 'adds few methods' do
@@ -56,7 +58,7 @@ describe Icss::Meta::RecordType do
       ).sort.should == [
       :blondness, :blondness=, :has_glasses, :has_glasses=,
       :receive_blondness,:receive_has_glasses,
-      :receive_smurfiness, :smurfiness, :smurfiness=,
+      :receive_smurfiness, :smurfiness, :smurfiness=
     ].sort
   end
 

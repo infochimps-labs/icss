@@ -58,12 +58,12 @@ module Icss
     #
     class Protocol
       include Icss::ReceiverModel
+      include Icss::ReceiverModel::ActsAsCatalog
 
-      field :protocol,    String, :required => true, :validates => { :format => { :with => /\A[A-Za-z_]\w*\z/, :message => "must start with [A-Za-z_] and contain only [A-Za-z0-9_]." } }
+      field :protocol,    String, :required => true, :validates => { :format => { :with => /\A[A-Za-z_]\w*\Z/, :message => "must start with [A-Za-z_] and contain only [A-Za-z0-9_]." } }
       alias_method  :basename, :protocol
-      field :namespace,   String, :required => true, :validates => { :format => { :with => /\A([A-Za-z_]\w*\.?)+\z/, :message => "Segments that start with [A-Za-z_] and contain only [A-Za-z0-9_], joined by '.'dots" } }
+      field :namespace,   String, :required => true, :validates => { :format => { :with => /\A([A-Za-z_]\w*\.?)+\Z/, :message => "Segments that start with [A-Za-z_] and contain only [A-Za-z0-9_], joined by '.'dots" } }
       field :doc,         String
-      field :license,     Hash
       #
       field :types,       Array, :items => Icss::Meta::TypeFactory, :default => []
       field :_doc_hints,  Hash,  :default => {}
@@ -72,16 +72,23 @@ module Icss
       field :data_assets, Array, :items  => Icss::Meta::DataAsset,   :default => []
       field :code_assets, Array, :items  => Icss::Meta::CodeAsset,   :default => []
       field :targets,     Hash,  :values => Icss::TargetListFactory, :default => {}, :merge_as => :hash_of_arrays
+      
+      field :tags,        Array, :items => String, :default => []
+      field :categories,  Array, :items => String, :default => []
+      field :license_id,  String
+      field :source_ids,  Array, :items => String, :default => []
+            
+      def sources
+        source_ids.collect{|source| Icss::Meta::Source.find(source) }
+      end    
+      
+      def license
+        Icss::Meta::License.find(license_id) unless license_id.blank?
+      end  
 
       field :under_consideration, Boolean
       field :update_frequency, String, :validates => { :format => { :with => /daily|weekly|monthly|quarterly|never/ }, :allow_blank => true }
       rcvr_remaining :_extra_params
-
-      class_attribute :registry
-      self.registry = Hash.new
-      after_receive(:register) do |hsh|
-        registry[fullname] = self
-      end
 
       after_receive(:parent_my_messages) do |hsh|
         # Set each message's protocol to self, and if the basename wasn't given, set
@@ -92,6 +99,17 @@ module Icss
         warn errors.inspect unless valid?
         warn "Extra params #{_extra_params.keys.inspect} given to #{self.fullname}" if _extra_params.present?
       end
+      after_receive(:declare_core_types) do |hsh|
+        self.types.each{|type| type.respond_to?(:_schema) && (type._schema.is_core = (self.fullname  == "icss.core.typedefs")) }
+      end
+      
+      
+      # after_receive(:fix_legacy_catalog_info) do
+      #   if main_catalog_target.present?
+      #     if title.blank? then self.title = main_catalog_target.title ; end
+      #     # ...
+      #   end
+      # end
 
       # String: namespace.basename
       def fullname
@@ -110,12 +128,18 @@ module Icss
       end
 
       def receive_types(types)
+        # this is a horrible, horrible kludge so that types with simple names ('bob') can become
+        # properly namespaced ('foo.bar.bob') even when they haven't met their parents (and even 
+        # where the calls to receive types are nested/recursive)
         Icss::Meta::TypeFactory.with_namespace(namespace) do
           super(types)
         end
       end
 
       def receive_messages(types)
+        # this is a horrible, horrible kludge so that messages with simple names ('do_bob') can become
+        # properly namespaced ('foo.bar.do_bob') even when they haven't met their parents (and even 
+        # where the calls to receive_messages are nested/recursive)
         Icss::Meta::TypeFactory.with_namespace(namespace) do
           super(types)
         end
@@ -135,30 +159,19 @@ module Icss
         end
         targets
       end
-
-      def self.load_from_catalog(protocol_fullname)
-        filepath = protocol_fullname.to_s.gsub(/(\.icss\.yaml)?$/,'').gsub(/\./, '/')+".icss.yaml"
-        filepath = File.join(Settings[:catalog_root], filepath)
-        Dir[filepath].sort.map do |filename|
-          begin
-            protocol_hsh = YAML.load(File.open(filename))
-            proto = self.receive(protocol_hsh)
-            # Log.debug(['load', filename, proto.to_wire.inspect[0..100]].join("\t")) if defined?(Log)
-            proto
-          rescue Exception => boom
-            warn( [
-                # boom.to_s,
-                boom.backtrace[1 .. 30],
-                "Could not load ICSS file #{filename}: #{boom}" ].flatten.join("\n") )
-            nil
-          end
-        end.compact
+      
+      def self.catalog_sections
+        ['core', 'datasets', 'old']
       end
 
       def to_hash()
         {
           :namespace   => @namespace, # use accessor so unset namespace isn't given
           :protocol    => protocol,
+          :license_id  => license_id,
+          :source_ids  => source_ids,
+          :tags        => tags,
+          :categories  => categories,
           :doc         => doc,
           :types       => (types       && types.map(&:to_schema)),
           :messages    => messages.inject({}){|h,(k,v)| h[k.to_sym] = v.to_hash; h },
@@ -178,7 +191,7 @@ module Icss
       end
 
       # This will cause funny errors when it is an element of something that's to_json'ed
-      def to_json(*args) to_hash.to_json(*args) ; end
+      def to_json(*args) to_hash.to_json(*args) ; end      
     end
   end
 
