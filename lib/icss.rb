@@ -12,6 +12,7 @@ require 'gorillib/hash/tree_merge'
 require 'gorillib/metaprogramming/class_attribute'
 require 'gorillib/serialization'
 require 'gorillib/hashlike'
+
 #
 require 'configliere'
 Settings.define :catalog_root, :type => :filename, :default => (defined?(Rails) ? (Rails.root+'catalog') : File.expand_path('../../infochimps_catalog', __FILE__))

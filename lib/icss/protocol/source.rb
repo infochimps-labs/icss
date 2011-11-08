@@ -9,7 +9,6 @@ module Icss
       field :description, String
       field :url,         String
       
-      
       def fullname
         source_id
       end

@@ -63,6 +63,7 @@ module Icss
       field :protocol,    String, :required => true, :validates => { :format => { :with => /\A[A-Za-z_]\w*\Z/, :message => "must start with [A-Za-z_] and contain only [A-Za-z0-9_]." } }
       alias_method  :basename, :protocol
       field :namespace,   String, :required => true, :validates => { :format => { :with => /\A([A-Za-z_]\w*\.?)+\Z/, :message => "Segments that start with [A-Za-z_] and contain only [A-Za-z0-9_], joined by '.'dots" } }
+      field :title,       String
       field :doc,         String
       #
       field :types,       Array, :items => Icss::Meta::TypeFactory, :default => []
@@ -76,15 +77,15 @@ module Icss
       field :tags,        Array, :items => String, :default => []
       field :categories,  Array, :items => String, :default => []
       field :license_id,  String
-      field :source_ids,  Array, :items => String, :default => []
-            
-      def sources
-        source_ids.collect{|source| Icss::Meta::Source.find(source) }
-      end    
+      field :credits,     Hash,  :values=> String, :default => {} # hash of source_ids
       
       def license
         Icss::Meta::License.find(license_id) unless license_id.blank?
       end  
+      
+      def sources
+        @sources ||= credits.inject(Hash.new){|hash, credit| hash[credit[0].to_sym] = Icss::Meta::Source.find(credit[1]); hash }
+      end
 
       field :under_consideration, Boolean
       field :update_frequency, String, :validates => { :format => { :with => /daily|weekly|monthly|quarterly|never/ }, :allow_blank => true }
@@ -102,14 +103,14 @@ module Icss
       after_receive(:declare_core_types) do |hsh|
         self.types.each{|type| type.respond_to?(:_schema) && (type._schema.is_core = (self.fullname  == "icss.core.typedefs")) }
       end
-      
-      
-      # after_receive(:fix_legacy_catalog_info) do
-      #   if main_catalog_target.present?
-      #     if title.blank? then self.title = main_catalog_target.title ; end
-      #     # ...
-      #   end
-      # end
+      after_receive(:fix_legacy_catalog_info) do
+        if targets[:catalog].present?
+          catalog = targets[:catalog].first
+          if self.title.blank? then self.title = catalog.title ; end
+          if self.tags.blank? then self.tags = catalog.tags ; end
+          if self.doc.blank? then self.doc = catalog.description; end
+        end
+      end
 
       # String: namespace.basename
       def fullname
@@ -154,7 +155,7 @@ module Icss
       def receive_targets(tgts)
         return unless tgts.present?
         self.targets ||= {}
-        tgts.each do |target_name, target_info_list|
+        tgts.symbolize_keys!.each do |target_name, target_info_list|
           targets[target_name] = TargetListFactory.receive(target_info_list, target_name) # array of targets
         end
         targets
@@ -169,7 +170,7 @@ module Icss
           :namespace   => @namespace, # use accessor so unset namespace isn't given
           :protocol    => protocol,
           :license_id  => license_id,
-          :source_ids  => source_ids,
+          :credits     => credits,
           :tags        => tags,
           :categories  => categories,
           :doc         => doc,

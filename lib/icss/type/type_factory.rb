@@ -124,11 +124,7 @@ module Icss
           klass_name.constantize
         rescue NameError => e
           # Log.debug "auto loading core type #{ns_name} - #{schema}" if defined?(Log)
-          begin
-            Icss::Meta::Type.find(ns_name)
-            klass_name.constantize
-          rescue Icss::NotFoundError
-          end
+          Icss::Meta::Type.find(ns_name)
         end
       end
 

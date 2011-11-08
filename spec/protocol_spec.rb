@@ -59,9 +59,9 @@ describe Icss::Meta::Protocol do
 
   describe 'targets' do
     it 'has a hash of targets' do
-      simple_icss.targets.keys.should == ['catalog']
-      simple_icss.targets['catalog'].first.should be_a(Icss::CatalogTarget)
-      simple_icss.targets['catalog'].first.basename.should == 'st_time_utils_chronic_parse'
+      simple_icss.targets.keys.should == [:catalog]
+      simple_icss.targets[:catalog].first.should be_a(Icss::CatalogTarget)
+      simple_icss.targets[:catalog].first.basename.should == 'st_time_utils_chronic_parse'
     end
   end
   
@@ -80,19 +80,21 @@ describe Icss::Meta::Protocol do
     end
   end
   
+  
+  
   describe 'sources' do
     it 'returns empty array if no source_ids specified' do
-      simple_icss.sources.should == []
+      simple_icss.sources.should == {}
     end
     it 'raises Icss::NotFoundError if license_id specified and not found' do
-      simple_icss.source_ids = ['not_found_license']
+      simple_icss.credits = { :role => 'not_found_license' }
       lambda{ simple_icss.sources }.should raise_error(Icss::NotFoundError, /Cannot find .*/)
     end
     it 'returns array of Icss::Meta::Source objects' do
       source2 = Icss::Meta::Source.receive_from_file(ENV.root_path('examples/source2.icss.yaml'))
       source1 = Icss::Meta::Source.receive_from_file(ENV.root_path('examples/source1.icss.yaml'))
-      simple_icss.source_ids = ['sources.source1', 'sources.source2'] 
-      simple_icss.sources.should == [source1, source2]
+      simple_icss.credits = {:main => 'sources.source1', :uploaded => 'sources.source2'}
+      simple_icss.sources.should == { :main => source1, :uploaded => source2 }
     end
   end
 
@@ -113,7 +115,7 @@ describe Icss::Meta::Protocol do
   describe '#to_hash' do
     it 'roundtrips' do
       simple_icss.license_id = 'licenses.example'
-      simple_icss.source_ids = ['sources.source1']
+      simple_icss.credits    = { :original => 'sources.source1' }
       simple_icss.tags       = ['tag1', 'tag2', 'tag3']
       simple_icss.categories = ['category1', 'category2', 'category3']
       hsh = simple_icss.to_hash
@@ -121,7 +123,7 @@ describe Icss::Meta::Protocol do
         :namespace=>"st.time_utils", :protocol=>"chronic",
         :doc=>"A series of calls hooking into the Chronic ruby gem",
         :license_id=>"licenses.example",
-        :source_ids=>["sources.source1"],
+        :credits=>{:original=>"sources.source1"},
         :tags=>['tag1', 'tag2', 'tag3'],
         :categories=>['category1', 'category2', 'category3'],
         :types => [
@@ -159,7 +161,7 @@ describe Icss::Meta::Protocol do
         },
         :data_assets=>[],
         :code_assets=>[{:location=>"code/chronic_endpoint.rb"}],
-        :targets => {"catalog"=>[{:name=>"st_time_utils_chronic_parse", :title=>"Utils - Parse Times", :description=>"An API call to parse human-readable date / time strings", :tags=>["apiawesome", "ruby", "gems", "chronic", "time", "date", "util", "parse"], :messages=>["parse"]}]},
+        :targets => {:catalog=>[{:name=>"st_time_utils_chronic_parse", :title=>"Utils - Parse Times", :description=>"An API call to parse human-readable date / time strings", :tags=>["apiawesome", "ruby", "gems", "chronic", "time", "date", "util", "parse"], :messages=>["parse"]}]},
       }
     end
   end

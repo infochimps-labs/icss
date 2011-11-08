@@ -93,7 +93,7 @@ describe "Icss::Meta::Protocol validations" do
 
   it "should contain keys for all fields even if not included in the Icss file" do
     @icss = Icss::Meta::Protocol.receive @template
-    @icss.keys.map{|k| k.to_s }.sort.should == (@template.keys | %w[code_assets _doc_hints _extra_params tags categories source_ids]).sort
+    @icss.keys.map{|k| k.to_s }.sort.should == (@template.keys | %w[code_assets _doc_hints _extra_params tags categories credits doc title]).sort
   end
 
   it "should generate an error when the namespace is formatted incorrectly" do
@@ -155,7 +155,7 @@ describe "Icss::Meta::Protocol validations" do
           'name' => 'fake_type_record',
           'type' => 'fake'
         })
-      lambda{ Icss::Meta::Protocol.receive(@template) }.should raise_error(NameError, /uninitialized.*Fake/)
+      lambda{ Icss::Meta::Protocol.receive(@template) }.should raise_error(Icss::NotFoundError, /Cannot find.*fake/)
     end
 
     it "should generate an error when an undefined type definition is given for a specific field" do
@@ -167,7 +167,7 @@ describe "Icss::Meta::Protocol validations" do
               'type' => 'fake_type'
             }]
         })
-      lambda{ Icss::Meta::Protocol.receive(@template) }.should raise_error(NameError, /uninitialized.*FakeType/)
+      lambda{ Icss::Meta::Protocol.receive(@template) }.should raise_error(Icss::NotFoundError, /Cannot find.*fake_type/)
       
     end
 
