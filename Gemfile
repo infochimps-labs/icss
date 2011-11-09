@@ -6,6 +6,7 @@ gem   'addressable',     "~> 2.2"
 
 gem   'configliere',     "~> 0.4.8"
 gem   'gorillib',        :git => 'https://github.com/infochimps/gorillib.git'
+gem   'addressable',   "~> 2.2"
 
 group                    :development do
   gem 'awesome_print',   "~> 0.4.0"
