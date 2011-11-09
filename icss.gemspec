@@ -9,15 +9,15 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Philip (flip) Kromer for Infochimps"]
-  s.date = "2011-10-22"
+  s.date = "2011-11-09"
   s.description = "Infochimps Simple Schema library: an avro-compatible data description standard. ICSS completely describes a collection of data (and associated assets) in a way that is expressive, scalable and sufficient to drive remarkably complex downstream processes."
   s.email = "coders@infochimps.com"
   s.extra_rdoc_files = [
+    "LICENSE.textile",
     "README.md"
   ]
   s.files = [
     ".document",
-    ".gitignore",
     ".rspec",
     ".watchr",
     "CHANGELOG.md",
@@ -42,21 +42,27 @@ Gem::Specification.new do |s|
     "examples/avro_examples/weather.avsc",
     "examples/bnc.icss.yaml",
     "examples/chronic.icss.yaml",
+    "examples/license.icss.yaml",
+    "examples/source1.icss.yaml",
+    "examples/source2.icss.yaml",
     "examples/test_icss.yaml",
     "icss.gemspec",
     "icss_specification.textile",
-    "init.rb",
     "lib/icss.rb",
     "lib/icss/core_types.rb",
     "lib/icss/error.rb",
+    "lib/icss/init.rb",
     "lib/icss/message.rb",
     "lib/icss/message/message_sample.rb",
     "lib/icss/protocol.rb",
     "lib/icss/protocol/code_asset.rb",
     "lib/icss/protocol/data_asset.rb",
+    "lib/icss/protocol/license.rb",
+    "lib/icss/protocol/source.rb",
     "lib/icss/protocol/target.rb",
     "lib/icss/receiver_model.rb",
     "lib/icss/receiver_model/active_model_shim.rb",
+    "lib/icss/receiver_model/acts_as_catalog.rb",
     "lib/icss/receiver_model/acts_as_hash.rb",
     "lib/icss/receiver_model/acts_as_loadable.rb",
     "lib/icss/receiver_model/acts_as_tuple.rb",
@@ -86,7 +92,10 @@ Gem::Specification.new do |s|
     "spec/icss_spec.rb",
     "spec/message/message_sample_spec.rb",
     "spec/message_spec.rb",
+    "spec/protocol/license_spec.rb",
+    "spec/protocol/protocol_catalog_spec.rb",
     "spec/protocol/protocol_validations_spec.rb",
+    "spec/protocol/source_spec.rb",
     "spec/protocol_spec.rb",
     "spec/receiver_model_spec.rb",
     "spec/serialization/zaml_spec.rb",
@@ -103,6 +112,7 @@ Gem::Specification.new do |s|
     "spec/type/record_type_spec.rb",
     "spec/type/simple_types_spec.rb",
     "spec/type/structured_schema_spec.rb",
+    "spec/type/type_catalog_spec.rb",
     "spec/type/type_factory_spec.rb",
     "spec/type/union_schema_spec.rb",
     "spec/type_spec.rb"
@@ -110,7 +120,7 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/mrflip/icss"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.10"
+  s.rubygems_version = "1.8.11"
   s.summary = "Infochimps Simple Schema library: an avro-compatible data description standard. ICSS completely describes a collection of data (and associated assets) in a way that is expressive, scalable and sufficient to drive remarkably complex downstream processes."
 
   if s.respond_to? :specification_version then
@@ -121,41 +131,41 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<activemodel>, ["~> 3.0.9"])
       s.add_runtime_dependency(%q<addressable>, ["~> 2.2"])
       s.add_runtime_dependency(%q<configliere>, ["~> 0.4.8"])
-      s.add_runtime_dependency(%q<gorillib>, [">= 0"])
+      s.add_runtime_dependency(%q<gorillib>, ["~> 0.1.7"])
       s.add_runtime_dependency(%q<addressable>, ["~> 2.2"])
-      s.add_development_dependency(%q<awesome_print>, ["~> 0.4.0"])
-      s.add_development_dependency(%q<rspec>, ["~> 2.3.0"])
-      s.add_development_dependency(%q<yard>, ["~> 0.6.0"])
       s.add_development_dependency(%q<bundler>, ["~> 1"])
       s.add_development_dependency(%q<jeweler>, ["~> 1.6.4"])
+      s.add_development_dependency(%q<yard>, ["~> 0.6.0"])
+      s.add_development_dependency(%q<rspec>, ["~> 2.3.0"])
       s.add_development_dependency(%q<rcov>, [">= 0"])
+      s.add_development_dependency(%q<awesome_print>, ["~> 0.4.0"])
     else
       s.add_dependency(%q<json>, [">= 0"])
       s.add_dependency(%q<activemodel>, ["~> 3.0.9"])
       s.add_dependency(%q<addressable>, ["~> 2.2"])
       s.add_dependency(%q<configliere>, ["~> 0.4.8"])
-      s.add_dependency(%q<gorillib>, [">= 0"])
+      s.add_dependency(%q<gorillib>, ["~> 0.1.7"])
       s.add_dependency(%q<addressable>, ["~> 2.2"])
-      s.add_dependency(%q<awesome_print>, ["~> 0.4.0"])
-      s.add_dependency(%q<rspec>, ["~> 2.3.0"])
-      s.add_dependency(%q<yard>, ["~> 0.6.0"])
       s.add_dependency(%q<bundler>, ["~> 1"])
       s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
+      s.add_dependency(%q<yard>, ["~> 0.6.0"])
+      s.add_dependency(%q<rspec>, ["~> 2.3.0"])
       s.add_dependency(%q<rcov>, [">= 0"])
+      s.add_dependency(%q<awesome_print>, ["~> 0.4.0"])
     end
   else
     s.add_dependency(%q<json>, [">= 0"])
     s.add_dependency(%q<activemodel>, ["~> 3.0.9"])
     s.add_dependency(%q<addressable>, ["~> 2.2"])
     s.add_dependency(%q<configliere>, ["~> 0.4.8"])
-    s.add_dependency(%q<gorillib>, [">= 0"])
+    s.add_dependency(%q<gorillib>, ["~> 0.1.7"])
     s.add_dependency(%q<addressable>, ["~> 2.2"])
-    s.add_dependency(%q<awesome_print>, ["~> 0.4.0"])
-    s.add_dependency(%q<rspec>, ["~> 2.3.0"])
-    s.add_dependency(%q<yard>, ["~> 0.6.0"])
     s.add_dependency(%q<bundler>, ["~> 1"])
     s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
+    s.add_dependency(%q<yard>, ["~> 0.6.0"])
+    s.add_dependency(%q<rspec>, ["~> 2.3.0"])
     s.add_dependency(%q<rcov>, [">= 0"])
+    s.add_dependency(%q<awesome_print>, ["~> 0.4.0"])
   end
 end
 
