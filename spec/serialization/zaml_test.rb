@@ -102,7 +102,7 @@ class ZamlDumpTest < Test::Unit::TestCase
     end
   end
   def stripped(x)
-    x.gsub(/ +$/,'').chomp.chomp.gsub(/\n+/,"\n")
+    x.gsub(/\.\.\.\n\z/m, '').gsub(/ \n/, "\n").gsub(/ +$/,'').chomp.chomp.gsub(/\n+/,"\n")
   end
   def dump_test(obj)
     z_load = YAML.load(z_dump = ZAML.dump(obj)) rescue "ZAML produced something YAML can't load."

@@ -12,7 +12,8 @@ describe ZAML do
       ['arr', :items, 4, /things/], Time.now, (3..69),
     ].each do |obj|
       it "serializes a #{obj.class}" do
-        obj.to_zaml.should == obj.to_yaml
+        # woof. This patches over inconsistencies between YAML::Psych and YAML::Syck
+        obj.to_zaml.gsub(/ \n/, "\n").should == obj.to_yaml.gsub(/\.\.\.\n\z/m, '').gsub(/ \n/, "\n")
       end
     end
   end
