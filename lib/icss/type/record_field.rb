@@ -38,15 +38,13 @@ module Icss
       # track recursion of type references
       after_receive(:am_i_a_reference) do |hsh|
         hsh = hsh.symbolize_keys
-        nonreference_klasses = [::Icss::Meta::ArrayType, ::Icss::Meta::HashType, ::Icss::Meta::EnumType, ::Icss::Meta::FixedType]
-        
-        @is_reference = (hsh[:type].is_a?(String) || hsh[:type].is_a?(Symbol) || (hsh[:type].is_a?(Class) && nonreference_klasses.none?{|klass| hsh[:type].is_a?(klass) }))
+        @is_reference = [String, Symbol, Class].any?{|klass| hsh[:type].is_a?(klass) } && !(hsh[:type]._schema.is_reference? rescue false)
       end
 
       # is the field a reference to a named type (true), or an inline schema (false)?
       def is_reference?() @is_reference ; end
 
-      def to_hash()
+      def to_hash
         hsh = super
         hsh = hsh.merge({ :type => (is_reference? ? type.fullname : Type.schema_for(type)) })
         hsh.delete(:_extra_params)

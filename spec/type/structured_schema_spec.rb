@@ -1,13 +1,5 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
-require 'gorillib/object/try_dup'
-require 'icss/receiver_model/acts_as_hash'
-require 'icss/type'                   #
-require 'icss/type/simple_types'      # Boolean, Integer, ...
-require 'icss/type/named_type'        # class methods for a named type: .metamodel .doc, .fullname, &c
-require 'icss/type/record_type'       # class methods for a record model: .field, .receive,
-require 'icss/type/record_model'      # instance methods for a record model
-require 'icss/type/type_factory'      # turn schema into types
-require 'icss/type/structured_schema' # loads array, hash, enum, fixed and simple schema
+require 'icss'
 #
 require ENV.root_path('spec/support/icss_test_helper')
 include IcssTestHelper

@@ -73,6 +73,9 @@ module Icss
     class StructuredSchema < NamedSchema
       class_attribute :parent_klass
       self.klass_metatypes = [::Icss::Meta::NamedType]
+
+      # is the field a reference to a named type (true), or an inline schema (false)?
+      def is_reference?() @is_reference ; end
     end
 
     # An array of objects with a specified type.
@@ -147,6 +150,11 @@ module Icss
       field :items, Icss::Meta::TypeFactory, :required => true
       #
       after_receive(:register){ true } # don't register
+      # track recursion of type references
+      after_receive(:am_i_a_reference) do |hsh|
+        hsh = hsh.symbolize_keys
+        @is_reference = (hsh[:items].is_a?(String) || hsh[:items].is_a?(Symbol))
+      end
       def fullname
         return @fullname if @fullname
         slug = (Type.klassname_for(items) || object_id.to_s).gsub(/^:*Icss:+/, '').gsub(/:+/, 'Dot')
@@ -161,7 +169,7 @@ module Icss
         val
       end
       def to_hash
-        { :type => :array, :items => Type.schema_for(items) }
+        { :type => :array, :items => ((is_reference? && items.respond_to?(:fullname)) ? items.fullname : Type.schema_for(items)) }
       end
       def type() :array ; end
     end
@@ -184,6 +192,11 @@ module Icss
       field :values, Icss::Meta::TypeFactory, :required => true
       #
       after_receive(:register){ true } # don't register
+      # track recursion of type references
+      after_receive(:am_i_a_reference) do |hsh|
+        hsh = hsh.symbolize_keys
+        @is_reference = (hsh[:values].is_a?(String) || hsh[:values].is_a?(Symbol)) && !::Icss::Meta::Type.simple?(hsh[:items])
+      end
       def fullname
         return @fullname if @fullname
         slug = (Type.klassname_for(values) || object_id.to_s).gsub(/^:*Icss:+/, '').gsub(/:+/, 'Dot')
@@ -198,7 +211,7 @@ module Icss
         val
       end
       def to_hash
-        { :type => :map, :values => Type.schema_for(values) }
+        { :type => :map, :values =>  ((is_reference? && values.respond_to?(:fullname)) ? values.fullname : Type.schema_for(values)) }
       end
       def type() :map ; end
     end # HashSchema

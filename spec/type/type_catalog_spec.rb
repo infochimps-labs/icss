@@ -2,10 +2,12 @@ require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 require 'icss'
 
 describe Icss::Meta::Type do
-  before { Icss::Meta::Type.send :flush_registry }
-  Icss::Meta::Type._catalog_loaded = true #prevent automatic loading of catalog
+  before(:all) do
+     Icss::Meta::Type.send :flush_registry
+     Icss::Meta::Type._catalog_loaded = true #prevent automatic loading of catalog
+     Icss::Meta::TypeFactory.receive(:name => 'name.space.test', :type => :record) # load type into registry
+  end
   let(:type){ Icss::Meta::TypeFactory.receive(:name => 'name.space.test', :type => :record) }
-  before { Icss::Meta::TypeFactory.receive(:name => 'name.space.test', :type => :record) } # load type into registry
   
   # Calling receive adds type to registry with after_receiver
   describe :registry do

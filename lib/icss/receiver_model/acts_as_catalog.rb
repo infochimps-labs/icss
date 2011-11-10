@@ -87,8 +87,9 @@ module Icss
         
         def find(name_or_find_type, name='*')  
           if !self._catalog_loaded
+            flush_registry
             self._catalog_loaded = true
-            load_catalog(true)
+            load_catalog
           end
                   
           method_name = case name_or_find_type
@@ -162,6 +163,7 @@ module Icss
         end
         
         def flush_registry
+          self._catalog_loaded = false
           registry.clear
         end
       end

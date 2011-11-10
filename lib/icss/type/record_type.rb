@@ -151,7 +151,7 @@ module Icss
           :name      => fullname,
           :namespace => namespace,
           :type      => :record,
-          :is_a      => (respond_to?(:is_a) ? is_a : []),
+          :is_a      => (respond_to?(:is_a) ? is_a.collect(&:fullname) : []),
           :doc       => doc,
           :fields    => fields.map(&:to_hash),
          }.compact_blank
