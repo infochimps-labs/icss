@@ -31,8 +31,11 @@ module Icss
         # * JSON otherwise
         #
         def receive_from_file filename
-          stream = File.open(filename)
+          stream = File.open(filename, 'r:utf-8')
           (filename =~ /.ya?ml$/) ? receive_yaml(stream) : receive_json(stream)
+          
+        rescue 
+          raise $!, "Error loading file (#{filename}): #{$!}", $!.backtrace
         end
       end
 

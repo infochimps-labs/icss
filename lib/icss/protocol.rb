@@ -65,6 +65,7 @@ module Icss
       field :namespace,   String, :required => true, :validates => { :format => { :with => /\A([A-Za-z_]\w*\.?)+\Z/, :message => "Segments that start with [A-Za-z_] and contain only [A-Za-z0-9_], joined by '.'dots" } }
       field :title,       String
       field :doc,         String
+      field :aliases,     Array, :items => String,                  :default => []
       #
       field :types,       Array, :items => Icss::Meta::TypeFactory, :default => []
       field :_doc_hints,  Hash,  :default => {}
@@ -109,6 +110,12 @@ module Icss
           if self.title.blank? then self.title = catalog.title ; end
           if self.tags.blank? then self.tags = catalog.tags ; end
           if self.doc.blank? then self.doc = catalog.description; end
+          if self.data_assets.blank? && catalog.link.present?
+            data_asset = { :name => catalog.name,
+                           :location => (catalog.link.match(/^http/) ? '' : 'http://') + catalog.link,
+                           :asset_type => :offsite }
+            self.data_assets << Icss::Meta::DataAsset.receive(data_asset)
+          end
         end
       end
 
@@ -162,13 +169,14 @@ module Icss
       end
       
       def self.catalog_sections
-        ['core', 'datasets', 'old']
+        ['core', 'datasets', 'old', 'george']
       end
 
       def to_hash()
         {
           :namespace   => @namespace, # use accessor so unset namespace isn't given
           :protocol    => protocol,
+          :title       => title,
           :license_id  => license_id,
           :credits     => credits,
           :tags        => tags,

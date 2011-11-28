@@ -120,8 +120,9 @@ module Icss
         def find_in_registry(name, args={})
           return registry[name] if args.symbolize_keys[:exact_match]
 
-          name = name.to_s.gsub('*', '[^\./]*').gsub(/\.\//, '\.').gsub(/\*$/, '.+') if name.include?('*')
-          name_regexp = Regexp.new("^#{name}$", true)
+          name = name.to_s.gsub('*', '[^\./]*').gsub(/[\.\/]+/, '\.').gsub(/\*$/, '.+') if name.include?('*') #regexify the name
+          name = '.+' + name.to_s unless name.include?('.') # attempt to match a protocol name
+          name_regexp = Regexp.new("^#{name}$", true) 
           registry.select{|k, v| k.match(name_regexp) }.values
         end
 
