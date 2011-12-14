@@ -38,7 +38,7 @@ describe 'loads all catalog types' do
     core_files,
   ].flatten.each do |filename_patt|
     it "loads #{filename_patt}" do
-      Icss::Meta::Protocol.find(:all, filename_patt)
+      Icss::Meta::Type.load_from_catalog(filename_patt)
       Log.debug "************* loaded #{Icss::Meta::Type.registry.size} core types in #{((Time.now-last_time).to_f * 1000).round} **************"
       last_time = Time.now
     end

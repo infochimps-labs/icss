@@ -28,7 +28,7 @@ module Icss
 
       # FIXME: cruft
       field :indexed_on, Symbol
-      field :identifier, Boolean, :doc => 'indicates the field is suitable for use'
+      field :identifier, Symbol, :doc => 'indicates the field is suitable for use'
 
       after_receive(:warnings) do |hsh|
         warn "Extra params given to field #{self}: #{_extra_params.inspect}" if _extra_params.present?
@@ -38,7 +38,7 @@ module Icss
       # track recursion of type references
       after_receive(:am_i_a_reference) do |hsh|
         hsh = hsh.symbolize_keys
-        @is_reference = [String, Symbol, Class].any?{|klass| hsh[:type].is_a?(klass) } && !(hsh[:type]._schema.is_reference? rescue false)
+        @is_reference = [String, Symbol, Class].any?{|klass| hsh[:type].is_a?(klass) } && [:items, :values].none?{|method_name| hsh[:type].respond_to?(method_name)}
       end
 
       # is the field a reference to a named type (true), or an inline schema (false)?

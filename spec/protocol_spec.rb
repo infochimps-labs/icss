@@ -122,6 +122,7 @@ describe Icss::Meta::Protocol do
       hsh.should == {
         :namespace=>"st.time_utils", :protocol=>"chronic",
         :doc=>"A series of calls hooking into the Chronic ruby gem",
+        :title => "Utils - Parse Times",
         :license_id=>"licenses.example",
         :credits=>{:original=>"sources.source1"},
         :tags=>['tag1', 'tag2', 'tag3'],

@@ -15,14 +15,21 @@ class ESIndex
   end
   
   def index(type=nil)
-    types = type ? [type.singularize] : %w{protocol type source license}
+    types = type ? [type.singularize] : %w{dataset type source license}
     types.each do |type|
       block = case type
-        when "protocol"
+        when "dataset"
           lambda{|protocol, hsh|
             next if ['icss.core.typedefs', 'meta.req.geolocator_typedefs'].include? protocol.fullname
             hsh[:license] = protocol.license.to_hash if protocol.license
             hsh[:sources] = protocol.sources.inject({}){|hash, source| hash[source[0]] = source[1].to_hash; hash }
+            score = nil
+            score = hsh[:targets][:catalog].first.delete(:score).to_f unless protocol.targets[:catalog].to_a.empty?
+            score = score.to_f == 0 ? 1 : score.to_f
+            hsh[:_boost] = score * 4 
+            price = protocol.targets[:catalog].first.price.to_i unless protocol.targets[:catalog].to_a.empty?
+            hsh[:_boost] = hsh[:_boost].to_f + 10 unless protocol.messages.empty? || !defined?(price)
+            hsh[:_messages] = hsh[:messages].map{ |key, value| value.merge({:name => key.to_s }) } unless hsh[:messages].empty?
           }
         when "type"
           lambda{|type, hsh| hsh[:core] = true if type.is_core? }
@@ -35,7 +42,7 @@ class ESIndex
   end
   
   def cleanup_aliases(type)
-    current_aliases = client.get_aliases("meta.#{type.pluralize}").keys
+    current_aliases = client.index_status("meta.#{type.pluralize}")["indices"].keys rescue []
     actions = { :add => { "meta.#{type.pluralize}-#{index_timestamp}" => "meta.#{type.pluralize}"}}
     actions[:remove] = current_aliases.inject({}){|hsh, index_alias| hsh[index_alias] = "meta.#{type.pluralize}"; hsh } unless current_aliases.empty?
     
@@ -48,7 +55,7 @@ class ESIndex
     create_index(type)
     puts "Indexing #{type.pluralize}"
     
-    Icss::Meta.const_get(type.classify).all.each do |obj|
+    Icss::Meta.const_get((type =='dataset' ? 'protocol' : type).classify).all.each do |obj|
       puts "Indexing #{type}: #{obj.fullname}" if options[:verbose]
       hsh = obj.to_hash rescue obj.to_schema
       yield obj, hsh
@@ -72,66 +79,109 @@ class ESIndex
   rescue ElasticSearch::RequestError
   end
   
-  def protocol_index_options
+  def dataset_index_options
     { :index => 
       { :analysis =>
-        { :tokenizer =>
-          { :namespaces =>
-            { :pattern => '\.+',
-              :lowercase => true,
-              :type => :pattern
-            }
-          },
-          :filter =>
-          {
-            :word_delimiter => 
-            {
-              :type => :word_delimiter,
+        { :filter =>
+          { :word_delimiter => 
+            { :type => :word_delimiter,
+              :split_on_numerics => false,
               :preserve_original => true,
-              :catenate_words => true,
-              :catenate_numbers => true
+              :catenate_all => true
+            },
+            :snowball => {
+              :type => :snowball,
+              :language => :English
+            },
+            :min_length => {
+              :type => :length,
+              :min => 1
             }
           },
           :analyzer => 
           { :namespaces =>
-            { :tokenizer => :namespaces,
-              :type => :custom
+            { :type => :pattern,
+              :pattern => '\.+',
+              :lowercase => true
             },
-            :word_delimiter => {
-              :tokenizer => :standard,
+            :text => {
               :type => :custom,
-              :filter => [:word_delimiter, :lowercase]
+              :tokenizer => :whitespace,
+              :filter => [:snowball, :stop, :min_length, :word_delimiter, :lowercase, :shingle]
             }
           }
         }
       },
       :mappings =>
-      { :protocol => 
-        { :dynamic => true,
+      { :dataset => 
+        { :_boost => 
+          { :name => :_boost,
+            :null_value => 1
+          },
+          :dynamic_templates =>
+          [
+            { "object_full_path" => 
+              { :match => '*',
+                :match_mapping_type => :object,
+                :mapping =>
+                { :path => 'full',
+                  :type => :object,
+                  :dynamic => true
+                }
+              }
+            }
+          ],
+          :_source =>
+          { :excludes => [:_boost, :_messages],
+          },
+          :dynamic => true,
           :numeric_detection => true,
-          :_all => { :analyzer => :word_delimiter },
+          :_all => { :analyzer => :text },
           :properties =>
           { :namespace =>
             { :type => :string,
               :analyzer => :namespaces,
-              :boost => 3
+              :boost => 2
             },
             :protocol =>
             { :type => :string,
               :analyzer => :namespaces,
-              :boost => 6
+              :boost => 2
             },
             :title =>
             { :type => :string,
               :boost => 6,
-              :analyzer => :word_delimiter
             },
             :tags => 
             { :type => :string,
-              :boost => 5
+              :boost => 7,
             },
             :doc => 
-            { :type => :string            },
+            { :type => :string,
+              :boost => 3
+            },
+            :messages =>
+            { :type => :object,
+              :dynamic => true,
+              :enabled => false,
+            },
+            :_messages => 
+            { :type => :object,
+              :index_name => 'messages',
+              :properties =>
+              { :request =>
+                { :dynamic => true,
+                  :type => :object,
+                  :enabled => false,
+                  :properties => 
+                   { :type =>
+                     { :type => :object,
+                       :enabled => false 
+                     }
+                   }
+                }
+              }
+            },
             :types => type_index_options[:mappings][:type],
             :data_assets =>
               { :dynamic => true,
@@ -144,7 +194,12 @@ class ESIndex
             :targets => 
             { :dynamic => true,
               :properties => 
-              { :geo_index => 
+              { :catalog => 
+                { :dynamic => true,
+                  :path => :full,
+                  :type => :object
+                },
+                :geo_index => 
                 { :dynamic => true,
                   :properties => 
                   { :sort_field => 
@@ -163,18 +218,12 @@ class ESIndex
   def type_index_options
     { :index => 
       { :analysis =>
-        { :tokenizer =>
+        { :analyzer => 
           { :namespaces =>
-            { :pattern => '\.+',
-              :lowercase => true,
-              :type => :pattern
-            }
-          },
-          :analyzer => 
-          { :namespaces =>
-            { :tokenizer => :namespaces,
-              :type => :custom
-            }
+            { :type => :pattern,
+              :pattern => '\.+',
+              :lowercase => true
+            },
           }
         }
       },
@@ -186,7 +235,7 @@ class ESIndex
           { :name =>
             { :type => :string,
               :analyzer => :namespaces,
-              :boost => 4
+              :boost => 2
             },
             :namespace =>
             { :type => :string,
@@ -200,10 +249,13 @@ class ESIndex
             { :dynamic => true,
               :properties => 
               { :type =>
-                { :type => :string,
-                  :analyzer => :namespaces 
+                { :enabled => false,
+                  :type => :object
                 },
                 :default => 
+                { :type => :string
+                },
+                :identifier => 
                 { :type => :string
                 }
               }
@@ -228,7 +280,7 @@ Settings.use :env_var, :commandline
 Settings.resolve!
 
 index_type = Settings.rest.first
-index_type = "protocols" if index_type == "datasets"
+index_type = "datasets" if index_type == "protocols"
 
 if !Settings['elasticsearch.host'].is_a?(Array) || Settings['elasticsearch.host'].empty?
   warn "Elastic search host(s) not specified"

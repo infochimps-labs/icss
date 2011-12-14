@@ -169,7 +169,7 @@ module Icss
       end
       
       def self.catalog_sections
-        ['core', 'datasets', 'old', 'george']
+        ['core', 'datasets', 'old', 'legacy/datasets']
       end
 
       def to_hash()

@@ -19,7 +19,7 @@ module Icss
       alias_method :basename, :name
 
       def self.catalog_sections
-        ['sources']
+        ['sources', 'legacy/sources']
       end
 
       def to_hash()

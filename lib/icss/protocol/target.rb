@@ -60,6 +60,7 @@ module Icss
     field :description,     String
     field :owner,           String
     field :price,           Float
+    field :score,           Float
     field :tags,            Array, :items => String
     field :messages,        Array, :items => String
     field :packages,        Array, :items => { :type => Hash, :values => Object }
