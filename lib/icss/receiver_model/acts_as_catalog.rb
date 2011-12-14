@@ -1,5 +1,13 @@
 require 'active_support/core_ext/module'
 
+# including class is required to implement the following methods:
+# * catalog_sections
+# * fullname
+
+# including module is required to additionally implement:
+# * receive (if not implemented)
+# * after_receiver (to register objects)
+
 module Icss
   module ReceiverModel
 
@@ -28,6 +36,7 @@ module Icss
 
       module ClassMethods
         include Icss::ReceiverModel::ActsAsLoadable::ClassMethods
+
 
         #
         # Include ActAsLoadable for file receivers
@@ -86,7 +95,6 @@ module Icss
         #
         def find(name_or_find_type, name='*')  
           unless self._catalog_loaded
-            flush_registry
             self._catalog_loaded = true
             load_catalog
           end
@@ -109,7 +117,7 @@ module Icss
         def load_from_catalog(fullname)
           filepath = fullname.to_s.gsub(/(\.icss\.yaml)?$/,'').gsub(/\./, '/')
           filenames = catalog_filenames(filepath, [''])
-          filenames.each{|filename| receive_from_file(filename) }.compact
+          filenames.map{|filename| receive_from_file(filename) }.compact
         end
 
       private

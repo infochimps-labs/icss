@@ -3,6 +3,7 @@
 module Icss
   module Encyclopedic ; module Wikipedia ; module Dbpedia ; end ; end ; end
   module Web ; module An ; end ; end
+  module Web ; module Analytics ; end ; end
   module Engineering ; module Chemical; module Msds ; end ; end ; end
   module Government ; module Public ; module Acs ; end ; end ; end
   module Language ; module Corpora ; module WordFreq ; end ; end ; end
