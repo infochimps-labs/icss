@@ -20,21 +20,31 @@ class ESIndex
       block = case type
         when "dataset"
           lambda{|protocol, hsh|
-            next if ['icss.core.typedefs', 'meta.req.geolocator_typedefs'].include? protocol.fullname
-            hsh[:license] = protocol.license.to_hash if protocol.license
-            hsh[:sources] = protocol.sources.inject({}){|hash, source| hash[source[0]] = source[1].to_hash; hash }
-            score = nil
-            score = hsh[:targets][:catalog].first.delete(:score).to_f unless protocol.targets[:catalog].to_a.empty?
-            score = score.to_f == 0 ? 1 : score.to_f
-            hsh[:_boost] = score * 4 
-            price = protocol.targets[:catalog].first.price.to_i unless protocol.targets[:catalog].to_a.empty?
-            hsh[:_boost] = hsh[:_boost].to_f + 10 unless protocol.messages.empty? || !defined?(price)
-            hsh[:_messages] = hsh[:messages].map{ |key, value| value.merge({:name => key.to_s }) } unless hsh[:messages].empty?
+            next if (['icss.core.typedefs', 'meta.req.geolocator_typedefs'].include?(protocol.fullname) || protocol.title.blank?)
+            
+            if !protocol.messages.empty?
+              hsh[:_type] = 'api'
+            else
+              hsh[:_type] = protocol[:data_assets].to_a.map(&:asset_type).first || 'offsite'
+            end
+            
+            unless (catalog = protocol.targets[:catalog].to_a).empty?
+              score = catalog.first.delete(:score).to_f 
+              price = catalog.first.price.to_f
+            else
+              price = nil
+              score = 1.0
+            end
+            
+            score *= 5
+            score += 15 unless !price || protocol.messages.empty?
+            hsh[:score] = hsh[:_boost] = score
+            true
           }
         when "type"
-          lambda{|type, hsh| hsh[:core] = true if type.is_core? }
+          lambda{|type, hsh| hsh[:core] = true if type.is_core?; true }
         else
-          lambda{|obj, hsh| }
+          lambda{|obj, hsh| true }
       end
       index_icss(type, &block)
       cleanup_aliases(type)
@@ -51,15 +61,14 @@ class ESIndex
   end
   
   def index_icss(type, &block)
-    delete_index(type)
     create_index(type)
     puts "Indexing #{type.pluralize}"
     
     Icss::Meta.const_get((type =='dataset' ? 'protocol' : type).classify).all.each do |obj|
       puts "Indexing #{type}: #{obj.fullname}" if options[:verbose]
       hsh = obj.to_hash rescue obj.to_schema
-      yield obj, hsh
-      client.index(hsh, {:index => "meta.#{type.pluralize}-#{index_timestamp}", :type => type, :id => obj.fullname})
+      next unless yield(obj, hsh)
+      client.index(hsh, {:index => "meta.#{type.pluralize}-#{index_timestamp}", :type => hsh.delete(:_type)||type, :id => obj.fullname})
     end
   end
   
@@ -67,9 +76,13 @@ class ESIndex
     index = "meta.#{type.pluralize}-#{index_timestamp}"
     
     puts "Creating index: #{index}"
-    opts = send(:"#{type}_index_options")
+    opts = index_options(type)
+    opts[:mappings][:api] = opts[:mappings][:downloadable] = opts[:mappings][:offsite] = opts[:mappings].delete(:dataset) if type.to_s == 'dataset'
+        
     client.create_index(index, opts[:index]||{})
-    client.update_mapping(opts[:mappings][type.to_sym]||{}, {:index => index, :type => type}) if opts[:mappings].present?
+    if opts[:mappings]
+      opts[:mappings].each{|type, mapping| client.update_mapping(mapping, {:index => index, :type => type}) }
+    end
   rescue ElasticSearch::RequestError => error
     puts "Error creating index: #{error}"
   end
@@ -79,7 +92,13 @@ class ESIndex
   rescue ElasticSearch::RequestError
   end
   
-  def dataset_index_options
+  def index_options type
+    opts = common_index_options(type)
+    opts[:mappings][type.to_s.to_sym][:properties].merge!(respond_to?(:"#{type}_index_properties") ? send(:"#{type}_index_properties") : {})
+    opts
+  end
+  
+  def common_index_options type
     { :index => 
       { :analysis =>
         { :filter =>
@@ -104,6 +123,10 @@ class ESIndex
               :pattern => '\.+',
               :lowercase => true
             },
+            :sortable =>
+            { :tokenizer => :keyword,
+              :filter => [:lowercase]
+            },
             :text => {
               :type => :custom,
               :tokenizer => :whitespace,
@@ -113,151 +136,107 @@ class ESIndex
         }
       },
       :mappings =>
-      { :dataset => 
-        { :_boost => 
-          { :name => :_boost,
-            :null_value => 1
-          },
-          :dynamic_templates =>
-          [
-            { "object_full_path" => 
-              { :match => '*',
-                :match_mapping_type => :object,
-                :mapping =>
-                { :path => 'full',
-                  :type => :object,
-                  :dynamic => true
+      { type.to_s.to_sym => 
+        { :dynamic_templates => 
+          [{ :multifield_sortable =>
+            { :match => '*',
+              :match_mapping_type => "string",
+              :mapping => 
+              { :type => :multi_field,
+                :fields =>
+                { :'{name}' => 
+                  { :type => :string,
+                    :analyzer => :text
+                  },
+                  :sortable =>
+                  { :type => :string,
+                    :analyzer => :sortable
+                  }
                 }
               }
             }
-          ],
+          }],
+          :_boost => 
+          { :name => :_boost,
+            :null_value => 1
+          },
           :_source =>
-          { :excludes => [:_boost, :_messages],
+          { :excludes => [:_boost, :score, "sortable_*"],
           },
           :dynamic => true,
           :numeric_detection => true,
           :_all => { :analyzer => :text },
-          :properties =>
-          { :namespace =>
-            { :type => :string,
-              :analyzer => :namespaces,
-              :boost => 2
-            },
-            :protocol =>
-            { :type => :string,
-              :analyzer => :namespaces,
-              :boost => 2
-            },
-            :title =>
-            { :type => :string,
-              :boost => 6,
-            },
-            :tags => 
-            { :type => :string,
-              :boost => 7,
-            },
-            :doc => 
-            { :type => :string,
-              :boost => 3
-            },
-            :messages =>
-            { :type => :object,
-              :dynamic => true,
-              :enabled => false,
-            },
-            :_messages => 
-            { :type => :object,
-              :index_name => 'messages',
-              :properties =>
-              { :request =>
-                { :dynamic => true,
-                  :type => :object,
-                  :enabled => false,
-                  :properties => 
-                   { :type =>
-                     { :type => :object,
-                       :enabled => false 
-                     }
-                   }
-                }
-              }
-            },
-            :types => type_index_options[:mappings][:type],
-            :data_assets =>
-              { :dynamic => true,
-                :properties =>
-                { :md5 => 
-                  { :type => :string
-                  }
-                }
-              },
-            :targets => 
-            { :dynamic => true,
-              :properties => 
-              { :catalog => 
-                { :dynamic => true,
-                  :path => :full,
-                  :type => :object
-                },
-                :geo_index => 
-                { :dynamic => true,
-                  :properties => 
-                  { :sort_field => 
-                    { :type => :string
-                    }
-                  }
-                }
-              }
-            }
-          }
+          :path => :full,
+          :properties => {}
         }
       }
     }
   end
   
-  def type_index_options
-    { :index => 
-      { :analysis =>
-        { :analyzer => 
-          { :namespaces =>
-            { :type => :pattern,
-              :pattern => '\.+',
-              :lowercase => true
-            },
+  def dataset_index_properties
+    { :namespace =>
+      { :type => :string,
+        :analyzer => :namespaces,
+        :boost => 2
+      },
+      :protocol =>
+      { :type => :string,
+        :analyzer => :namespaces,
+        :boost => 2
+      },
+      :title =>
+      { :type => :multi_field,
+        :fields => {
+          :title =>
+          { :type => :string,
+            :boost => 6,
+           :analyzer => :text
+          },
+          :sortable =>
+          { :type => :string,
+            :analyzer => :sortable
           }
         }
       },
-      :mappings => 
-      { :type =>
+      :tags => 
+      { :type => :string,
+        :boost => 7,
+      },
+      :categories => 
+      { :type => :string,
+        :analyzer => :sortable
+      },
+      :doc => 
+      { :type => :string,
+        :boost => 3
+      },
+      :messages =>
+      { :type => :object,
+        :dynamic => true,
+        :enabled => false,
+      },
+      :types => index_options(:type)[:mappings][:type],
+      :data_assets =>
         { :dynamic => true,
-          :numeric_detection => true,
           :properties =>
-          { :name =>
-            { :type => :string,
-              :analyzer => :namespaces,
-              :boost => 2
-            },
-            :namespace =>
-            { :type => :string,
-              :analyzer => :namespaces
-            },
-            :is_a => {
-              :type => :string,
-              :analyzer => :namespaces
-            },
-            :fields => 
-            { :dynamic => true,
-              :properties => 
-              { :type =>
-                { :enabled => false,
-                  :type => :object
-                },
-                :default => 
-                { :type => :string
-                },
-                :identifier => 
-                { :type => :string
-                }
+          { :md5 => 
+            { :type => :string
+            }
+          }
+        },
+      :targets => 
+      { :dynamic => true,
+        :properties => 
+        { :catalog => 
+          { :dynamic => true,
+            :path => :full,
+            :type => :object
+          },
+          :geo_index => 
+          { :dynamic => true,
+            :properties => 
+            { :sort_field => 
+              { :type => :string
               }
             }
           }
@@ -266,11 +245,36 @@ class ESIndex
     }
   end
   
-  def source_index_options
-    {}
-  end
-  def license_index_options
-    {}
+  def type_index_properties
+    { :name =>
+      { :type => :string,
+        :analyzer => :namespaces,
+        :boost => 2
+      },
+      :namespace =>
+      { :type => :string,
+        :analyzer => :namespaces
+      },
+      :is_a => {
+        :type => :string,
+        :analyzer => :namespaces
+      },
+      :fields => 
+      { :dynamic => true,
+        :properties => 
+        { :type =>
+          { :enabled => false,
+            :type => :object
+          },
+          :default => 
+          { :type => :string
+          },
+          :identifier => 
+          { :type => :string
+          }
+        }
+      }
+    }
   end
 end
 
