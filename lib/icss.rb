@@ -15,7 +15,7 @@ require 'gorillib/hashlike'
 
 #
 require 'configliere'
-Settings.define :catalog_root, :type => :filename, :env_var => 'CATALOG_ROOT', :default => (defined?(Rails) ? (Rails.root+'infochimps_catalog') : File.expand_path('../../infochimps_catalog', __FILE__))
+Settings.define :catalog_root, :type => :filename, :env_var => 'CATALOG_ROOT', :default => (defined?(Rails) ? (Rails.root.nil? ? nil : Rails.root+'infochimps_catalog') : File.expand_path('../../infochimps_catalog', __FILE__))
 #
 require 'icss/error'
 require 'icss/receiver_model/acts_as_hash'
