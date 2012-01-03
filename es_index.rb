@@ -29,16 +29,14 @@ class ESIndex
             end
             
             unless (catalog = protocol.targets[:catalog].to_a).empty?
-              score = catalog.first.delete(:score).to_f 
+              score = (catalog.first.delete(:score)||1).to_f 
               price = catalog.first.price.to_f
             else
               price = nil
               score = 1.0
             end
-            
-            score *= 5
-            score += 15 unless !price || protocol.messages.empty?
-            hsh[:score] = hsh[:_boost] = score
+            hsh[:score] = score
+            hsh[:sources] = hsh[:credits].values unless hsh[:credits].empty?
             true
           }
         when "type"
