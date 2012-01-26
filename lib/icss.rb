@@ -15,7 +15,7 @@ require 'gorillib/hashlike'
 
 #
 require 'configliere'
-Settings.define :catalog_root, :type => :filename, :default => (defined?(Rails) ? (Rails.root+'catalog') : File.expand_path('../../infochimps_catalog', __FILE__))
+Settings.define :catalog_root, :type => :filename, :default => (defined?(Rails) ? (Rails.root+'catalog') : File.expand_path('../../ics/infochimps_catalog', __FILE__))
 #
 require 'icss/error'
 require 'icss/receiver_model/acts_as_hash'
@@ -30,6 +30,8 @@ require 'icss/type/simple_types'      # Boolean, Integer, ...
 require 'icss/type/named_type'        # class methods for a named type: .metamodel .doc, .fullname, &c
 require 'icss/type/record_type'       # class methods for a record model: .field, .receive,
 require 'icss/type/record_model'      # instance methods for a record model
+
+
 #
 require 'icss/type/type_factory'      #
 require 'icss/type/structured_schema' # generate type from array, hash, &c schema
@@ -48,3 +50,4 @@ require 'icss/protocol/license'
 require 'icss/protocol/source'
 require 'icss/protocol'
 require 'icss/message/message_sample'
+
