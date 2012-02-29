@@ -1,75 +1,133 @@
 module Icss
-
-  #
-  # Describes an Avro Message
-  #
-  # A message has attributes:
-  #
-  # * doc:        an optional description of the message,
-  # * request:    a list of named, typed parameter schemas (this has the same form as the fields of a record declaration);
-  # * response:   a valid schema for the response
-  # * errors:     an optional union of error schemas.
-  #
-  # A request parameter list is processed equivalently to an anonymous
-  # record. Since record field lists may vary between reader and writer, request
-  # parameters may also differ between the caller and responder, and such
-  # differences are resolved in the same manner as record field differences.
-  #
-  class Message
-    include Receiver
-    include Receiver::ActsAsHash
-    rcvr_accessor :name,     String
-    rcvr_accessor :doc,      String
-
-    #we're starting to attach a lot of pork to this lib...
-    rcvr_accessor :initial_free_qty,      Integer
-    rcvr_accessor :price_per_k_in_cents,  Integer
-
-    rcvr_accessor :request,  Array, :of => Icss::RecordField, :default => []
-    rcvr_accessor :response, Icss::TypeFactory
-    rcvr_accessor :errors,   Icss::UnionType, :default => []
-    attr_accessor :protocol
-    # this is defined in sample_message_call.rb -- since we don't do referenced types yet
-    # rcvr_accessor :samples, Array, :of => Icss::SampleMessageCall, :default => []
-
-    after_receive do |hsh|
-      # track recursion of type references
-      @response_is_reference = true if hsh['response'].is_a?(String) || hsh['response'].is_a?(Symbol)
-      # tie each sample back to this, its parent message
-      (self.samples ||= []).each{|sample| sample.message = self }
-    end
-
-    def path
-      File.join(protocol.path, name)
-    end
-
-    def first_sample_request_param
-      req = samples.first.request.first rescue nil
-      req || {}
-    end
-
+  module Meta
     #
-    # Conversion
+    # Describes an Avro Message
     #
-    def to_hash()
-      {
-        :doc      => doc,
-        :initial_free_qty => initial_free_qty,
-        :price_per_k_in_cents => price_per_k_in_cents,
-        :request  => summary_of_request_attr,
-        :response => summary_of_response_attr,
-        :samples  => samples.map(&:to_hash).map(&:compact_blank),
-        :errors   => (errors.blank? ? nil : errors),
-      }.reject{|k,v| v.nil? }
-    end
-    def to_json(*args) to_hash.to_json(*args) ; end
+    # A message has attributes:
+    #
+    # * doc:        an optional description of the message,
+    # * request:    a list of named, typed parameter schemas (this has the same form as the fields of a record declaration);
+    # * response:   a valid schema for the response
+    # * errors:     an optional union of error schemas.
+    #
+    # A request parameter list is processed equivalently to an anonymous
+    # record. Since record field lists may vary between reader and writer, request
+    # parameters may also differ between the caller and responder, and such
+    # differences are resolved in the same manner as record field differences.
+    #
+    class Message
+      include ::Icss::ReceiverModel
 
-  private
-    def summary_of_response_attr
-      case when response.blank? then response when @response_is_reference then response.name else response.to_hash.compact_blank end
-    end
-    def summary_of_request_attr
-      request.map(&:to_hash).compact_blank
+      field :name,     String
+      alias_method :basename,  :name
+      alias_method :basename=, :name=
+      field :doc,      String
+
+      field :request_decorators, Hash, :default => {:anchors => []}
+
+      field :request,  Array, :items => Icss::Meta::RecordField, :default => []
+      field :response, Icss::Meta::TypeFactory
+      field :errors,   Object # FIXME: Icss::Meta::UnionType, :default => []
+      # this is defined in sample_message_call.rb -- since we don't do referenced types yet
+
+      attr_accessor :protocol
+
+      #we're starting to attach a lot of pork to this lib...
+      field :initial_free_qty,      Integer
+      field :price_per_k_in_cents,  Integer
+
+      after_receive(:are_my_types_references) do |hsh|
+        # track recursion of type references
+        @response_referenceness = ! hsh[:response].respond_to?(:each_pair)
+      end
+
+      after_receive(:parent_my_samples) do |hsh|
+        # # tie each sample back to this, its parent message
+        (self.samples||=[]).each{|samp| samp.message = self }
+      end
+
+      def fullname
+        "#{protocol.fullname}.#{basename}"
+      end
+      def path
+        fullname.gsub(%r{\.},'/')
+      end
+
+      # the type of the message's params (by convention, its first request field)
+      def params_type
+        request.first ? request.first.type : {}
+      end
+
+      def first_sample_request_param
+        req = samples.first.request.first rescue nil
+        req || {}
+      end
+
+      # ----------------------------------------
+      # GEO
+      #
+
+      def is_a_geo?
+        geolocators.present?
+      end
+
+      rcvr_alias(:is_geo, :is_geo)
+      def receive_is_geo(val)
+        return unless val
+        unless defined?(Icss::Meta::Req::Geolocator) then
+          warn "View helpers can\'t help with geolocators: Icss::Meta::Req::Geolocator type is missing. Is the catalog loaded properly?"
+          return
+        end
+        self.request_decorators = {
+          :anchors => [
+            Icss::Meta::Req::PointWithRadiusGeolocator,
+            Icss::Meta::Req::AddressTextGeolocator,
+            Icss::Meta::Req::TileXYZoomGeolocator,
+            Icss::Meta::Req::BoundingBoxGeolocator,
+            Icss::Meta::Req::IpAddressGeolocator
+          ],
+        }
+      end
+
+      def geolocators
+        request_decorators[:anchors]
+      end
+
+      #
+      # Conversion
+      #
+      def to_hash()
+        {
+          :request  => summary_of_request_attr,
+          :response => summary_of_response_attr,
+          :doc      => doc,
+          :errors   => (errors.blank? ? nil : errors),
+          :samples  => samples.map(&:to_hash).map(&:compact_blank),
+          :initial_free_qty => initial_free_qty,
+          :price_per_k_in_cents => price_per_k_in_cents,
+        }.compact
+      end
+      def to_json(*args) to_hash.to_json(*args) ; end
+
+    private
+      def summary_of_response_attr
+        case
+        when response.blank?        then response
+        when @response_referenceness then response.fullname
+        else response.to_schema.compact_blank
+        end
+      end
+      def summary_of_request_attr
+        request.map do |req|
+          case
+          when req.blank?        then req
+          # Is there a case where this needs to be a string and not a hash?
+          # when req.is_reference? then req.type.fullname
+          else                        req.to_schema.compact_blank
+          end
+        end
+      end
     end
   end
+
 end

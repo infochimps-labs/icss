@@ -81,14 +81,15 @@ types:
           type: your_mom
           doc:  wears combat boots
           
-        # - name: field_that_is_an_array
-        #   type: array
-        #   items: int
-        #   doc:  I am an array of primitives
-        # - name: field_that_is_a_named_type_holy_fuck
-        #   type: array
-        #   items: your_mom
-        #   doc:  I am an array of Iccs::Type::YourMomType
+        - name: field_that_is_an_array
+          type: array
+          items: int
+          doc:  I am an array of primitives
+        - name: field_that_is_a_named_type_holy_fuck
+          type:
+            - type: array
+              items: your_mom
+          doc:  I am an array of Iccs::Type::YourMomType
             
     - name: chronic_parse_response
       type: record
@@ -107,11 +108,11 @@ types:
           doc:  >-
             Your params, right back atcha'
           type: string  # map
-        # - name: errors
-        #   doc:  >-
-        #     Error conditions
-        #   type: array
-        #   optional: true
+        - name: errors
+          doc:  >-
+            Error conditions
+          type: array
+          optional: true
         - name: whatever
           doc:  dummy string
           type:
