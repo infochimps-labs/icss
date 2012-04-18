@@ -1,4 +1,4 @@
-module Icss  
+module Icss
   module Meta
     module Type
       include Icss::ReceiverModel::ActsAsCatalog
@@ -49,7 +49,7 @@ module Icss
   # Raw records, for use by data mungers
   module Raw      ; end
 
-  # Buffalo Buffalo buffalo Buffalo Buffalo Buffalo buffalow.
+  # Buffalo Buffalo buffalo Buffalo Buffalo Buffalo buffalo.
   module Meta
     # full definitions in type/structured_schema.rb and type/union_schema.rb
     class NamedSchema  ; end

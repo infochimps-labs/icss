@@ -31,7 +31,7 @@ module Icss
       field :identifier, Boolean, :doc => 'indicates the field is suitable for use'
 
       after_receive(:warnings) do |hsh|
-        warn "Extra params given to field #{self}: #{_extra_params.inspect}" if _extra_params.present?
+        # warn "Extra params given to field #{self}: #{_extra_params.inspect}" if _extra_params.present?
         warn "Validation failed for field #{self}: #{errors.inspect}" if respond_to?(:errors) && (not valid?)
       end
 
@@ -39,7 +39,7 @@ module Icss
       after_receive(:am_i_a_reference) do |hsh|
         hsh = hsh.symbolize_keys
         nonreference_klasses = [::Icss::Meta::ArrayType, ::Icss::Meta::HashType, ::Icss::Meta::EnumType, ::Icss::Meta::FixedType]
-        
+
         @is_reference = (hsh[:type].is_a?(String) || hsh[:type].is_a?(Symbol) || (hsh[:type].is_a?(Class) && nonreference_klasses.none?{|klass| hsh[:type].is_a?(klass) }))
       end
 

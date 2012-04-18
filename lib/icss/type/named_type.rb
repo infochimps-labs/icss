@@ -50,7 +50,7 @@ module Icss
           :doc       => doc,
         }.compact_blank
       end
-      
+
       def is_core?
         respond_to?(:_schema) && _schema.is_core?
       end
@@ -120,7 +120,7 @@ module Icss
         scope_names   = scope_names_for(fullname)
         klass_name    = scope_names.pop
         parent_module = get_nested_module(%w[Icss] + scope_names)
-        
+
         # const_defined?(klass, inherit), const_get(klass, inherit)
         # inherit = false makes these methods be scoped to parent_module instead of universally
         if parent_module.const_defined?(klass_name, false)
@@ -140,6 +140,7 @@ module Icss
 
       # Returns the meta-module for the given scope and name, starting with
       # '::Icss::Meta' and creating all necessary parents along the way.
+      #
       # @example
       #   Icss::Meta::TypeFactory.get_meta_module(["This", "That"], "TheOther")
       #   # Icss::Meta::This::That::TheOtherModel
@@ -167,7 +168,7 @@ module Icss
       #   # This::That::TheOther
       def self.get_nested_module(scope_names)
         scope_names.inject(Object) do |parent_module, module_name|
-          
+
           # const_defined?(klass, inherit), const_get(klass, inherit)
           # inherit = false makes these methods be scoped to parent_module instead of universally
           if parent_module.const_defined?(module_name, false)

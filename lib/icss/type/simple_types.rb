@@ -11,7 +11,7 @@ module Icss
       end
     end
 
-    module NilClassSchema ; include PrimitiveSchema ; def fullname()  :null    ; end ; def receive(val=nil) raise(ArgumentError, "#{self} must be initialized with nil, but [#{val}] was given") unless val.nil? ; nil ; end ; end
+    module NilClassSchema ; include PrimitiveSchema ; def fullname() :null    ; end ; def receive(val=nil) raise(ArgumentError, "#{self} must be initialized with nil, but [#{val}] was given") unless val.nil? ; nil ; end ; end
     module BooleanSchema  ; include PrimitiveSchema ; def fullname() :boolean ; end ; def receive(val=nil) case when val.nil? then nil when val.to_s.strip.blank? then false else val.to_s.strip != "false" end ; end ; end
     module IntegerSchema  ; include PrimitiveSchema ; def fullname() :int     ; end ; def receive(val=nil) val.blank? ? nil : val.to_i                            ; end ; end
     module LongSchema     ; include PrimitiveSchema ; def fullname() :long                                                                                        ; end ; end
@@ -57,11 +57,11 @@ class ::Boolean < BasicObject
   def inspect()
     "<Boolean #{val.inspect}>"
   end
-  def class()   ::Boolean          ; end
-  def !()           (! val)          ; end
-  def ==(other_val) val == other_val ; end
-  def !=(other_val) val != other_val ; end
-  def try_dup() ::Boolean.new(val) ; end
+  def class()       ::Boolean          ; end
+  def !()           (not val)          ; end
+  def ==(other_val) val == other_val   ; end
+  def !=(other_val) val != other_val   ; end
+  def try_dup()     ::Boolean.new(val) ; end
 end
 
 # Datamapper also defines:
@@ -69,4 +69,3 @@ end
 #   Apikey BCryptHash URI UUID Slug CommaSeparatedList Csv IpAddress Json Yaml Enum Flag Discriminator
 #
 # maybe someday we will too...
-

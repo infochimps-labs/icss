@@ -17,7 +17,7 @@ module Icss
       after_receive(:verify_name) do |hsh|
         warn "** Missing name for #{self}" unless self.fullname.present?
       end
-      
+
       after_receive(:register) do |hsh|
         begin
           Icss::Meta::Type.register(self.model_klass)
@@ -29,7 +29,7 @@ module Icss
           end
         end
       end
-      
+
       def is_core?
         !!is_core
       end
@@ -44,7 +44,7 @@ module Icss
         model_type = @model_klass.singleton_class
         # inscribe attributes
         attrs_to_inscribe.each do |attr|
-          val = self.send(attr) 
+          val = self.send(attr)
           model_type.class_eval{ define_method(attr){ val } }
         end
         schema_writer = self

@@ -11,7 +11,7 @@ module Icss
       field :_doc_hints,       Hash,    :default => {}
       field :fields,           Array,   :default => []
       #
-      
+
       def type() :record ; end
 
       def to_hash
@@ -28,7 +28,7 @@ module Icss
       def model_klass
         return @model_klass if @model_klass
         super
-        @model_klass.class_eval{ include(::Icss::Meta::RecordModel)}
+        @model_klass.class_eval{ include(::Icss::Meta::RecordModel) }
         self.fields.each do |field_schema|
           @model_klass.field(field_schema[:name], field_schema[:type], field_schema)
         end

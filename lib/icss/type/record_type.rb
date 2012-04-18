@@ -44,21 +44,21 @@ module Icss
       # @param [Class, Icss::Meta::Type] type a schema, or a string or symbol
       #   naming a record definition (required)
       #
-      #     avro type     json type   ruby type   kind        example
-      #     ---------     ---------   ----------  --------    ---------
-      #     null          null        NilClass    simple   nil
-      #     boolean       boolean     Boolean     simple   true
-      #     int,long      integer     Integer     simple   1
-      #     float,double  number      Float       simple   1.1
-      #     bytes         string      String      simple   "\u00FF"
-      #     string        string      String      simple   "foo"
-      #     record        object      RecordModel  named       {"a": 1}
-      #     enum          string      Enum        named       "FOO"
-      #     array         array       Array       container  [1]
-      #     map           object      Hash        container  { "a": 1 }
-      #     fixed         string      String      container  "\u00ff"
-      #     union         object      XxxFactory  union
-      #     time          string      Time        simple      "2011-01-02T03:04:05Z"
+      #     ruby type   kind        avro type     json type   example
+      #     ----------  --------    ---------     ---------   ---------
+      #     NilClass    simple      null          null        nil
+      #     Boolean     simple      boolean       boolean     true
+      #     Integer     simple      int,long      integer     1
+      #     Float       simple      float,double  number      1.1
+      #     String      simple      bytes         string      "\u00FF"
+      #     String      simple      string        string      "foo"
+      #     RecordModel named       record        object      {"a": 1}
+      #     Enum        named       enum          string      "FOO"
+      #     Array       container   array         array       [1]
+      #     Hash        container   map           object      { "a": 1 }
+      #     String      container   fixed         string      "\u00ff"
+      #     XxxFactory  union       union         object
+      #     Time        simple      time          string      "2011-01-02T03:04:05Z"
       #
       # @option schema [String] :doc -- description of field for users (optional)
       #
@@ -129,7 +129,7 @@ module Icss
       # @param  [Class]   type - a
       #
       # @option [Object]  :default  - After any receive! operation, attribute is set to this value unless attr_set? is true
-      # @option [Class]   :items       - For collections (Array, Hash, etc), the type of the collection's items
+      # @option [Class]   :items    - For collections (Array, Hash, etc), the type of the collection's items
       #
       def rcvr(field_name, schema={})
         return if schema[:receiver] == :none
@@ -179,7 +179,7 @@ module Icss
         add_after_receivers(field_name)
       end
 
-      # make a block to run after each time  .receive! is invoked
+      # make a block to run after each time .receive! is invoked
       def after_receive(after_hook_name, &after_hook)
         @after_receivers ||= {}
         @after_receivers[after_hook_name] = after_hook
@@ -303,7 +303,7 @@ module Icss
         end
         # super(field_name) if defined?(super)
       end
-      
+
 
       def set_field_default(field_name, default_val=nil, &blk)
         blk = default_val if default_val.is_a?(Proc)

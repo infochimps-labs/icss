@@ -5,7 +5,9 @@ An ICSS file is a *complete*, *expressive* description of a collection of relate
 
 ___________________________________________________________________________
 <a name="model" >
+
 ## Icss::ReceiverModel -- a pragmatic, flexible framework for active structured data
+
 ### (or: How to Be Object-Oriented in a JSON World)
 
 Hooray:
